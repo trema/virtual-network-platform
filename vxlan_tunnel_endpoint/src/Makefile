@@ -7,12 +7,6 @@ CC = gcc
 CFLAGS = -std=gnu99 -D_GNU_SOURCE -g -fno-strict-aliasing -Wall -Wextra -Wformat=2 -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion -Wfloat-equal -Wpointer-arith -Werror
 LDFLAGS = -pthread -lrt
 
-INSTALL = install
-PREFIX = /usr
-SBINDIR = $(PREFIX)/sbin
-INITDIR = /etc/init.d
-ETCDIR = /etc
-
 VXLAND = vxland
 VXLAND_SRCS = vxland.c fdb.c hash.c linked_list.c iftap.c net.c vxlan_instance.c vxlan.c daemon.c log.c ctrl_if.c vxlan_ctrl_server.c wrapper.c
 VXLAND_OBJS = $(VXLAND_SRCS:.c=.o)
@@ -57,23 +51,6 @@ $(REFLECTORCTL): $(REFLECTORCTL_OBJS)
 
 depend:
 	$(CC) -MM $(CFLAGS) $(SRCS) > $(DEPENDS)
-
-install:
-	$(INSTALL) -m 755 $(VXLAND) $(VXLANCTL) $(REFLECTORD) $(REFLECTORCTL) $(SBINDIR)
-	$(INSTALL) -m 755 -T vxland.rc $(INITDIR)/vxland
-	$(INSTALL) -m 644 -T vxland.conf $(ETCDIR)/vxland.conf
-	$(INSTALL) -m 755 -T reflectord.rc $(INITDIR)/reflectord
-	$(INSTALL) -m 644 -T reflectord.conf $(ETCDIR)/reflectord.conf
-
-uninstall:
-	@rm -f $(SBINDIR)/$(VXLAND)
-	@rm -f $(SBINDIR)/$(VXLANCTL)
-	@rm -f $(SBINDIR)/$(REFLECTORD)
-	@rm -f $(SBINDIR)/$(REFLECTORCTL)
-	@rm -f $(ETCDIR)/vxland.conf
-	@rm -f $(INITDIR)/vxland
-	@rm -f $(ETCDIR)/reflectord.conf
-	@rm -f $(INITDIR)/reflectord
 
 clean:
 	@rm -rf $(DEPENDS) $(OBJS) $(TARGETS) *~
