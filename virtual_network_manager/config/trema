@@ -1,0 +1,4 @@
+TREMA_HOME="$HOME/trema"
+SWITCH_MANAGER_OPTS="--port=6633 --daemonize --switch=$TREMA_HOME/objects/switch_manager/switch -- --no-flow-cleanup --no-cookie-translation --no-packet_in port_status::virtual_network_manager packet_in::virtual_network_manager state_notify::virtual_network_manager vendor::virtual_network_manager"
+RUN_PACKETIN_FILTER="no"
+PACKETIN_FILTER_OPTS="--daemonize"

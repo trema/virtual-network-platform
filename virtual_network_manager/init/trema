@@ -1,0 +1,127 @@
+#! /bin/sh
+
+### BEGIN INIT INFO
+# Provides:          trema
+# Required-Start:    $remote_fs $network $syslog
+# Required-Stop:     $remote_fs $network $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start Trema core modules
+# Description:       This script starts or stops Trema core modules.
+### END INIT INFO
+
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+DESC="Trema Core Modules"
+NAME=trema
+SCRIPTNAME=/etc/init.d/$NAME
+
+. /lib/init/vars.sh
+
+. /lib/lsb/init-functions
+
+if [ -f /etc/default/$NAME ]; then
+    . /etc/default/$NAME
+fi
+
+PIDDIR=$TREMA_HOME/tmp/pid
+
+SWITCH_MANAGER=$TREMA_HOME/objects/switch_manager/switch_manager
+SWITCH_MANAGER_PIDFILE=$PIDDIR/switch_manager.pid
+
+[ -x "$SWITCH_MANAGER" ] || exit 0
+
+PACKETIN_FILTER=$TREMA_HOME/objects/packetin_filter/packetin_filter
+PACKETIN_FILTER_PIDFILE=$PIDDIR/packetin_filter.pid
+
+[ -x "$PACKETIN_FILTER" ] || exit 0
+
+do_start()
+{
+    TREMA_HOME=$TREMA_HOME start-stop-daemon --start --quiet --pidfile $SWITCH_MANAGER_PIDFILE \
+	--exec $SWITCH_MANAGER --test > /dev/null || return 1
+    TREMA_HOME=$TREMA_HOME start-stop-daemon --start --quiet --pidfile $SWITCH_MANAGER_PIDFILE \
+	--exec $SWITCH_MANAGER -- $SWITCH_MANAGER_OPTS || return 2
+
+    [ "$RUN_PACKETIN_FILTER" != yes ] && return 0
+
+    TREMA_HOME=$TREMA_HOME start-stop-daemon --start --quiet --pidfile $PACKETIN_FILTER_PIDFILE \
+	--exec $PACKETIN_FILTER --test > /dev/null || return 1
+    TREMA_HOME=$TREMA_HOME start-stop-daemon --start --quiet --pidfile $PACKETIN_FILTER_PIDFILE \
+	--exec $PACKETIN_FILTER -- $PACKETIN_FILTER_OPTS || return 2
+}
+
+do_stop()
+{
+    RETVAL="0"
+
+    for pid in $SWITCH_MANAGER_PIDFILE $PIDDIR/switch.*.pid $PACKETIN_FILTER_PIDFILE
+    do
+        if [ -f $pid ]; then
+	    start-stop-daemon --stop --quiet --retry=TERM/30/KILL/5 --pidfile $pid \
+		--name `basename $pid`
+	    RETVAL="$?"
+	    if [ "$RETVAL" != "0" ]; then
+                break
+	    fi
+	    rm -f $pid
+        fi
+    done
+
+    return "$RETVAL"
+}
+
+do_status()
+{
+    status_of_proc "$SWITCH_MANAGER" "$NAME"
+    RETVAL="$?"
+    [ "$RETVAL" != "1" ] && return $RETVAL
+    [ "$RUN_PACKETIN_FILTER" != yes ] && return 0
+
+    status_of_proc "$PACKETIN_FILTER" "$NAME" && return 0 || return $?
+}
+
+case "$1" in
+    start)
+	[ "$VERBOSE" != no ] && log_daemon_msg "Starting $DESC" "$NAME"
+	do_start
+	case "$?" in
+	    0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+	    2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+	esac
+	;;
+    stop)
+	[ "$VERBOSE" != no ] && log_daemon_msg "Stopping $DESC" "$NAME"
+	do_stop
+	case "$?" in
+	    0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+	    2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+	esac
+	;;
+  status)
+	do_status
+	exit $?
+	;;
+  restart|force-reload)
+	log_daemon_msg "Restarting $DESC" "$NAME"
+	do_stop
+	case "$?" in
+	    0|1)
+		do_start
+		case "$?" in
+		    0) log_end_msg 0 ;;
+		    1) log_end_msg 1 ;;
+		    *) log_end_msg 1 ;;
+		esac
+		;;
+	    *)
+		log_end_msg 1
+		;;
+	esac
+	;;
+    *)
+	echo "Usage: $SCRIPTNAME {start|stop|status|restart|force-reload}" >&2
+	exit 3
+	;;
+esac
+
+:

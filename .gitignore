@@ -1,4 +1,10 @@
 *.o
+*.a
 *~
 *.swp
 .depends
+virtual_network_manager/src/virtual_network_manager
+vxlan_tunnel_endpoint/src/reflectorctl
+vxlan_tunnel_endpoint/src/reflectord
+vxlan_tunnel_endpoint/src/vxlanctl
+vxlan_tunnel_endpoint/src/vxland

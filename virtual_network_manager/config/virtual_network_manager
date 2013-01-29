@@ -1,1 +1,6 @@
-BISCO_VNET_MANAGER_OPTS="--db_host=127.0.0.1 --db_port=3306 --db_username=root --db_password=root123 --db_name=vnet --daemonize"
+VIRTUAL_NETWORK_MANAGER_DIR="$HOME/virtual_network_manager"
+DB_HOST="127.0.0.1"
+DB_PORT="3306"
+DB_USERNAME="root"
+DB_PASSWORD="root123"
+DB_NAME="vnet"

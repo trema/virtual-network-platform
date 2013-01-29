@@ -1,132 +1,97 @@
 #! /bin/sh
-#
-# bisco_vnet_manager        Start/Stop Bisco virtual network manager.
-#
-# chkconfig: 2345 70 20
-# Description: Bisco virtual network manager allows to create virtual
-#              layer 2 networks based on VXLAN and OpenFlow.
 
 ### BEGIN INIT INFO
-# Provides: bisco_vnet_manager
-# Required-Start: $local_fs $network $syslog $trema $mysqld
-# Required-Stop: $local_fs $network $syslog $trema $mysqld
-# Default-Start: 2 3 4 5
-# Default-Stop: 0 1 6
-# Short-Description: run Bisco virtual network manager
-# Description: Bisco virtual network manager allows to create virtual
-#              layer 2 networks based on VXLAN and OpenFlow.
+# Provides:          virtual_network_manager
+# Required-Start:    $remote_fs $network $syslog mysql trema
+# Required-Stop:     $remote_fs $network $syslog mysql trema
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start Virtual Network Manager
+# Description:       This script starts or stops Virtual Network Manager.
 ### END INIT INFO
 
-[ -f /etc/sysconfig/bisco_vnet_manager ] || {
-    [ "$1" = "status" ] && exit 4 || exit 6
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+DESC="Virtual Network Manager"
+NAME=virtual_network_manager
+SCRIPTNAME=/etc/init.d/$NAME
+
+. /lib/init/vars.sh
+
+. /lib/lsb/init-functions
+
+if [ -f /etc/default/trema ]; then
+    . /etc/default/trema  # Read TREMA_HOME from this
+fi
+
+PIDDIR=$TREMA_HOME/tmp/pid
+PIDFILE=$PIDDIR/$NAME.pid
+
+if [ -f /etc/default/$NAME ]; then
+    . /etc/default/$NAME
+fi
+
+DAEMON=$VIRTUAL_NETWORK_MANAGER_DIR/src/$NAME
+DAEMON_ARGS="-b $DB_HOST -p $DB_PORT -u $DB_USERNAME -c $DB_PASSWORD -m $DB_NAME -g -d"
+
+[ -x "$DAEMON" ] || exit 0
+
+do_start()
+{
+	TREMA_HOME=$TREMA_HOME start-stop-daemon --start --quiet --pidfile $PIDFILE \
+	--exec $DAEMON --test > /dev/null || return 1
+	TREMA_HOME=$TREMA_HOME start-stop-daemon --start --quiet --pidfile $PIDFILE \
+	--exec $DAEMON -- $DAEMON_ARGS || return 2
 }
 
-prog="bisco_vnet_manager"
-retval=0
-lockfile=/var/lock/subsys/$prog
-
-# Source function library.
-. /etc/rc.d/init.d/functions
-
-# pull in sysconfig settings
-[ -e /etc/sysconfig/$prog ] && . /etc/sysconfig/$prog
-
-BISCO_VNET_MANAGER=/usr/sbin/bisco_vnet_manager
-TREMA_HOME=/var/run/trema
-PID_DIR=$TREMA_HOME/tmp/pid
-BISCO_VNET_MANAGER_PID_FILE=$PID_DIR/bisco_vnet_manager.pid
-
-check_root_privilege() {
-    if [ $UID -ne 0 ]; then
-        echo "Root privilege is required."
-        exit 4
-    fi
+do_stop()
+{
+	start-stop-daemon --stop --quiet --retry=TERM/30/KILL/5 --pidfile $PIDFILE --name $NAME
+	RETVAL="$?"
+	rm -f $PIDFILE
+	return "$RETVAL"
 }
-
-start() {
-    check_root_privilege
-
-    [ -x $exec ] || exit 5
-    [ -f $config ] || exit 6
-    echo -n $"Starting $prog: "
-    TREMA_HOME=$TREMA_HOME $BISCO_VNET_MANAGER $BISCO_VNET_MANAGER_OPTS
-    retval=$?
-    [ $retval -eq 0 ] && success $"Starting $prog"
-    [ $retval -ne 0 ] && failure $"Starting $prog"
-    echo
-    [ $retval -eq 0 ] && touch $lockfile
-    return $retval
-}
-
-stop() {
-    check_root_privilege
-
-    echo -n $"Stopping $prog: "
-    if [ -f "$BISCO_VNET_MANAGER_PID_FILE" ]; then
-	killproc -p $BISCO_VNET_MANAGER_PID_FILE $BISCO_VNET_MANAGER
-	retval=$?
-    else
-	retval=7
-    fi
-    [ $retval -eq 0 ] && success $"Stopping $prog"
-    [ $retval -ne 0 ] && failure $"Stopping $prog"
-    echo
-    [ $retval -eq 0 ] && rm -f $lockfile
-    return $retval
-}
-
-restart() {
-    stop
-    start
-}
-
-reload() {
-    restart
-}
-
-force_reload() {
-    restart
-}
-
-rh_status() {
-    status -p $BISCO_VNET_MANAGER_PID_FILE $BISCO_VNET_MANAGER
-    retval=$?
-    return $retval
-}
-
-rh_status_q() {
-    rh_status >/dev/null 2>&1
-}
-
 
 case "$1" in
-    start)
-        rh_status_q && exit 0
-        $1
-        ;;
-    stop)
-        rh_status_q || exit 0
-        $1
-        ;;
-    restart)
-        $1
-        ;;
-    reload)
-        rh_status_q || exit 7
-        $1
-        ;;
-    force-reload)
-        force_reload
-        ;;
-    status)
-        rh_status
-        ;;
-    condrestart|try-restart)
-        rh_status_q || exit 0
-        restart
-        ;;
-    *)
-        echo $"Usage: $0 {start|stop|status|restart|condrestart|try-restart|reload|force-reload}"
-        exit 2
+  start)
+	[ "$VERBOSE" != no ] && log_daemon_msg "Starting $DESC" "$NAME"
+	do_start
+	case "$?" in
+		0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+		2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+	esac
+	;;
+  stop)
+	[ "$VERBOSE" != no ] && log_daemon_msg "Stopping $DESC" "$NAME"
+	do_stop
+	case "$?" in
+		0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+		2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+	esac
+	;;
+  status)
+       status_of_proc "$DAEMON" "$NAME" && exit 0 || exit $?
+       ;;
+  restart|force-reload)
+	log_daemon_msg "Restarting $DESC" "$NAME"
+	do_stop
+	case "$?" in
+	  0|1)
+		do_start
+		case "$?" in
+			0) log_end_msg 0 ;;
+			1) log_end_msg 1 ;;
+			*) log_end_msg 1 ;;
+		esac
+		;;
+	  *)
+		log_end_msg 1
+		;;
+	esac
+	;;
+  *)
+	echo "Usage: $SCRIPTNAME {start|stop|status|restart|force-reload}" >&2
+	exit 3
+	;;
 esac
-exit $retval
+
+:

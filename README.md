@@ -103,12 +103,15 @@ before building Virtual Network Manager.
 
   $ sudo cp virtual_network_manager/init/virtual_network_manager /etc/init.d
   $ sudo update-rc.d virtual_network_manager defaults
+  $ sudo cp virtual_network_manager/init/trema /etc/init.d
+  $ sudo update-rc.d trema defaults
 
-1.4. Setup configuration file
+1.4. Setup configuration files
 
   $ sudo cp virtual_network_manager/config/virtual_network_manager /etc/default
+  $ sudo cp virtual_network_manager/config/trema /etc/default
 
-Edit the configuration file (/etc/default/virtual_network_manager) as follows:
+Edit the configuration files as follows:
 
   (TBD)
 
