@@ -1,0 +1,92 @@
+#! /bin/sh
+#
+# Start/Stop the VXLAN packet reflector daemon.
+#
+### BEGIN INIT INFO
+# Provides:		reflectord
+# Required-Start:	$remote_fs $local_fs
+# REquired-Stop:	$remote_fs $local_fs
+# Default-Start:	2 3 4 5
+# Default-Stop:		0 1 6
+# Short-Description:	VXLAN packet reflector daemon
+#
+### END INIT INFO
+
+NAME=reflectord
+DAEMON=/usr/sbin/reflectord
+CONFIG=/etc/reflectord.conf
+PIDFILE=/var/run/reflectord.pid
+
+if [ ! -x $DAEMON ]; then
+    echo "$DAEMON does not exist" 
+    exit 0
+fi
+
+if [ ! -f $CONFIG ]; then
+    echo "$CONFIG does not exist"
+    exit 0
+fi
+
+if [ `id -u` != "0" ]; then
+    echo "Root privilege is required."
+    exit 0
+fi
+
+. $CONFIG
+
+start()
+{
+    if [ -f $PIDFILE ]; then 
+	echo "Pid file ($PIDFILE) exists"
+	exit 0
+    fi
+
+    echo "Starting" `basename $DAEMON`
+    $DAEMON -i $INTERFACE -s -d
+}
+
+stop()
+{
+    if [ -f $PIDFILE ]; then 
+	kill `cat $PIDFILE`
+	echo -n "Waiting for" `basename $DAEMON` "to be terminated."
+	while true
+	do
+	    pidof $DAEMON > /dev/null 2>&1
+	    if [ "$?" != "0" ]; then
+		break
+	    fi
+	    echo -n "."
+	    sleep 1
+	done
+	echo
+	rm -f $PIDFILE
+    else
+	echo "$DAEMON is not running"
+	exit 0
+    fi
+}
+
+
+case $1 in
+    start)
+	start
+	;;
+
+    stop)
+	stop
+	;;
+
+    restart)
+	stop
+	sleep 1
+	start
+	;;
+
+    *)
+	echo "$0 {start|stop|restart}"
+	exit 2
+	;;
+esac
+
+exit 0

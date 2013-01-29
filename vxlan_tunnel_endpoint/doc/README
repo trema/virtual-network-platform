@@ -1,0 +1,13 @@
+*** NEC Confidential ***
+Copyright (C) 2012-2013 NEC Corporation
+
+Jumper Wire: A VXLAN Tunnel Endpoint implementation on Linux
+
+* License
+
+All source code under this repository MUST be treated as NEC Confidential.
+
+* Acknowledgement
+
+Some parts of the code are based on hogelan (https://github.com/upa/hogelan)
+which is licensed under the BSD license.

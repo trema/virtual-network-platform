@@ -1,0 +1,69 @@
+/*
+ * Message sequence diagram for adding a MAC address to a switch port
+ *
+ * Author: Yasunobu Chiba
+ *
+ * Copyright (C) 2012 NEC Corporation
+ * NEC Confidential
+ */
+
+msc {
+  width = "1280", wordwraparcs = "true";
+
+  C [ label = "Client" ],
+  CIF [ label = "Client I/F" ],
+  DB [ label = "Backend Database" ],
+  VNM [ label = "Virtual Network Manager" ],
+  SD [ label = "Switch Daemon" ],
+  VNA [ label = "Virtual Network Agent" ],
+  SW [ label = "OpenFlow Switch" ],
+  RSW [ label = "Remote OpenFlow Switch" ];
+
+  C => CIF [ label = "POST /networks/{slice_id}/ports/{port_id}/mac_addresses" ];
+  CIF => DB [ label = "Set slice state to PREPARING_TO_UPDATE" ];
+  DB => CIF [ label = "Succeeded" ];
+  CIF => DB [ label = "Set port state to PREPARING_TO_UPDATE" ];
+  DB => CIF [ label = "Succeeded" ];
+  CIF => DB [ label = "Insert MAC entry (state = READY_TO_INSTALL)" ];
+  DB => CIF [ label = "Succeeded" ];
+  CIF => DB [ label = "Set port state to READY_TO_UPDATE" ];
+  DB => CIF [ label = "Succeeded" ];
+  CIF => DB [ label = "Set slice state to READY_TO_UPDATE" ];
+  DB => CIF [ label = "Succeeded" ];
+  CIF => C [ label = "202 Accepted" ];
+
+  VNM => DB [ label = "Set slice state to UPDATING" ];
+  DB => VNM [ label = "Succeeded" ];
+  VNM => DB [ label = "Set port state to UPDATING" ];
+  DB => VNM [ label = "Succeeded" ];
+  VNM => DB [ label = "Set MAC state to INSTALLING" ];
+  DB => VNM [ label = "Succeeded" ];
+
+  VNM => SD [ label = "Flow Mod - Modify Strict (table=0,pri=255,match=[in_port=Phn,dl_dst=Mhn])" ];
+  SD => SW [ label = "Flow Mod - Modify Strict (table=0,pri=255,match=[in_port=Phn,dl_dst=Mhn])" ];
+  VNM => SD [ label = "Barrier Request" ];
+  SD => SW [ label = "Barrier Request" ];
+  SW => SD [ label = "Barrier Reply" ];
+  SD => VNM [ label = "Barrier Reply" ];
+
+  VNM => SD [ label = "Flow Mod - Modify Strict (table=2,pri=255,match=[reg0=slice_id,dl_dst=Mhn],actions=[output=Phn])" ];
+  SD => SW [ label = "Flow Mod - Modify Strict (table=2,pri=255,match=[reg0=slice_id,dl_dst=Mhn],actions=[output=Phn])" ];
+  VNM => SD [ label = "Barrier Request" ];
+  SD => SW [ label = "Barrier Request" ];
+  SW => SD [ label = "Barrier Reply" ];
+  SD => VNM [ label = "Barrier Reply" ];
+
+  VNM => SD [ label = "Flow Mod - Modify Strict (table=2,pri=255,match=[reg0=slice_id,dl_dst=Mhn],actions=[output=Pv])" ];
+  SD => RSW [ label = "Flow Mod - Modify Strict (table=2,pri=255,match=[reg0=slice_id,dl_dst=Mhn],actions=[output=Pv])" ];
+  VNM => SD [ label = "Barrier Request" ];
+  SD => RSW [ label = "Barrier Request" ];
+  RSW => SD [ label = "Barrier Reply" ];
+  SD => VNM [ label = "Barrier Reply" ];
+
+  VNM => DB [ label = "Set MAC state to INSTALLED" ];
+  DB => VNM [ label = "Succeeded" ];
+  VNM => DB [ label = "Set port state to CONFIRMED" ];
+  DB => VNM [ label = "Succeeded" ];
+  VNM => DB [ label = "Set slice state to CONFIRMED" ];
+  DB => VNM [ label = "Succeeded" ];
+}

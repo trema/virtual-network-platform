@@ -1,0 +1,110 @@
+#! /bin/sh
+#
+# Start/Stop the BISCO Virtual Network Agent
+#
+### BEGIN INIT INFO
+# Provides:		bisco_vnet_agent
+# Required-Start:	$remote_fs $local_fs
+# REquired-Stop:	$remote_fs $local_fs
+# Default-Start:	2 3 4 5
+# Default-Stop:		0 1 6
+# Short-Description:	BISCO Virtual Netowrk Agent
+#
+### END INIT INFO
+
+NAME=bisco_vnet_agent
+DAEMON=/usr/sbin/bisco_vnet_agent
+CONFIG=/etc/default/bisco_vnet_agent
+PIDFILE=/var/run/bisco_vnet_agent.pid
+VN_NOTIFIER=/usr/sbin/vn_notifier
+VXLAN_REGISTER=/usr/sbin/ovs_vxlanregister
+PR_REGISTER=/usr/sbin/prregister
+VN_NOTIFIER_LOG=/var/log/vn_notifier.log
+VXLAN_REGISTER_LOG=/var/log/ovs_vxlanregister.log
+PR_REGISTER_LOG=/var/log/prregister.log
+
+if [ ! -x $DAEMON ]; then
+    echo "$DAEMON does not exist" 
+    exit 0
+fi
+
+if [ ! -f $CONFIG ]; then
+    echo "$CONFIG does not exist"
+    exit 0
+fi
+
+if [ `id -u` != "0" ]; then
+    echo "Root privilege is required."
+    exit 0
+fi
+
+. $CONFIG
+
+start()
+{
+    if [ -f $PIDFILE ]; then 
+	echo "Pid file ($PIDFILE) exists"
+	exit 0
+    fi
+
+    echo "Starting" `basename $DAEMON`
+    $DAEMON 1> /dev/null 2>&1 &
+    echo $! > $PIDFILE
+
+    if [ "$AGENT_MODE" = "ovs" ]; then
+	$VXLAN_REGISTER 1>> $VXLAN_REGISTER_LOG 2>&1
+	$VN_NOTIFIER start 1>> $VN_NOTIFIER_LOG 2>&1
+    fi
+    if [ "$AGENT_MODE" = "reflector" ]; then
+	$PR_REGISTER 1>> $PR_REGISTER_LOG 2>&1
+    fi
+}
+
+stop()
+{
+    if [ -f $PIDFILE ]; then 
+	kill `cat $PIDFILE`
+	echo -n "Waiting for" `basename $DAEMON` "to be terminated."
+	while true
+	do
+	    pidof $DAEMON > /dev/null 2>&1
+	    if [ "$?" != "0" ]; then
+		break
+	    fi
+	    echo -n "."
+	    sleep 1
+	done
+	echo
+	rm -f $PIDFILE
+        if [ "$AGENT_MODE" = "ovs" ]; then
+            $VN_NOTIFIER stop 1>> $VN_NOTIFIER_LOG 2>&1
+        fi
+    else
+	echo "$DAEMON is not running"
+	exit 0
+    fi
+}
+
+
+case $1 in
+    start)
+	start
+	;;
+
+    stop)
+	stop
+	;;
+
+    restart)
+	stop
+	sleep 1
+	start
+	;;
+
+    *)
+	echo "$0 {start|stop|restart}"
+	exit 2
+	;;
+esac
+
+exit 0

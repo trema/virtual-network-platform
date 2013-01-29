@@ -1,0 +1,5 @@
+#
+# vxland.conf
+#
+
+INTERFACE="eth0"

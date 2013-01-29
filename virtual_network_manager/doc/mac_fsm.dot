@@ -1,0 +1,38 @@
+/*
+ * State transition diagram for a mac address to switch port binding
+ *
+ * Author: Yasunobu Chiba
+ *
+ * Copyright (C) 2012 NEC Corporation
+ * NEC Confidential
+ */
+
+digraph mac_state_transition {
+  size = "11.69,16.54";
+  ratio = "fill";
+  center = "true";
+  node [
+    shape = circle
+    fixedsize = true
+    width = 3
+    height = 3
+  ];
+  /* state transitions conducted by user interface side */
+  INSTALLED -> READY_TO_DELETE [ label = "User requested to destroy a slice" ];
+  INSTALLED -> READY_TO_DELETE [ label = "User requested to destroy a port" ];
+  START -> READY_TO_INSTALL [ label = "User requested to add a new MAC address" ];
+  INSTALLED -> READY_TO_DELETE [ label = "User requested to delete a MAC address" ];
+  INSTALLED -> READY_TO_INSTALL [ label = "User requested to reset a slice" ];
+  INSTALL_FAILED -> READY_TO_INSTALL [ label = "User requested to reset a slice" ];
+  DELETE_FAILED -> READY_TO_DELETE [ label = "User requested to reset a slice" ];
+
+  /* state transitions conducted by virtual network manager */
+  READY_TO_INSTALL -> INSTALLING [ label = "VN manager started to add MAC address configurations" ];
+  INSTALLING -> INSTALLED [ label = "VN manager completed to add MAC address configurations" ];
+  INSTALLING -> INSTALL_FAILED [ label = "VN manager failed to add a MAC address configuration" ];
+  READY_TO_DELETE -> DELETING [ label = "VN manager started to delete MAC address configurations" ];
+  DELETING -> DELETED [ label = "VN manager completed to delete MAC address configurations" ];
+  DELETING -> DELETE_FAILED [ label = "VN manager failed to delete a MAC address configuration" ];
+}
+
+

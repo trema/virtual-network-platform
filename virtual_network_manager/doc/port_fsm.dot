@@ -1,0 +1,45 @@
+/*
+ * State transition diagram for a port definition
+ *
+ * Author: Yasunobu Chiba
+ *
+ * Copyright (C) 2012 NEC Corporation
+ * NEC Confidential
+ */
+
+digraph port_state_transition {
+  size = "11.69,16.54";
+  ratio = "fill";
+  center = "true";
+  node [
+    shape = circle
+    fixedsize = true
+    width = 3
+    height = 3
+  ];
+  /* state transitions conducted by user interface side */
+  CONFIRMED -> PREPARING_TO_DESTROY [ label = "User started to destroy a slice" ];
+  PREPARING_TO_DESTROY -> DESTROY_FAILED [ label = "User failed to complete to delete a MAC address definition" ];
+  PREPARING_TO_DESTROY -> READY_TO_DESTROY [ label = "User completed to delete MAC address definitions" ];
+  START -> READY_TO_UPDATE [ label = "User requested to create a new port definition" ];
+  CONFIRMED -> READY_TO_DESTROY [ label = "User requested to destroy a port" ];
+  CONFIRMED -> PREPARING_TO_UPDATE [ label = "User started to add a MAC address definition" ];
+  READY_TO_UPDATE -> PREPARING_TO_UPDATE [ label = "User started to add a MAC address definition" ];
+  PREPARING_TO_UPDATE -> UPDATE_FAILED [ label = "User failed to complete to add a MAC address definition" ];
+  PREPARING_TO_UPDATE -> READY_TO_UPDATE [ label = "User complated to add a MAC address definition" ];
+  CONFIRMED -> PREPARING_TO_UPDATE [ label = "User started to delete a MAC address definition" ];
+  READY_TO_UPDATE -> PREPARING_TO_UPDATE [ label = "User started to delete a MAC address definition" ];
+  PREPARING_TO_UPDATE -> UPDATE_FAILED [ label = "User failed to complete to delete a MAC address definition" ];
+  PREPARING_TO_UPDATE -> READY_TO_UPDATE [ label = "User complated to delete a MAC address definition" ];
+  CONFIRMED -> READY_TO_UPDATE [ label = "User requested to reset a slice" ];
+  UPDATE_FAILED -> READY_TO_UPDATE [ label = "User requested to reset a slice" ];
+  DESTROY_FAILED -> READY_TO_DESTROY [ label = "User requested to reset a slice" ];
+
+  /* state transitions conducted by virtual network manager */
+  READY_TO_UPDATE -> UPDATING [ label = "VN manager started to update port configurations" ];
+  UPDATING -> CONFIRMED [ label = "VN manager completed to update port configurations" ];
+  UPDATING -> UPDATE_FAILED [ label = "VN manager failed to update port configurations" ];
+  READY_TO_DESTROY -> DESTROYING [ label = "VN manager started to delete port configurations" ];
+  DESTROYING -> DESTROYED [ label = "VN manager completed to delete port configurations" ];
+  DESTROYING -> DESTROY_FAILED [ label = "VN manager failed to delete port configurations" ];
+}

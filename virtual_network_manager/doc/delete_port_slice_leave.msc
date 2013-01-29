@@ -1,0 +1,111 @@
+/*
+ * Message sequence diagram for deleting a port from a virtual network slice
+ *
+ * Author: Yasunobu Chiba
+ *
+ * Copyright (C) 2012 NEC Corporation
+ * NEC Confidential
+ */
+
+msc {
+  width = "1280", wordwraparcs = "true";
+
+  C [ label = "Client" ],
+  CIF [ label = "Client I/F" ],
+  DB [ label = "Backend Database" ],
+  VNM [ label = "Virtual Network Manager" ],
+  SD [ label = "Switch Daemon" ],
+  VNA [ label = "Virtual Network Agent" ],
+  SW [ label = "OpenFlow Switch" ],
+  RSW [ label = "Remote OpenFlow Switch" ];
+
+  C => CIF [ label = "DELETE /networks/{slice_id}/ports/{port_id}" ];
+  CIF => DB [ label = "Set slice state to PREPARING_TO_UPDATE" ];
+  DB => CIF [ label = "Succeeded" ];
+  CIF => DB [ label = "Update port state to READY_TO_DESTROY" ];
+  DB => CIF [ label = "Succeeded" ];
+  CIF => DB [ label = "Update MAC state to READY_TO_DELETE" ];
+  DB => CIF [ label = "Succeeded" ];
+  CIF => DB [ label = "Set slice to READY_TO_UPDATE" ];
+  DB => CIF [ label = "Succeeded" ];
+  CIF => C [ label = "202 Accepted" ];
+
+  VNM => DB [ label = "Set slice state to UPDATING" ];
+  DB => VNM [ label = "Succeeded" ];
+
+  VNM => DB [ label = "Set port state to DESTROYING" ];
+  DB => VNM [ label = "Succeeded" ];
+
+  VNM => SD [ label = "Flow Mod - Delete Strict (table=0,pri=127,match=[in_port=Phn])" ];
+  SD => SW [ label = "Flow Mod - Delete Strict (table=0,pri=127,match=[in_port=Phn])" ];
+  VNM => SD [ label = "Barrier Request" ];
+  SD => SW [ label = "Barrier Request" ];
+  SW => SD [ label = "Barrier Reply" ];
+  SD => VNM [ label = "Barrier Reply" ];
+
+  VNM => SD [ label = "Flow Mod - Delete Strict (table=0,pri=127,match=[in_port=Pv])" ];
+  SD => SW [ label = "Flow Mod - Delete Strict (table=0,pri=127,match=[in_port=Pv])" ];
+  VNM => SD [ label = "Barrier Request" ];
+  SD => SW [ label = "Barrier Request" ];
+  SW => SD [ label = "Barrier Reply" ];
+  SD => VNM [ label = "Barrier Reply" ];
+
+  VNM => SD [ label = "Flow Mod - Delete Strict (table=2,pri=127,match=[reg0=slice_id,in_port=Phn])" ];
+  SD => SW [ label = "Flow Mod - Delete Strict (table=2,pri=127,match=[reg0=slice_id,in_port=Phn])" ];
+  VNM => SD [ label = "Barrier Request" ];
+  SD => SW [ label = "Barrier Request" ];
+  SW => SD [ label = "Barrier Reply" ];
+  SD => VNM [ label = "Barrier Reply" ];
+
+  VNM => SD [ label = "Flow Mod - Delete Strict (table=2,pri=127,match=[reg0=slice_id,in_port=Pv])" ];
+  SD => SW [ label = "Flow Mod - Delete Strict (table=2,pri=127,match=[reg0=slice_id,in_port=Pv])" ];
+  VNM => SD [ label = "Barrier Request" ];
+  SD => SW [ label = "Barrier Request" ];
+  SW => SD [ label = "Barrier Reply" ];
+  SD => VNM [ label = "Barrier Reply" ];
+
+  VNM => DB [ label = "Set MAC states to DELETING" ];
+  DB => VNM [ label = "Succeeded" ];
+
+  VNM => SD [ label = "Flow Mod - Delete Strict (table=0,pri=255,match=[in_port=Phn,dl_dst=Mhn])" ];
+  SD => SW [ label = "Flow Mod - Delete Strict (table=0,pri=255,match=[in_port=Phn],dl_dst=Mhn)" ];
+  VNM => SD [ label = "Barrier Request" ];
+  SD => SW [ label = "Barrier Request" ];
+  SW => SD [ label = "Barrier Reply" ];
+  SD => VNM [ label = "Barrier Reply" ];
+
+  VNM => SD [ label = "Flow Mod - Delete Strict (table=2,pri=255,match=[reg0=slice_id,dl_dst=Mhn],out_port=Phn)" ];
+  SD => SW [ label = "Flow Mod - Delete Strict (table=2,pri=255,match=[reg0=slice_id,dl_dst=Mhn],out_port=Phn)" ];
+  VNM => SD [ label = "Barrier Request" ];
+  SD => SW [ label = "Barrier Request" ];
+  SW => SD [ label = "Barrier Reply" ];
+  SD => VNM [ label = "Barrier Reply" ];
+
+  VNM => SD [ label = "Flow Mod - Delete Strict (table=2,pri=255,match=[reg0=slice_id,dl_dst=Mhn],output=Pv)" ];
+  SD => RSW [ label = "Flow Mod - Delete Strict (table=2,pri=255,match=[reg0=slice_id,dl_dst=Mhn],output=Pv)" ];
+  VNM => SD [ label = "Barrier Request" ];
+  SD => RSW [ label = "Barrier Request" ];
+  RSW => SD [ label = "Barrier Reply" ];
+  SD => VNM [ label = "Barrier Reply" ];
+
+  /* this flow_mod might be not implemented yet */
+  VNM => SD [ label = "Flow Mod - Delete Strict (table=2,pri=255,match=[reg0=slice_id,dl_dst=Mrn],out_port=Pv)" ];
+  SD => SW [ label = "Flow Mod - Delete Strict (table=2,pri=255,match=[reg0=slice_id,dl_dst=Mrn],out_port=Pv)" ];
+  VNM => SD [ label = "Barrier Request" ];
+  SD => SW [ label = "Barrier Request" ];
+  SW => SD [ label = "Barrier Reply" ];
+  SD => VNM [ label = "Barrier Reply" ];
+
+  VNM >> VNA [ label = "Destroy tunnel (slice = slice_id)" ];
+  VNA >> SW [ label = "Delete tunnel port" ];
+  VNA >> VNM [ label = "Succeeded" ];
+  SW >> SD [ label = "Port Status (DELETE)" ];
+  SD >> VNM [ label = "Port Status (DELETE)" ];
+
+  VNM => DB [ label = "Set MAC state to DELETED" ];
+  DB => VNM [ label = "Succeeded" ];
+  VNM => DB [ label = "Set port state to DESTROYED" ];
+  DB => VNM [ label = "Succeeded" ];
+  VNM => DB [ label = "Set slice state to CONFIRMED" ];
+  DB => VNM [ label = "Succeeded" ];
+}

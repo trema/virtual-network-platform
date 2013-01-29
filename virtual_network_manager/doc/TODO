@@ -1,0 +1,27 @@
+NEC Confidential
+
+* Bisco - Virtual network manager
+  * Draw sequence diagrams in detail
+  * Create database tables with proper indexes
+  * Add packet filter function to allow/deny/redirect (to a specific
+    virtual network) traffic with IPv4 and IPv6 support
+  * Allow to delete a port/mac definition in READY_TO_UPDATE/READY_TO_INSTALL state
+  * Allow to revert a port/mac definition in READY_TO_DESTROY/READY_TO_DELETE state
+  * Allow to assign the same MAC address on multiple switch ports
+  * Install remote MAC addresses properly in multiple controller environment
+  * Handle VLAN IDs properly
+  * Check if all allocated memory segments are freed properly
+  * ADD - DELETE vs. CREATE - DESTROY
+  * Allow to check if a virtual network created correctly (with test packets)
+  * Update flow entries on port status (add/delete/modify) events
+  * Add statistics counters
+  * Allow to dump internal states for debugging purpose
+  * Add keppalive function to detect failure on switch or switch daemon
+  * Read constants from persistent storage (configuration file) on startup
+
+* Trema
+  * Allow to cancel a specific OpenFlow transaction which is currently
+    queued but not sent yet
+  * Allow to deny connections from unauthorized switches
+  * Add a function to set logging level in operation
+

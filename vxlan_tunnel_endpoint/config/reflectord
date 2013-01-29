@@ -1,0 +1,6 @@
+#
+# reflectord.conf
+#
+
+INTERFACE="eth0"
+

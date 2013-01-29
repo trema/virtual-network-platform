@@ -1,0 +1,6 @@
+* reflectord
+- Multiple distributor threads
+
+* vxland
+- Multiple UDP source ports support
+- Decrease TTL values by a single thread

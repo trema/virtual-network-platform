@@ -1,0 +1,82 @@
+/*
+ * Message sequence diagram for initial OpenFlow sequence
+ *
+ * Author: Yasunobu Chiba
+ *
+ * Copyright (C) 2012 NEC Corporation
+ * NEC Confidential
+ */
+
+msc {
+  width = "1280", wordwraparcs = "true";
+
+  VNM [ label = "Virtual Network Manager" ],
+  SD [ label = "Switch Daemon" ],
+  SM [ label = "Switch Manager" ],
+  SW [ label = "OpenFlow Switch" ];
+
+  SW => SM [ label = "Syn" ];
+  SM => SW [ label = "Syn+Ack" ];
+  SW => SM [ label = "Ack" ];
+  SW => SD [ label = "Hello" ];
+  SD => SW [ label = "Hello" ];
+  SD >> SW [ label = "Flow Mod - Add (pri=0,match=[*],hard_timeout=10)" ];
+  SD => SW [ label = "Features Request" ];
+  SW => SD [ label = "Features Reply" ];
+  SD => SW [ label = "Set Config" ];
+  SD => VNM [ label = "Switch Ready" ];
+
+  VNM => SD [ label = "Set Flow Format" ];
+  SD => SW [ label = "Set Flow Format" ];
+  VNM => SD [ label = "Barrier Request" ];
+  SD => SW [ label = "Barrier Request" ];
+  SW => SD [ label = "Barrier Reply" ];
+  SD => VNM [ label = "Barrier Reply" ];
+
+  VNM => SD [ label = "Flow Mod Table ID" ];
+  SD => SW [ label = "Flow Mod Table ID" ];
+  VNM => SD [ label = "Barrier Request" ];
+  SD => SW [ label = "Barrier Request" ];
+  SW => SD [ label = "Barrier Reply" ];
+  SD => VNM [ label = "Barrier Reply" ];
+
+  VNM => SD [ label = "Flow Mod - Modify Strict (table=0,pri=0,match=[*])" ];
+  SD => SW [ label = "Flow Mod - Modify Strict (table=0,pri=0,match=[*])" ];
+  VNM => SD [ label = "Barrier Request" ];
+  SD => SW [ label = "Barrier Request" ];
+  SW => SD [ label = "Barrier Reply" ];
+  SD => VNM [ label = "Barrier Reply" ];
+
+  VNM => SD [ label = "Flow Mod - Modify Strict (table=0,pri=65535,match=[dl_dst=0])" ];
+  SD => SW [ label = "Flow Mod - Modify Strict (table=0,pri=65535,match=[dl_dst=0])" ];
+  VNM => SD [ label = "Barrier Request" ];
+  SD => SW [ label = "Barrier Request" ];
+  SW => SD [ label = "Barrier Reply" ];
+  SD => VNM [ label = "Barrier Reply" ];
+
+  VNM => SD [ label = "Flow Mod - Modify Strict (table=0,pri=65535,match=[dl_src=0])" ];
+  SD => SW [ label = "Flow Mod - Modify Strict (table=0,pri=65535,match=[dl_src=0])" ];
+  VNM => SD [ label = "Barrier Request" ];
+  SD => SW [ label = "Barrier Request" ];
+  SW => SD [ label = "Barrier Reply" ];
+  SD => VNM [ label = "Barrier Reply" ];
+
+  VNM => SD [ label = "Flow Mod - Modify Strict (table=0,pri=65535,match=[dl_src=ff:ff:ff:ff:ff:ff])" ];
+  SD => SW [ label = "Flow Mod - Modify Strict (table=0,pri=65535,match=[dl_src=ff:ff:ff:ff:ff:ff])" ];
+  VNM => SD [ label = "Barrier Request" ];
+  SD => SW [ label = "Barrier Request" ];
+  SW => SD [ label = "Barrier Reply" ];
+  SD => VNM [ label = "Barrier Reply" ];
+
+  VNM => SD [ label = "Flow Mod - Modify Strict (table=2,pri=0,match=[*])" ];
+  SD => SW [ label = "Flow Mod - Modify Strict (table=2,pri=0,match=[*])" ];
+  VNM => SD [ label = "Barrier Request" ];
+  SD => SW [ label = "Barrier Request" ];
+  SW => SD [ label = "Barrier Reply" ];
+  SD => VNM [ label = "Barrier Reply" ];
+
+  VNM => SD [ label = "Features Request" ];
+  SD => SW [ label = "Features Request" ];
+  SW => SD [ label = "Features Reply" ];
+  SD => VNM [ label = "Features Reply" ];
+}

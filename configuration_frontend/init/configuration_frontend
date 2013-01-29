@@ -1,0 +1,48 @@
+#! /usr/bin/perl
+#
+# Copyright (C) 2012 NEC Corporation
+# Copyright (C) NEC BIGLOBE, Ltd. 2012
+# NEC Confidential
+#
+
+eval 'exec /usr/bin/perl  -S $0 ${1+"$@"}'
+    if 0;    # not running under some shell
+use strict;
+use Plack::Runner;
+
+use lib qw( /usr/share/bisco-virtual-network-manager );
+use Bisco::Common;
+use Bisco::Constant;
+
+read_config_file();
+unless ( grep { $_ =~ /^(--host|-o)=/ } @ARGV ) {
+    my $if = get_constant("BISCO.SERVICE_INTERFACE");
+    if ($if) {
+        my $host = get_ipaddr_from_nic($if);
+        push @ARGV, "--host=$host";
+    }
+}
+unless ( grep { $_ =~ /^(--port|-p)=/ } @ARGV ) {
+    my $port     = get_constant("BISCO.SERVICE_PORT");
+    my $protocol = get_constant("BISCO.PROTOCOL");
+    unless ($port) {
+        if ( $protocol eq "http" ) {
+            $port = 80;
+        }
+        elsif ( $protocol eq "https" ) {
+            $port = 443;
+        }
+        else {
+            $port = 5000;
+        }
+    }
+    push @ARGV, "--port=$port";
+}
+unless ( grep { $_ =~ /\.psgi$/ } @ARGV ) {
+    push @ARGV, "/usr/sbin/bisco.psgi";
+}
+
+my $runner = Plack::Runner->new;
+$runner->parse_options(@ARGV);
+$runner->run;
+

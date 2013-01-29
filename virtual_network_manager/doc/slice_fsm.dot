@@ -1,0 +1,35 @@
+/*
+ * State transition diagram for a network slice definition
+ *
+ * Author: Yasunobu Chiba
+ *
+ * Copyright (C) 2012 NEC Corporation
+ * NEC Confidential
+ */
+
+digraph slice_state_transition {
+  size = "11.69,16.54";
+  ratio = "fill";
+  center = "true";
+  node [
+    shape = circle
+    fixedsize = true
+    width = 3
+    height = 3
+  ];
+  CONFIRMED -> PREPARING_TO_UPDATE [ label = "User started to update port/mac definitions /\nUser requested to reset a slice" ];
+  PREPARING_TO_UPDATE -> READY_TO_UPDATE [ label = "User completed to update port/mac definitions" ];
+  PREPARING_TO_UPDATE -> UPDATE_FAILED [ label = "User failed to complete to update port/mac definitions" ];
+  READY_TO_UPDATE -> PREPARING_TO_UPDATE [ label = "User started to update port/mac definitions" ];
+  READY_TO_UPDATE -> UPDATING [ label = "VN manager started to update port/mac configurations" ];
+  UPDATING -> CONFIRMED [ label = "VN manager completed to update port/mac configurations" ];
+  UPDATING -> UPDATE_FAILED [ label = "VN manager failed to update port/mac configurations" ];
+  CONFIRMED -> PREPARING_TO_DESTROY [ label = "User requested to destroy a slice" ];
+  PREPARING_TO_DESTROY -> READY_TO_DESTROY [ label = "User requested to delete all port/mac definitions" ];
+  PREPARING_TO_DESTROY -> DESTROY_FAILED [ label = "User failed to request to delete all port/mac definitions" ];
+  READY_TO_DESTROY -> DESTROYING [ label = "VN manager started to delete all port/mac definitions" ];
+  DESTROYING -> DESTROYED [ label = "VN manager completed to delete all port/mac configurations" ];
+  DESTROYING -> DESTROY_FAILED [ label = "VN manager failed to delete a port/mac configuration" ];
+  UPDATE_FAILED -> PREPARING_TO_UPDATE [ label = "User requested to reset a slice" ];
+  DESTROY_FAILED -> PREPARING_TO_DESTROY [ label = "User requested to reset a slice" ];
+}

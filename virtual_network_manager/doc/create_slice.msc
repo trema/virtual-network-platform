@@ -1,0 +1,25 @@
+/*
+ * Message sequence diagram for creating a virtual network slice
+ *
+ * Author: Yasunobu Chiba
+ *
+ * Copyright (C) 2012 NEC Corporation
+ * NEC Confidential
+ */
+
+msc {
+  width = "1280", wordwraparcs = "true";
+
+  C [ label = "Client" ],
+  CIF [ label = "Client I/F" ],
+  DB [ label = "Backend Database" ],
+  VNM [ label = "Virtual Network Manager" ],
+  SD [ label = "Switch Daemon" ],
+  VNA [ label = "Virtual Network Agent" ],
+  SW [ label = "OpenFlow Switch" ];
+
+  C => CIF [ label = "POST /networks" ];
+  CIF => DB [ label = "Insert slice entry (state = CONFIRMED)" ];
+  DB => CIF [ label = "Succeeded" ];
+  CIF => C [ label = "202 Accepted" ];
+}

@@ -1,0 +1,66 @@
+/*
+ * Message sequence diagram for adding a port to a virtual network slice
+ *
+ * Author: Yasunobu Chiba
+ *
+ * Copyright (C) 2012 NEC Corporation
+ * NEC Confidential
+ */
+
+msc {
+  width = "1280", wordwraparcs = "true";
+
+  C [ label = "Client" ],
+  CIF [ label = "Client I/F" ],
+  DB [ label = "Backend Database" ],
+  VNM [ label = "Virtual Network Manager" ],
+  SD [ label = "Switch Daemon" ],
+  VNA [ label = "Virtual Network Agent" ],
+  SW [ label = "OpenFlow Switch" ];
+
+  C => CIF [ label = "POST /networks/{slice_id}/ports" ];
+  CIF => DB [ label = "Set slice state to PREPARING_TO_UPDATE" ];
+  DB => CIF [ label = "Succeeded" ];
+  CIF => DB [ label = "Insert port entry (state = READY_TO_UPDATE)" ];
+  DB => CIF [ label = "Succeeded" ];
+  CIF => DB [ label = "Set slice state to READY_TO_UPDATE" ];
+  DB => CIF [ label = "Succeeded" ];
+  CIF => C [ label = "202 Accepted" ];
+
+  VNM => DB [ label = "Set slice state to UPDATING" ];
+  DB => VNM [ label = "Succeeded" ];
+  VNM => DB [ label = "Set port state to UPDATING" ];
+  DB => VNM [ label = "Succeeded" ];
+
+  VNM => SD [ label = "Flow Mod - Modify Strict (table=0,pri=127,match=[in_port=Ph1],actions=[reg0=slice_id,resubmit=2])" ];
+  SD => SW [ label = "Flow Mod - Modify Strict (table=0,pri=127,match=[in_port=Ph1],actions=[reg0=slice_id,resubmit=2])" ];
+  VNM => SD [ label = "Barrier Request" ];
+  SD => SW [ label = "Barrier Request" ];
+  SW => SD [ label = "Barrier Reply" ];
+  SD => VNM [ label = "Barrier Reply" ];
+
+  VNM => SD [ label = "Flow Mod - Modify Strict (table=2,pri=127,match=[reg0=slice_id,in_port=Ph1],actions=[output=Pv,Ph2])" ];
+  SD => SW [ label = "Flow Mod - Modify Strict (table=2,pri=127,match=[reg0=slice_id,in_port=Ph1],actions=[output=Pv,Ph2])" ];
+  VNM => SD [ label = "Barrier Request" ];
+  SD => SW [ label = "Barrier Request" ];
+  SW => SD [ label = "Barrier Reply" ];
+  SD => VNM [ label = "Barrier Reply" ];
+  VNM => SD [ label = "Flow Mod - Modify Strict (table=2,pri=127,match=[reg0=slice_id,in_port=Pv],actions=[output=Ph1,Ph2])" ];
+  SD => SW [ label = "Flow Mod - Modify Strict (table=2,pri=127,match=[reg0=slice_id,in_port=Pv],actions=[output=Ph1,Ph2])" ];
+  VNM => SD [ label = "Barrier Request" ];
+  SD => SW [ label = "Barrier Request" ];
+  SW => SD [ label = "Barrier Reply" ];
+  SD => VNM [ label = "Barrier Reply" ];
+  VNM => SD [ label = "Flow Mod - Modify Strict (table=2,pri=127,match=[reg0=slice_id,in_port=Ph2],actions=[output=Pv,Ph1])" ];
+  SD => SW [ label = "Flow Mod - Modify Strict (table=2,pri=127,match=[reg0=slice_id,in_port=Ph2],actions=[output=Pv,Ph1])" ];
+  VNM => SD [ label = "Barrier Request" ];
+  SD => SW [ label = "Barrier Request" ];
+  SW => SD [ label = "Error (Table Full)" ];
+  SD => VNM [ label = "Error (Table Full)" ];
+  ...;
+
+  VNM => DB [ label = "Set port state to UPDATE_FAILED" ];
+  DB => VNM [ label = "Succeeded" ];
+  VNM => DB [ label = "Set slice state to UPDATE_FAILED" ];
+  DB => VNM [ label = "Succeeded" ];
+}

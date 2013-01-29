@@ -1,0 +1,60 @@
+#! /usr/bin/perl
+#
+# Copyright (C) 2009-2012 NEC Corporation
+#
+# NEC Confidential
+#
+
+use strict;
+use warnings;
+use LWP::UserAgent;
+use JSON;
+
+my $URI = "http://127.0.0.1:8888/networks";
+my $METHOD = "GET";
+
+&main();
+
+sub main()
+{
+    my $file;
+
+    if(@ARGV < 1){
+	printf("usage: httpc.pl method uri [file]\n");
+	exit;
+    }
+    if(defined($ARGV[0])){
+	$METHOD = $ARGV[0];
+    }
+    if(defined($ARGV[1])){
+	$URI = $ARGV[1];
+    }
+    if(defined($ARGV[2])){
+	$file = $ARGV[2];
+    }
+
+    my $ua = LWP::UserAgent->new();
+    my $req = HTTP::Request->new(GET => $URI);
+    $req->method($METHOD);
+
+    if(defined($file)){
+	if(!open(FILE, $file)){
+	    printf(STDERR "could not open file (%s)\n", $file);
+	    exit;
+	}
+	my $body = '';
+	while(<FILE>){
+	    $body .= $_;
+	}
+	close(FILE);
+	$req->content_type("application/json");
+	$req->content($body);
+    }
+
+    my $res = $ua->request($req);
+
+    printf("Status: %s\n", $res->status_line);
+    if(defined($res->content) && length($res->content) > 0){
+	printf("Content:\n%s\n", $res->content);
+    }
+}
