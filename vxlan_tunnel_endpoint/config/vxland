@@ -1,5 +1,2 @@
-#
-# vxland.conf
-#
-
-INTERFACE="eth0"
+VXLAND_DIR="/usr/sbin"
+VXLAND_OPTS="-s -d -i eth0"

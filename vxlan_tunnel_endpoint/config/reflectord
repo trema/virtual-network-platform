@@ -1,6 +1,2 @@
-#
-# reflectord.conf
-#
-
-INTERFACE="eth0"
-
+REFLECTORD_DIR="/usr/sbin"
+REFLECTORD_OPTS="-i eth0 -s -d"
