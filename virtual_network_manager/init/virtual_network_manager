@@ -50,9 +50,8 @@ do_start()
 
 do_stop()
 {
-    start-stop-daemon --stop --quiet --retry=TERM/30/KILL/5 --pidfile $PIDFILE --name $NAME
+    start-stop-daemon --stop --quiet --retry=TERM/30/KILL/5 --pidfile $PIDFILE
     RETVAL="$?"
-    rm -f $PIDFILE
     return "$RETVAL"
 }
 

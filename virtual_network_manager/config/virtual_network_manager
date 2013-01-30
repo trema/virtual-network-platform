@@ -1,4 +1,4 @@
-VIRTUAL_NETWORK_MANAGER_DIR="$HOME/virtual_network_manager/src"
+VIRTUAL_NETWORK_MANAGER_DIR="/somewhere/virtual_network_manager/src"
 DB_HOST="127.0.0.1"
 DB_PORT="3306"
 DB_USERNAME="root"

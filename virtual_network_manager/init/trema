@@ -57,13 +57,11 @@ do_stop()
     for pid in $SWITCH_MANAGER_PIDFILE $PIDDIR/switch.*.pid $PACKETIN_FILTER_PIDFILE
     do
         if [ -f $pid ]; then
-	    start-stop-daemon --stop --quiet --retry=TERM/30/KILL/5 --pidfile $pid \
-		--name `basename $pid`
+	    start-stop-daemon --stop --quiet --retry=TERM/30/KILL/5 --pidfile $pid
 	    RETVAL="$?"
 	    if [ "$RETVAL" != "0" ]; then
                 break
 	    fi
-	    rm -f $pid
         fi
     done
 
@@ -72,12 +70,12 @@ do_stop()
 
 do_status()
 {
-    status_of_proc "$SWITCH_MANAGER" "$NAME"
+    status_of_proc "$SWITCH_MANAGER" `basename $SWITCH_MANAGER`
     RETVAL="$?"
-    [ "$RETVAL" != "1" ] && return $RETVAL
+    [ "$RETVAL" != "0" ] && return $RETVAL
     [ "$RUN_PACKETIN_FILTER" != yes ] && return 0
 
-    status_of_proc "$PACKETIN_FILTER" "$NAME" && return 0 || return $?
+    status_of_proc "$PACKETIN_FILTER" `basename $PACKETIN_FILTER` && return 0 || return $?
 }
 
 case "$1" in

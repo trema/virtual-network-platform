@@ -93,9 +93,9 @@ build Trema before building Virtual Network Manager.
 
   $ sudo apt-get install gcc make ruby rubygems ruby-dev libpcap-dev \
   libsqlite3-dev
-  $ sudo gem install gli
   $ cd trema
   $ ./build.rb
+  $ mkdir -p tmp/log tmp/sock tmp/pid
   $ cd ..
 
 1.2. Build Virtual Network Manager
@@ -118,11 +118,19 @@ build Trema before building Virtual Network Manager.
 
   $ sudo cp virtual_network_manager/config/virtual_network_manager \
   /etc/default
+  $ sudo chown root.root /etc/default/virtual_network_manager
+  $ sudo chmod 600 /etc/default/virtual_network_manager
   $ sudo cp virtual_network_manager/config/trema /etc/default
 
-Edit the configuration files as follows:
+Point the directory that the Virtual Network Manager executable exists.
 
-  (TBD)
+  (/etc/default/virtual_network_manager)
+  VIRTUAL_NETWORK_MANAGER_DIR="/somewhere/virtual_network_manager/src"
+
+Also, point the directory that Trema exists.
+
+  (/etc/default/trema)
+  TREMA_HOME="/somewhere/trema"
 
 2. Backend Database
 
@@ -130,23 +138,19 @@ Edit the configuration files as follows:
 
   $ sudo apt-get install mysql-server mysql-client
 
-During the installation process, you may be asked to set a root's
-password. We assume here that the password is set to "root123".
+During the installation process, you may be asked to set password for
+the MySQL "root" user. We assume here that the password is set to
+"root123".
 
-2.2. Edit /etc/my.cnf as follows:
-
-  ...
-  bind-address = 127.0.0.1
-  ...
-
-2.3. Add privileges to "root"
+2.2. Add privileges to "root"
 
   $ mysql -u root --password=root123
   mysql> grant all privileges on *.* to root@localhost identified 
   by 'root123' with grant option;
   mysql> flush privileges;
+  mysql> quit
 
-2.4. Create database and tables
+2.3. Create database and tables
 
   $ cd backend_database
   $ ./create_database.sh
@@ -176,7 +180,7 @@ follows:
 
 4. Start all required services
 
-  $ sudo service mysql restart
+  $ sudo service trema start
   $ sudo service virtual_network_manager start
   $ sudo service configuration_frontend start
 
@@ -223,7 +227,7 @@ follows:
 Datapath id must be a 64-bit unique identifier for specifying the
 switch instance. You need to assign a unique identifier for each
 switch instance. Note hat datapath id may be specified with 16 digits
-hexadecimal without "0x" prefix.
+hexadecimal without "0x" prefix (e.g. 0000000000000001).
 
   $ sudo ovs-vsctl set Bridge br0 \
   other-config:datapath-id=[datapath id in hex]
@@ -251,9 +255,10 @@ hexadecimal without "0x" prefix.
 
   $ sudo cp vxlan_tunnel_endpoint/config/vxland /etc/default
 
-Edit the configuration file (/etc/default/vxland) as follows:
+Edit the configuration file (/etc/default/vxland). Point the directory
+that the executable (vxland) exists.
 
-  (TBD)
+  VXLAND_DIR="/somewhere/vxlan_tunnel_endpoint/src"
 
 4. Start VXLAN Tunnel End-Point
 

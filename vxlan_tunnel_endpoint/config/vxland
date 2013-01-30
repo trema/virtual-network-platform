@@ -1,2 +1,2 @@
-VXLAND_DIR="/usr/sbin"
+VXLAND_DIR="/somewhere"
 VXLAND_OPTS="-s -d -i eth0"
