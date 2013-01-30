@@ -68,7 +68,7 @@ vSwitch, please visit http://openvswitch.org/.
 
 At least, one host that runs Virtual Network Controller and two hosts
 for Virtual Network Agent, VXLAN Tunnel End-Point, and OpenFlow switch
-are required. The following operating systems are only supported.
+are required. The following operating system is only supported.
 
 * Ubuntu 12.04.1 LTS Desktop (amd64)
 
@@ -86,8 +86,8 @@ environment.
 
 1. Virtual Network Manager
 
-Since Virtual Network Manager is based on Trema, you need to build
-Trema before building Virtual Network Manager.
+Since Virtual Network Manager is developed on top of Trema, you need to
+build Trema before building Virtual Network Manager.
 
 1.1. Build Trema
 
