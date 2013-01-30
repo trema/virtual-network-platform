@@ -1,7 +1,6 @@
 #! /bin/sh
 #
-# Copyright (C) 2012 NEC Corporation
-# NEC Confidential
+# Copyright (C) 2012-2013 NEC Corporation
 #
 
 MYSQL="mysql"

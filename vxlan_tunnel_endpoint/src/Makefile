@@ -1,14 +1,17 @@
 #
 # Copryright (C) 2012-2013 NEC Corporation
-# NEC Confidential
 #
 
 CC = gcc
-CFLAGS = -std=gnu99 -D_GNU_SOURCE -g -fno-strict-aliasing -Wall -Wextra -Wformat=2 -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion -Wfloat-equal -Wpointer-arith -Werror
+CFLAGS = -std=gnu99 -D_GNU_SOURCE -g -fno-strict-aliasing -Wall \
+         -Wextra -Wformat=2 -Wcast-qual -Wcast-align -Wwrite-strings \
+         -Wconversion -Wfloat-equal -Wpointer-arith -Werror
 LDFLAGS = -pthread -lrt
 
 VXLAND = vxland
-VXLAND_SRCS = vxland.c fdb.c hash.c linked_list.c iftap.c net.c vxlan_instance.c vxlan.c daemon.c log.c ctrl_if.c vxlan_ctrl_server.c wrapper.c
+VXLAND_SRCS = vxland.c fdb.c hash.c linked_list.c iftap.c net.c \
+              vxlan_instance.c vxlan.c daemon.c log.c ctrl_if.c \
+              vxlan_ctrl_server.c wrapper.c
 VXLAND_OBJS = $(VXLAND_SRCS:.c=.o)
 
 VXLANCTL = vxlanctl
@@ -16,11 +19,14 @@ VXLANCTL_SRCS = vxlanctl.c log.c ctrl_if.c vxlan_ctrl_client.c wrapper.c
 VXLANCTL_OBJS = $(VXLANCTL_SRCS:.c=.o)
 
 REFLECTORD = reflectord
-REFLECTORD_SRCS = reflectord.c reflector_common.c receiver.c distributor.c ethdev.c log.c queue.c linked_list.c hash.c ctrl_if.c reflector_ctrl_server.c daemon.c vxlan.c wrapper.c
+REFLECTORD_SRCS = reflectord.c reflector_common.c receiver.c distributor.c \
+                  ethdev.c log.c queue.c linked_list.c hash.c ctrl_if.c \
+                  reflector_ctrl_server.c daemon.c vxlan.c wrapper.c
 REFLECTORD_OBJS = $(REFLECTORD_SRCS:.c=.o)
 
 REFLECTORCTL = reflectorctl
-REFLECTORCTL_SRCS = reflectorctl.c ctrl_if.c reflector_ctrl_client.c log.c wrapper.c
+REFLECTORCTL_SRCS = reflectorctl.c ctrl_if.c reflector_ctrl_client.c log.c \
+                    wrapper.c
 REFLECTORCTL_OBJS = $(REFLECTORCTL_SRCS:.c=.o)
 
 SRCS = $(VXLAND_SRCS) $(VXLANCTL_SRCS) $(REFLECTORD_SRCS) $(REFLECTORCTL_SRCS)

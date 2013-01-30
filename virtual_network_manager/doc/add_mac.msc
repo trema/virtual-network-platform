@@ -1,10 +1,7 @@
 /*
  * Message sequence diagram for adding a MAC address to a switch port
  *
- * Author: Yasunobu Chiba
- *
  * Copyright (C) 2012 NEC Corporation
- * NEC Confidential
  */
 
 msc {

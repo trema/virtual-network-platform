@@ -1,10 +1,7 @@
 /*
  * Message sequence diagram for destroying a virtual network slice
  *
- * Author: Yasunobu Chiba
- *
  * Copyright (C) 2012 NEC Corporation
- * NEC Confidential
  */
 
 msc {

@@ -1,9 +1,11 @@
+Copyright (C) 2012-2013 NEC Corporation
+
 !!! NOTICE !!!
 
-This directory contains message sequence charts that show message exchanges between
-Virtual Network Manager and other components. Also, state transition diagrams of
-virtual network configuration are also provided.
+This directory contains message sequence charts that show message exchanges
+between Virtual Network Manager and other components. Also, state transition
+diagrams of virtual network configuration are also provided.
 
-Please note that all information provided by the sequence chars and state transition
-diagrams may not reflect current implementation. There might be some difference
-between current implementation and the charts.
+Please note that all information provided by the sequence chars and the state
+transition diagrams may not reflect current implementation. There might be some
+difference between current implementation and the charts.

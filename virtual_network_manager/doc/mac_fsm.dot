@@ -1,10 +1,7 @@
 /*
  * State transition diagram for a mac address to switch port binding
  *
- * Author: Yasunobu Chiba
- *
  * Copyright (C) 2012 NEC Corporation
- * NEC Confidential
  */
 
 digraph mac_state_transition {
