@@ -1,20 +1,31 @@
 #! /bin/sh
 #
-# Copyright (C) 2012 NEC Corporation
-#
-# NEC Confidential
+# Copyright (C) 2012-2013 NEC Corporation
 #
 
 BASE_URI="http://127.0.0.1:8888/networks"
 
-CLIENT="./httpc"
+CURL="curl"
 
 run(){
-    method=$1
-    target=$BASE_URI$2
-    content=$3
+    local method=$1
+    local target=$BASE_URI$2
+    local file=$3
+    local content
+
+    if [ -n "$file" ]; then
+	content=`cat $file`
+    fi
+
     echo "#### BEGIN: $method $target ####"
-    $CLIENT $method $target $content
+    if [ -n "$content" ]; then
+	$CURL -v -H "Accept: application/json" \
+	    -H "Content-type: application/json" \
+	    -X $method -d "'$content'" $target
+	echo
+    else
+	$CURL -v -H "Accept: application/json" -X $method $target
+    fi
     echo "#### END: $method $target ####"
     echo
 }
