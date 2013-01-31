@@ -98,6 +98,10 @@ class OverlayNetwork
       OVS::Port
     end
 
+    def ovs_bridge
+      OVS::Bridge
+    end
+
     def vxlan_instance
       Vxlan::Instance
     end
@@ -111,7 +115,8 @@ class OverlayNetwork
     end
 
     def register_url
-      config[ 'controller_uri' ] + "agents/" + config[ 'datapath_id' ].to_s
+      datapath_id = ovs_bridge.datapath_id
+      config[ 'controller_uri' ] + "agents/" + datapath_id.to_s
     end
     alias :unregister_url :register_url
 

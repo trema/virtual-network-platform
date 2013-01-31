@@ -17,4 +17,3 @@
 controller_uri: http://127.0.0.1:8080/
 uri: http://127.0.0.1:8000/
 tunnel_endpoint: 10.0.0.1
-datapath_id: 0xe0

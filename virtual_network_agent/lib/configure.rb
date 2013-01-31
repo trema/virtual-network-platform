@@ -32,14 +32,6 @@ class Configure
     if default_config.has_key? 'uri'
       default_config[ 'uri' ] << '/' unless %r,/$, =~ default_config[ 'uri' ]
     end
-    if default_config.has_key? 'datapath_id'
-      case default_config[ 'datapath_id' ]
-        when /^0[Xx][[:xdigit:]]+$/
-          default_config[ 'datapath_id' ] = default_config[ 'datapath_id' ].hex
-        else
-          default_config[ 'datapath_id' ] = default_config[ 'datapath_id' ].to_i
-      end
-    end
     if default_config.has_key? 'reflector_mode'
       default_config[ 'reflector_mode' ] = ( default_config[ 'reflector_mode' ] == 'true' )
     else
