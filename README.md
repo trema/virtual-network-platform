@@ -160,7 +160,7 @@ the MySQL "root" user. We assume here that the password is set to
 
 3.1. Install Sinatra and ActiveRecord
 
-  $ sudo apt-get install ruby-sinatra ruby-activerecord
+  $ sudo apt-get install ruby-json ruby-sinatra ruby-activerecord ruby-mysql
 
 3.2. Setup init script
 
@@ -188,7 +188,7 @@ follows:
 
 1. Install Sinatra
 
-  $ sudo apt-get install ruby-sinatra
+  $ sudo apt-get install ruby-json ruby-sinatra ruby-rest-client
 
 2. Setup init script
 
