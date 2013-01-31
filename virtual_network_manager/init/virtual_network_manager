@@ -2,8 +2,8 @@
 
 ### BEGIN INIT INFO
 # Provides:          virtual_network_manager
-# Required-Start:    $remote_fs $network $syslog mysql trema
-# Required-Stop:     $remote_fs $network $syslog mysql trema
+# Required-Start:    $remote_fs $network $syslog trema
+# Required-Stop:     $remote_fs $network $syslog trema
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 # Short-Description: Start Virtual Network Manager
@@ -42,6 +42,11 @@ DAEMON_ARGS="-b $DB_HOST -p $DB_PORT -u $DB_USERNAME -c $DB_PASSWORD -m $DB_NAME
 
 do_start()
 {
+    # Quick hack to start MySQL (which starts with Upstart) before starting
+    # Virtual Network Manager
+    start mysql 1>/dev/null 2>&1
+    sleep 1
+
     TREMA_HOME=$TREMA_HOME start-stop-daemon --start --quiet --pidfile $PIDFILE \
 	--exec $DAEMON --test > /dev/null || return 1
     TREMA_HOME=$TREMA_HOME start-stop-daemon --start --quiet --pidfile $PIDFILE \
