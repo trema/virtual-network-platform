@@ -1,0 +1,436 @@
+#!/usr/bin/env ruby
+#
+# Copyright (C) 2013 NEC Corporation
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License, version 2, as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+
+required_path = File.dirname( __FILE__ ) + '/lib'
+$LOAD_PATH.unshift required_path unless $LOAD_PATH.include? required_path
+
+require 'rubygems'
+require 'gli'
+
+require 'agent'
+require 'log'
+require 'network'
+require 'reflector'
+
+logger = Log.instance
+logger.level = Log::INFO
+
+ActiveRecord::Base.logger = logger
+
+include GLI::App
+
+program_desc "configure a network slice"
+
+db_config = DB::Configure.instance
+desc "Database host"
+flag [ :h, 'db-host' ], :default_value => db_config[ 'host' ]
+
+desc "Database port number to use for connection"
+flag [ 'db-port' ], :default_value => db_config[ 'port' ]
+
+desc "Database user for login"
+flag [ :u, 'db-user' ], :default_value => db_config[ 'username' ]
+
+desc "Database password to use for login"
+flag [ :p, 'db-password' ], :default_value => db_config[ 'password' ]
+
+desc "Debug mode"
+switch [ :d, :debug ], :negatable => false
+
+desc "Debug this application"
+switch [ :D, :GLI_DEBUG ], :negatable => false
+
+desc "Show this message"
+switch [ :help ], :negatable => false
+
+pre do | global_options, command, options, args |
+  db_config = DB::Configure.instance
+  db_config[ 'host' ] = global_options[ 'db-host' ]
+  db_config[ 'port' ] = global_options[ 'db-port' ]
+  db_config[ 'username' ] = global_options[ 'db-user' ] if not global_options[ 'db-user' ].nil?
+  db_config[ 'password' ] = global_options[ 'db-password' ] if not global_options[ 'db-password' ].nil?
+
+  if global_options[ :debug ]
+    logger.level = Log::DEBUG if global_options[ :debug ]
+  end
+  if global_options[ :GLI_DEBUG ]
+    logger.level = Log::DEBUG
+    ENV[ 'GLI_DEBUG' ] = 'true'
+  end
+  DB.connect
+  true
+end
+
+# Network
+
+desc "List summary of networks"
+command :list do | c |
+  c.action do | global_options, options, args |
+    parameters = {}
+    help_now! "Too many arguments" unless args.size == 0
+    parameters[ :require_updated_at ] = true
+    response = Network.list parameters
+    raise "No slice found" unless response.size != 0
+    response.sort! { | a, b | a[ :id ] <=> b[ :id ] }
+    printf "%-8s%-32s%-21s%s\n", "ID", "Description", "State", "Updated At"
+    response.each do | each |
+      printf "%-8s%-32s%-21s%s\n", each[ :id ], each[ :description ], each[ :state ], each[ :updated_at ]
+    end
+  end
+end
+
+desc "Create a new network"
+arg_name "[slice_id [desctiption]]"
+command :create do | c |
+  c.action do | global_options, options, args |
+    parameters = {}
+    parameters[ :id ] = args.shift
+    parameters[ :description ] = args.shift
+    help_now! "Too many arguments" unless args.size == 0
+    Network.create( parameters )
+    puts "A slice is created successfully."
+  end
+end
+
+desc "Update details of network"
+arg_name "slice_id desctiption"
+command :modify do | c |
+  c.action do | global_options, options, args |
+    parameters = {}
+    parameters[ :id ] = args.shift or help_now! "Too few arguments"
+    parameters[ :description ] = args.shift or help_now! "Too few arguments"
+    help_now! "Too many arguments" unless args.size == 0
+    Network.update( parameters )
+    puts "A slice is modified successfully."
+  end
+end
+
+desc "Show details of network"
+arg_name "slice_id"
+command :show do | c |
+  c.action do | global_options, options, args |
+    parameters = {}
+    parameters[ :id ] = args.shift or help_now! "Too few arguments"
+    help_now! "Too many arguments" unless args.size == 0
+    parameters[ :require_updated_at ] = true
+    response = Network.show( parameters )
+    net_id = response[ :id ]
+    puts "[Description]\n#{ response[ :description ] }"
+    puts "[State]\n#{ response[ :state ] }"
+    puts "[Updated At]\n#{ response[ :updated_at ] }"
+    puts "[Ports]"
+    indent = "  "
+    show_ports net_id, indent
+  end
+end
+
+desc "Remove the network"
+arg_name "slice_id"
+command :destroy do | c |
+  c.action do | global_options, options, args |
+    parameters = {}
+    parameters[ :id ] = args.shift or help_now! "Too few arguments"
+    help_now! "Too many arguments" unless args.size == 0
+    Network.destroy( parameters )
+    puts "A slice is destroyed successfully."
+  end
+end
+
+desc "Reset the network"
+arg_name "slice_id"
+command :reset do | c |
+  c.action do | global_options, options, args |
+    parameters = {}
+    parameters[ :id ] = args.shift or help_now! "Too few arguments"
+    help_now! "Too many arguments" unless args.size == 0
+    Network.reset( parameters )
+    puts "A slice is resetted successfully."
+  end
+end
+
+# Port
+
+desc "Retrieve detail of the port"
+arg_name "slice_id [port_id]"
+command 'show-port' do | c |
+  c.action do | global_options, options, args |
+    parameters = {}
+    parameters[ :net_id ] = args.shift or help_now! "Too few arguments"
+    parameters[ :id ] = args.shift
+    help_now! "Too many arguments" unless args.size == 0
+    parameters[ :require_updated_at ] = true
+    net_id = parameters[ :net_id ]
+    if parameters[ :id ].nil?
+      show_ports net_id
+    else
+      response = Network.show_port( parameters )
+      port_id = response[ :id ]
+      display_port response
+      puts "[Mac addresses]"
+      indent = "  "
+      show_mac_addresses net_id, port_id, indent
+    end
+  end
+end
+
+desc "Create a port on the network"
+arg_name "slice_id dpid port [vid [description]]"
+command 'add-port' do | c |
+  c.desc "Port id"
+  c.flag [ :i, :id ], :type => Integer
+
+  c.action do | global_options, options, args |
+    parameters = {}
+    parameters[ :net_id ] = args.shift or help_now! "Too few arguments"
+    parameters[ :datapath_id ] = args.shift or help_now! "Too few arguments"
+    parameters[ :id ] = options[ :id ]
+    port = args.shift or help_now! "Too few arguments"
+    if /^[[:digit:]]+$/ =~ port
+      parameters[ :number ] = port
+    else
+      parameters[ :name ] = port
+    end
+    parameters[ :vid ] = args.shift
+    parameters[ :description ] = args.shift
+    help_now! "Too many arguments" unless args.size == 0
+    Network.create_port( parameters )
+    puts "A port is added successfully."
+  end
+end
+
+desc "Remove a port from the network"
+arg_name "slice_id port_id"
+command 'delete-port' do | c |
+  c.action do | global_options, options, args |
+    parameters = {}
+    parameters[ :net_id ] = args.shift or help_now! "Too few arguments"
+    parameters[ :id ] = args.shift or help_now! "Too few arguments"
+    help_now! "Too many arguments" unless args.size == 0
+    Network.delete_port( parameters )
+    puts "A port is deleted successfully."
+  end
+end
+
+# MAC address
+
+desc "Retrieve detail of the mac address"
+arg_name "slice_id port_id [mac_address]"
+command 'show-mac' do | c |
+  c.action do | global_options, options, args |
+    parameters = {}
+    parameters[ :net_id ] = args.shift or help_now! "Too few arguments"
+    parameters[ :id ] = args.shift or help_now! "Too few arguments"
+    parameters[ :address ] = args.shift
+    help_now! "Too many arguments" unless args.size == 0
+    parameters[ :require_updated_at ] = true
+    if not parameters[ :address ].nil?
+      display_mac_address Network.show_local_mac_address( parameters )
+      indent = "  "
+      mac_addresses = Network.show_remote_mac_addresses( parameters )
+      puts "[Remotes]"
+      if mac_addresses.empty?
+        puts "#{ indent }No mac addresses found."
+      else
+        mac_addresses.collect do | each |
+          display_mac_address each, "#{ indent }  "
+        end
+      end
+    else
+      show_mac_addresses parameters[ :net_id ], parameters[ :id ]
+    end
+  end
+end
+
+desc "Create a mac address on the port"
+arg_name "slice_id port_id mac_address"
+command 'add-mac' do | c |
+  c.action do | global_options, options, args |
+    parameters = {}
+    parameters[ :net_id ] = args.shift or help_now! "Too few arguments"
+    parameters[ :id ] = args.shift or help_now! "Too few arguments"
+    parameters[ :address ] = args.shift or help_now! "Too few arguments"
+    help_now! "Too many arguments" unless args.size == 0
+    Network.create_mac_address( parameters )
+    puts "A MAC address is added successfully."
+  end
+end
+
+desc "Remove a mac address from the port."
+arg_name "slice_id port_id mac_address"
+command 'delete-mac' do | c |
+  c.action do | global_options, options, args |
+    parameters = {}
+    parameters[ :net_id ] = args.shift or help_now! "Too few arguments"
+    parameters[ :id ] = args.shift or help_now! "Too few arguments"
+    parameters[ :address ] = args.shift or help_now! "Too few arguments"
+    help_now! "Too many arguments" unless args.size == 0
+    Network.delete_mac_address( parameters )
+  end
+end
+
+# Agent
+
+desc "Retrieve detail of the switch"
+arg_name "[datapath_id]"
+command 'show-switch' do | c |
+  c.action do | global_options, options, args |
+    parameters = {}
+    parameters[ :datapath_id ] = args.shift
+    help_now! "Too many arguments" unless args.size == 0
+    if parameters[ :datapath_id ].nil?
+      response = Agent.list( parameters )
+      if response.empty?
+        puts "No switches found."
+      else
+        response.collect do | each |
+	  display_agent each
+        end
+      end
+    else
+      response = Agent.show( parameters )
+      if response.empty?
+        puts "No switches found."
+      else
+	display_agent response
+      end
+    end
+  end
+end
+
+
+if ENV[ 'TEST_OF_REGISTRATION' ] == 'true'
+  desc "Register a new switch (test only)"
+  arg_name "datapath_id uri tep"
+  command 'register-switch' do | c |
+    c.action do | global_options, options, args |
+      parameters = {}
+      parameters[ :datapath_id ] = args.shift or help_now! "Too few arguments"
+      parameters[ :control_uri ] = args.shift or help_now! "Too few arguments"
+      parameters[ :tunnel_endpoint ] = args.shift or help_now! "Too few arguments"
+      help_now! "Too many arguments" unless args.size == 0
+      Agent.register( parameters )
+      puts "A switch is registered successfully."
+    end
+  end
+end
+
+if ENV[ 'TEST_OF_UNRESET_SWITCH' ] == 'true'
+  desc "Unregister the switch (test only)"
+  arg_name "datapath_id"
+  command 'unregister-switch' do | c |
+    c.action do | global_options, options, args |
+      parameters = {}
+      parameters[ :datapath_id ] = args.shift or help_now! "Too few arguments"
+      help_now! "Too many arguments" unless args.size == 0
+      Agent.unregister( parameters )
+      puts "A switch is unregistered successfully."
+    end
+  end
+end
+
+if ENV[ 'TEST_OF_RESET_SWITCH' ] == 'true'
+  desc "Reset a switch (test only)"
+  arg_name "datapath_id"
+  command 'reset-switch' do | c |
+    c.action do | global_options, options, args |
+      parameters = {}
+      parameters[ :datapath_id ] = args.shift or help_now! "Too few arguments"
+      parameters[ :action ] = 'reset'
+      help_now! "Too many arguments" unless args.size == 0
+      Agent.action( parameters )
+      puts "A switch is reset successfully."
+    end
+  end
+end
+
+# Reflector
+
+if ENV[ 'TEST_OF_REFLECTOR' ] == 'true'
+  desc "Retrieve detail of the tunnel-endpoints"
+  command 'list-tep' do | c |
+    c.action do | global_options, options, args |
+      help_now! "Too many arguments" unless args.size == 0
+      response = Reflector.list
+      if response.empty?
+	  puts "No tunnel-endpoints found."
+      else
+	response do | slice_id, teps |
+	  puts "[Slice Id: #{ slice_id }]"
+	  puts "%-20s%s" % [ "IP address", "Port" ]
+	  teps.list.each do | tep |
+	    puts "%-20s%s" % [ tep[ :ip ], tep[ :port ] ]
+	  end
+	end
+      end
+    end
+  end
+end
+
+#
+
+def show_ports net_id, indent = ""
+  ports = Network.show_ports( { :net_id => net_id, :require_updated_at => true } )
+  if ports.empty?
+    puts "#{ indent }No ports found."
+  else
+    ports.each do | each |
+      port_id = each[ :id ]
+      display_port each, indent
+      puts "#{ indent }[Mac addresses]"
+      show_mac_addresses net_id, port_id, "#{ indent}  "
+    end
+  end
+end
+
+def show_mac_addresses net_id, port_id, indent = ""
+  mac_addresses = Network.show_mac_addresses( { :net_id => net_id, :id => port_id, :require_state => true, :require_updated_at => true })
+  if mac_addresses.empty?
+    puts "#{ indent }No mac addresses found."
+  else
+    mac_addresses.each do | each |
+      display_mac_address each, indent
+    end
+  end
+end
+
+def display_port response, indent = ""
+  puts "#{ indent }[ID: #{ response[ :id ] }]"
+  puts "#{ indent }Description: #{ response[ :description ] }"
+  puts "#{ indent }Datapath Id: #{ response[ :datapath_id ] }"
+  puts "#{ indent }Port: #{ response[ :number ] } (#{ ( response[ :name ].blank? and "port-name-unknown" or response[ :name ] ) })"
+  puts "#{ indent }Vlan Id: #{ response[ :vid ] }"
+  puts "#{ indent }Type: #{ response[ :type ] }"
+  puts "#{ indent }State: #{ response[ :state ] }"
+  puts "#{ indent }Updated At: #{ response[ :updated_at ] }"
+end
+
+def display_mac_address response, indent = ""
+  puts "#{ indent }[MAC: #{ response[ :address ] }]"
+  puts "#{ indent }Datapath Id: #{ response[ :datapath_id ] }" unless response[ :datapath_id ].nil?
+  puts "#{ indent }Type: #{ response[ :type ] }" unless response[ :type ].nil?
+  puts "#{ indent }State: #{ response[ :state ] }"
+  puts "#{ indent }Updated At: #{ response[ :updated_at ] }"
+end
+
+def display_agent response
+  puts "[Datapath ID: #{ response[ :datapath_id ] }]"
+  puts "Uri: #{ response[ :control_uri ] }"
+  puts "Tunnel endpoint: #{ response[ :tunnel_endpoint ] }"
+end
+
+exit run( ARGV )

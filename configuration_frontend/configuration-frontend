@@ -1,0 +1,403 @@
+#!/usr/bin/env ruby
+#
+# Copyright (C) 2013 NEC Corporation
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License, version 2, as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+
+required_path = File.dirname( __FILE__ ) + '/lib'
+$LOAD_PATH.unshift required_path unless $LOAD_PATH.include? required_path
+
+require 'optparse'
+
+require 'rubygems'
+
+require 'json'
+require 'sinatra/base'
+
+require 'agent'
+require 'configure'
+require 'log'
+require 'network'
+require 'reflector'
+require 'webrick_wrapper'
+
+class RestApi < Sinatra::Base
+
+  set :port, 8080
+  set :bind, '0.0.0.0'
+  set :server, [ 'webrick_wrapper' ]
+
+  logger = Log.instance
+  ActiveRecord::Base.logger = logger
+  use Rack::CommonLogger, logger
+
+  def json_parse request, requires = []
+    request.body.rewind
+    parameters = JSON.parse( request.body.read, :symbolize_names => true )
+    requires.each do | each |
+      raise BadReuestError.new unless parameters.has_key? each
+    end
+    parameters
+  end
+
+  def json_generate response
+    JSON.pretty_generate( response ) << "\n"
+  end
+
+  def no_message_body response
+    ""
+  end
+
+  #
+
+  before do
+    DB.connect
+  end
+
+  # Error
+
+  #set :dump_errors, false
+  #set :show_exceptions, false
+
+  error do
+    e = env[ 'sinatra.error' ]
+    content_type 'text/plain'
+    status e.code if e.kind_of?( NetworkManagementError )
+    e.message + "\n"
+  end
+
+  # Network
+
+  get '/networks/?' do
+    logger.debug "#{__FILE__}:#{__LINE__}: List summary of networks associated."
+    content_type :json, :charset => 'utf-8'
+    status 200
+    json_generate Network.list
+  end
+
+  post '/networks/?' do
+    logger.debug "#{__FILE__}:#{__LINE__}: Create a new network associated."
+    requires = []
+    parameters = json_parse( request, requires )
+    content_type :json, :charset => 'utf-8'
+    status 202
+    json_generate Network.create( parameters )
+  end
+
+  put '/networks/?' do
+    405
+  end
+
+  delete '/networks/?' do
+    405
+  end
+
+  #
+
+  get '/networks/:net_id/?' do | net_id |
+    logger.debug "#{__FILE__}:#{__LINE__}: Show details of network identified by net_id."
+    parameters = { :id => net_id }
+    content_type :json, :charset => 'utf-8'
+    status 200
+    json_generate Network.show( parameters )
+  end
+
+  post '/networks/:net_id/?' do | net_id |
+    405
+  end
+
+  put '/networks/:net_id/?' do | net_id |
+    logger.debug "#{__FILE__}:#{__LINE__}: Update details of network identified by net_id."
+    requires = [ :description ]
+    parameters = json_parse( request, requires )
+    parameters[ :id ] = net_id
+    content_type :json, :charset => 'utf-8'
+    status 202
+    no_message_body Network.update( parameters )
+  end
+
+  delete '/networks/:net_id/?' do | net_id |
+    logger.debug "#{__FILE__}:#{__LINE__}: Remove the network identified by net_id."
+    parameters = { :id => net_id }
+    content_type :json, :charset => 'utf-8'
+    status 202
+    no_message_body Network.destroy( parameters )
+  end
+
+  # Port
+
+  get '/networks/:net_id/ports/?' do | net_id |
+    logger.debug "#{__FILE__}:#{__LINE__}: List all the ports currently defined."
+    parameters = { :net_id => net_id }
+    content_type :json, :charset => 'utf-8'
+    status 200
+    json_generate Network.show_ports( parameters )
+  end
+
+  post '/networks/:net_id/ports/?' do | net_id |
+    logger.debug "#{__FILE__}:#{__LINE__}: Create a logical port on the network specified in the request URI."
+    requires = [ :datapath_id, :vid ]
+    parameters = json_parse( request, requires )
+    parameters[ :net_id ] = net_id
+    content_type :json, :charset => 'utf-8'
+    status 202
+    no_message_body Network.add_port( parameters )
+  end
+
+  put '/networks/:net_id/ports/?' do | net_id |
+    405
+  end
+
+  delete '/networks/:net_id/ports/?' do | net_id |
+    405
+  end
+
+  #
+
+  get '/networks/:net_id/ports/:port_id/?' do | net_id, port_id |
+    logger.debug "#{__FILE__}:#{__LINE__}: Retrieve detail of the port port_id configured for the network net_id."
+    parameters = { :net_id => net_id, :id => port_id }
+    content_type :json, :charset => 'utf-8'
+    status 200
+    json_generate Network.show_port( parameters )
+  end
+
+  post '/networks/:net_id/ports/:port_id/?' do | net_id, port_id |
+    405
+  end
+
+  put '/networks/:net_id/ports/:port_id/?' do | net_id, port_id |
+    405
+  end
+
+  delete '/networks/:net_id/ports/:port_id/?' do | net_id, port_id |
+    logger.debug "#{__FILE__}:#{__LINE__}: Remove a port from the network."
+    parameters = { :net_id => net_id, :id => port_id }
+    content_type :json, :charset => 'utf-8'
+    status 202
+    no_message_body Network.delete_port( parameters )
+  end
+
+  # MAC address
+
+  get '/networks/:net_id/ports/:port_id/mac_addresses?' do | net_id, port_id |
+    logger.debug "#{__FILE__}:#{__LINE__}: List all the mac addresses currently defined."
+    parameters = { :net_id => net_id, :id => port_id }
+    content_type :json, :charset => 'utf-8'
+    status 202
+    json_generate Network.show_mac_addresses( parameters )
+  end
+
+  post '/networks/:net_id/ports/:port_id/mac_addresses?' do | net_id, port_id |
+    logger.debug "#{__FILE__}:#{__LINE__}: Create a mac address on the logical port in the request URI."
+    requires = [ :address ]
+    parameters = json_parse( request, requires )
+    parameters.merge!( { :net_id => net_id, :id => port_id } )
+    content_type :json, :charset => 'utf-8'
+    status 202
+    no_message_body Network.create_mac_address( parameters )
+  end
+
+  put '/networks/:net_id/ports/?' do | net_id |
+    405
+  end
+
+  delete '/networks/:net_id/ports/?' do | net_id |
+    405
+  end
+
+  get '/networks/:net_id/ports/:port_id/mac_addresses/:mac_address/?' do | net_id, port_id, mac_address |
+    logger.debug "#{__FILE__}:#{__LINE__}: Retrieve detail of the mac address mac_address configured for the port port_id."
+    parameters = { :net_id => net_id, :id => port_id, :address => mac_address }
+    content_type :json, :charset => 'utf-8'
+    status 202
+    json_generate Network.show_local_mac_address( parameters )
+  end
+
+  post '/networks/:net_id/ports/:port_id/mac_addresses/:mac_address/?' do | net_id, port_id, mac_address |
+    405
+  end
+
+  put '/networks/:net_id/ports/:port_id/mac_addresses/:mac_address/?' do | net_id, port_id, mac_address |
+    405
+  end
+
+  delete '/networks/:net_id/ports/:port_id/mac_addresses/:mac_address/?' do | net_id, port_id, mac_address |
+    logger.debug "#{__FILE__}:#{__LINE__}: Remove a mac address from the port."
+    parameters = { :net_id => net_id, :port_id => port_id, :mac_address => mac_address }
+    status 202
+    no_message_body Network.delete_mac_address( parameters )
+  end
+
+  # Agent
+
+  get '/agents/?' do
+    405
+  end
+
+  post '/agents/?' do
+    405
+  end
+
+  put '/agents/?' do
+    405
+  end
+
+  delete '/agents/?' do
+    405
+  end
+
+  #
+
+  get '/agents/:datapath_id/?' do | datapath_id |
+    405
+  end
+
+  post '/agents/:datapath_id/?' do | datapath_id |
+    logger.debug "#{__FILE__}:#{__LINE__}: Register a new switch associated."
+    requires = [ :control_uri, :tunnel_endpoint ]
+    parameters = json_parse( request, requires )
+    parameters[ :datapath_id ] = datapath_id
+    status 202
+    no_message_body Agent.register( parameters )
+  end
+
+  put '/agents/:datapath_id/?' do | datapath_id |
+    logger.debug "#{__FILE__}:#{__LINE__}: Update details of switch identified by datapath_id."
+    requires = [ :action ]
+    parameters = json_parse( request, requires )
+    parameters[ :datapath_id ] = datapath_id
+    status 202
+    no_message_body Agent.action( parameters )
+  end
+
+  delete '/agents/:datapath_id/?' do | datapath_id |
+    logger.debug "#{__FILE__}:#{__LINE__}: unregister the switch identified by datapath_id."
+    parameters = { :datapath_id => datapath_id }
+    status 202
+    no_message_body Agent.unregister( parameters )
+  end
+
+  # Reflector
+
+  get '/reflector/?' do
+    405
+  end
+
+  post '/reflector/?' do
+    405
+  end
+
+  put '/reflector/?' do
+    405
+  end
+
+  delete '/reflector/?' do
+    405
+  end
+
+  # Reflector
+
+  get '/reflector/config/?' do
+    logger.debug "#{__FILE__}:#{__LINE__}: List of tunnel-endpoints associated."
+    content_type :json, :charset => 'utf-8'
+    status 200
+    json_generate Reflector.list
+  end
+
+  post '/reflector/config/?' do
+    405
+  end
+
+  put '/reflector/config/?' do
+    405
+  end
+
+  delete '/reflector/config/?' do
+    405
+  end
+
+  #
+
+  get '/*' do
+    404
+  end
+
+  post '/*' do
+    404
+  end
+
+  put '/*' do
+    404
+  end
+
+  delete '/*' do
+    404
+  end
+
+  config = Configure.instance
+  db_config = DB::Configure.instance
+  option = OptionParser.new
+  option.on( '-h arg', '--db-host=arg', "Database host (default '#{ db_config[ 'host' ] }')" ) do | arg |
+    db_config[ 'host' ] = arg
+  end
+  option.on( '--db-port=arg', "Database port number to use for connection (default '#{ db_config[ 'port' ] }')" ) do | arg |
+    db_config[ 'port' ] = arg
+  end
+  option.on( '-u arg', '--db-user=arg', "Database user for login (default '#{ db_config[ 'username' ] }')" ) do | arg |
+    db_config[ 'username' ] = arg
+  end
+  option.on( '-p arg', '--db-password=arg', "Database password to use for login (default '#{ db_config[ 'password' ] }')" ) do | arg |
+    db_config[ 'password' ] = arg
+  end
+  option.on( '--address=arg', "Listen address (default '#{ settings.bind }')" ) do | arg |
+    set :bind, arg
+  end
+  option.on( '--port=arg', "Listen port number (default '#{ settings.port }')" ) do | arg |
+    set :port, arg
+  end
+  option.on( '--pid-file=arg', "Pid file (default '#{ config[ 'pid_file' ] }')" ) do | arg |
+    config[ 'pid_file' ] = arg
+  end
+  option.on( '--log-file=arg', "Log file (default '#{ config[ 'log_file' ] }')" ) do | arg |
+    config[ 'log_file' ] = arg
+  end
+  option.on( '-b', '--daemon', "Daemonize (default '#{ config[ 'daemon' ] }')" ) do | arg |
+    config[ 'daemon' ] = arg
+  end
+  option.on( '-d', '--debug', "Debug mode" ) do | arg |
+    Log.instance.level = Log::DEBUG
+  end
+  option.on( '--help', "Show this message" ) do | arg |
+    puts option.help
+    exit 0
+  end
+  begin
+    option.parse! ARGV
+  rescue OptionParser::ParseError => e
+    puts e.message
+    puts option.help
+    exit 1
+  end
+  if ARGV.size != 0
+    puts option.help
+    exit 1
+  end
+  config[ 'daemon' ] = false if Log.instance.level == Log::DEBUG
+  logger.log_file = config[ 'log_file' ] unless config[ 'log_file' ].nil?
+
+  run!
+
+end
