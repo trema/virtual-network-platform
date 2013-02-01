@@ -40,7 +40,7 @@ module DB
     end
 
     def to_s
-      if @port.nil?
+      if @port.nil? or @port.to_i == 0
         @ip_address.to_s
       else
         @ip_address.to_s + ':' + @port.to_s

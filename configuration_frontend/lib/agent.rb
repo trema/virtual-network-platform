@@ -21,10 +21,6 @@ require 'convert'
 
 class Agent
   class << self
-    def initialize
-      @logger = Log.instance
-    end
-
     def register parameters
       raise BadReuestError.new "Datapath id must be specified." if parameters[ :datapath_id ].nil?
       raise BadReuestError.new "Agent uri must be specified." if parameters[ :control_uri ].nil?
@@ -161,7 +157,7 @@ class Agent
     private
 
     def logger
-      @logger
+      Log.instance
     end
 
   end

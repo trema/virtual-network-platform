@@ -41,6 +41,8 @@ def convert_id value
   i
 end
 
+SLICE_ID_MAX = 0xffffff
+
 def convert_slice_id value
   return nil if value.nil?
 
@@ -49,7 +51,7 @@ def convert_slice_id value
   rescue BadReuestError
     raise BadReuestError.new "Slice id (#{ value }) is illegal format."
   end
-  if i < 0 or i > 0xffffff
+  if i < 0 or i > SLICE_ID_MAX
     raise BadReuestError.new "Slice id (#{ value }) is illegal range."
   end
   i
@@ -82,7 +84,7 @@ def convert_datapath_id value
 end
 
 def convert_port_no value
-  return BD::PORT_NO_UNDEFINED if value.nil?
+  return DB::PORT_NO_UNDEFINED if value.nil?
 
   begin
     i = convert_id value

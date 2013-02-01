@@ -86,7 +86,7 @@ commands
     destroy id                   - Remove the network
     reset id                     - Reset the network
     show-port net_id [id]        - Retrieve detail of the port
-    add-port [-i id] net_id datapath_id (number|name) [vid [description]]
+    create-port [-i id] net_id datapath_id (number|name) [vid [description]]
                                  - Create a port on the network
     delete-port net_id id        - Remove a port from the network
     show-mac net_id id [address] - Retrieve detail of the mac address
@@ -201,7 +201,7 @@ command 'show-port' do | args |
   end
 end
 
-command 'add-port' do | args |
+command 'create-port' do | args |
   options = {}
   option = OptionParser.new
   option.on( '-i arg', '--id=arg' ) do | arg |

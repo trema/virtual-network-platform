@@ -23,10 +23,6 @@ require 'log'
 class Network
 
   class << self
-    def initialize
-      @logger = Log.instance
-    end
-
     def create parameters
       slice_id = convert_slice_id parameters[ :id ]
       description = convert_description parameters[ :description ]
@@ -78,6 +74,11 @@ class Network
         destroy_all_ports slice_id do
 	  destroy_all_mac_addresses slice_id
 	end
+      end
+      begin
+        DB::OverlayNetwork.delete( slice_id )
+      rescue
+        raise NetworkManagementError.new
       end
     end
 
@@ -136,7 +137,7 @@ class Network
 
       # exists?
       if not port_id.nil?
-        raise DuplicatedPortId.new port_id if DB::Port.exists?( port_id )
+        raise DuplicatedPortId.new port_id if DB::Port.exists?( [ "id = ? AND slice_id = ?", port_id, slice_id ] )
       end
       if port_no != DB::PORT_NO_UNDEFINED
         raise DuplicatedPort.new port_no if DB::Port.exists?( [ "datapath_id = ? AND port_no = ? AND vid = ?",
@@ -491,10 +492,6 @@ class Network
 	  slice_id, port_id, port_type, DB::SLICE_STATE_PREPARING_TO_DESTROY ] )
     end
 
-    def destroy_overlay_port slice_id, port_id, &a_proc
-      destroy_port slice_id, port_id, DB::PORT_TYPE_OVERLAY, a_proc
-    end
-
     def destroy_mac_addresses slice_id, port_id
       DB::MacAddress.update_all(
         [ "state = ?", DB::MAC_STATE_READY_TO_DELETE ],
@@ -679,8 +676,8 @@ class Network
         logger.debug "#{__FILE__}:#{__LINE__}: An overlay port does not exist (slice_id = #{ slice_id }, datapath_id = #{ datapath_id })."
 	return
       end
-      destroy_overlay_port slice_id, port_id do
-        destroy_mac_addresses slice_id, port_id
+      destroy_port slice_id, overlay_port_id, DB::PORT_TYPE_OVERLAY do
+        destroy_mac_addresses slice_id, overlay_port_id
       end
 
     end
@@ -834,7 +831,7 @@ class Network
     end
 
     def logger
-      @logger
+      Log.instance
     end
 
   end

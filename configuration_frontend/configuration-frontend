@@ -43,8 +43,15 @@ class RestApi < Sinatra::Base
   use Rack::CommonLogger, logger
 
   def json_parse request, requires = []
+    logger = Log.instance
     request.body.rewind
-    parameters = JSON.parse( request.body.read, :symbolize_names => true )
+    body = request.body.read
+    begin
+      parameters = JSON.parse( body, :symbolize_names => true )
+    rescue
+      logger.debug "body = '#{ body }'"
+      raise
+    end
     requires.each do | each |
       raise BadReuestError.new unless parameters.has_key? each
     end
@@ -68,7 +75,7 @@ class RestApi < Sinatra::Base
   # Error
 
   #set :dump_errors, false
-  #set :show_exceptions, false
+  set :show_exceptions, false
 
   error do
     e = env[ 'sinatra.error' ]
@@ -152,7 +159,7 @@ class RestApi < Sinatra::Base
     parameters[ :net_id ] = net_id
     content_type :json, :charset => 'utf-8'
     status 202
-    no_message_body Network.add_port( parameters )
+    no_message_body Network.create_port( parameters )
   end
 
   put '/networks/:net_id/ports/?' do | net_id |
@@ -191,7 +198,7 @@ class RestApi < Sinatra::Base
 
   # MAC address
 
-  get '/networks/:net_id/ports/:port_id/mac_addresses?' do | net_id, port_id |
+  get '/networks/:net_id/ports/:port_id/mac_addresses/?' do | net_id, port_id |
     logger.debug "#{__FILE__}:#{__LINE__}: List all the mac addresses currently defined."
     parameters = { :net_id => net_id, :id => port_id }
     content_type :json, :charset => 'utf-8'
@@ -199,7 +206,7 @@ class RestApi < Sinatra::Base
     json_generate Network.show_mac_addresses( parameters )
   end
 
-  post '/networks/:net_id/ports/:port_id/mac_addresses?' do | net_id, port_id |
+  post '/networks/:net_id/ports/:port_id/mac_addresses/?' do | net_id, port_id |
     logger.debug "#{__FILE__}:#{__LINE__}: Create a mac address on the logical port in the request URI."
     requires = [ :address ]
     parameters = json_parse( request, requires )
@@ -235,7 +242,7 @@ class RestApi < Sinatra::Base
 
   delete '/networks/:net_id/ports/:port_id/mac_addresses/:mac_address/?' do | net_id, port_id, mac_address |
     logger.debug "#{__FILE__}:#{__LINE__}: Remove a mac address from the port."
-    parameters = { :net_id => net_id, :port_id => port_id, :mac_address => mac_address }
+    parameters = { :net_id => net_id, :id => port_id, :address => mac_address }
     status 202
     no_message_body Network.delete_mac_address( parameters )
   end

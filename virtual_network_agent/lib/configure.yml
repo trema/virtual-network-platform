@@ -14,6 +14,8 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-controller_uri: http://127.0.0.1:8080/
-uri: http://127.0.0.1:8000/
+controller_uri: http://127.0.0.1:8081/
+uri: http://127.0.0.1:8082/
 tunnel_endpoint: 10.0.0.1
+listen_port: 8082
+listen_address: 0.0.0.0

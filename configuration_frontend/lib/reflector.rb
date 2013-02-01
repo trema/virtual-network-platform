@@ -20,10 +20,6 @@ require 'db'
 
 class Reflector
   class << self
-    def initialize
-      @logger = Log.instance
-    end
-
     def list parameters = {}
       tunnel_endpoints = Hash.new do | hash, key |
         hash[ key ] = []
@@ -41,7 +37,7 @@ class Reflector
     private
 
     def logger
-      @logger
+      Log.instance
     end
 
   end

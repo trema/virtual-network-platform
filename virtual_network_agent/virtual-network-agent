@@ -36,16 +36,21 @@ require 'webrick_wrapper'
 class RestApi < Sinatra::Base
 
   set :reflector_mode, false
-  set :port, 8000
-  set :bind, '0.0.0.0'
   set :server, [ 'webrick_wrapper' ]
 
   logger = Log.instance
   use Rack::CommonLogger, logger
 
   def json_parse request, requires = []
+    logger = Log.instance
     request.body.rewind
-    parameters = JSON.parse( request.body.read, :symbolize_names => true )
+    body = request.body.read.gsub( /\000/, '' ) # TODO
+    begin
+      parameters = JSON.parse( body, :symbolize_names => true )
+    rescue
+      logger.debug "body = '#{ body }'"
+      raise
+    end
     requires.each do | each |
       raise BadReuestError.new unless parameters.has_key? each
     end
@@ -63,7 +68,7 @@ class RestApi < Sinatra::Base
   # Error
 
   #set :dump_errors, false
-  #set :show_exceptions, false
+  set :show_exceptions, false
 
   error do
     e = env[ 'sinatra.error' ]
@@ -238,10 +243,10 @@ class RestApi < Sinatra::Base
     config[ 'daemon' ] = arg
   end
   option.on( '--address=arg', "Listen address (default '#{ settings.bind }')" ) do | arg |
-    set :bind, arg
+    config[ 'listen-address' ] = arg
   end
   option.on( '--port=arg', "Listen port number (default '#{ settings.port }')" ) do | arg |
-    set :port, arg
+    config[ 'listen-port' ] = arg
   end
   option.on( '-d', '--debug', "Debug mode" ) do | arg |
     Log.instance.level = Log::DEBUG
@@ -264,6 +269,8 @@ class RestApi < Sinatra::Base
   set :reflector_mode, config[ 'reflector_mode' ]
   config[ 'daemon' ] = false if Log.instance.level == Log::DEBUG
   logger.log_file = config[ 'log_file' ] unless config[ 'log_file' ].nil?
+  set :port, config[ 'listen_port' ]
+  set :bind, config[ 'listen_address' ]
 
   run!
 

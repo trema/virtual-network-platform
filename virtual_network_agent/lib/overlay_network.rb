@@ -16,6 +16,7 @@
 #
 
 require 'configure'
+require 'convert'
 require 'log'
 require 'ovs'
 require 'vxlan'
