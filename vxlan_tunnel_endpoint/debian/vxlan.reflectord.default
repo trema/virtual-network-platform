@@ -1,0 +1,2 @@
+REFLECTORD_DIR="/usr/sbin"
+REFLECTORD_OPTS="-i lo -s -d"

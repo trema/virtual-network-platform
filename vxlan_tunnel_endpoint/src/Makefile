@@ -3,6 +3,7 @@
 #
 
 CC = gcc
+INSTALL = install
 CFLAGS = -std=gnu99 -D_GNU_SOURCE -g -fno-strict-aliasing -Wall \
          -Wextra -Wformat=2 -Wcast-qual -Wcast-align -Wwrite-strings \
          -Wconversion -Wfloat-equal -Wpointer-arith -Werror
@@ -36,6 +37,12 @@ TARGETS = $(VXLAND) $(VXLANCTL) $(REFLECTORD) $(REFLECTORCTL)
 
 DEPENDS = .depends
 
+ifndef DESTDIR
+SBINDIR=/usr/sbin
+else
+SBINDIR=$(DESTDIR)/usr/sbin
+endif
+
 .PHONY : all clean depend
 
 all: depend $(TARGETS)
@@ -54,6 +61,12 @@ $(REFLECTORCTL): $(REFLECTORCTL_OBJS)
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<
+
+install: $(VXLAND) $(VXLANCTL) $(REFLECTORD) $(REFLECTORCTL)
+	$(INSTALL) -o root -g root -D -m 755 $(VXLAND) $(SBINDIR)/$(VXLAND)
+	$(INSTALL) -o root -g root -D -m 755 $(REFLECTORD) $(SBINDIR)/$(REFLECTORD)
+	$(INSTALL) -o root -g root -D -m 755 $(VXLANCTL) $(SBINDIR)/$(VXLANCTL)
+	$(INSTALL) -o root -g root -D -m 755 $(REFLECTORCTL) $(SBINDIR)/$(REFLECTORCTL)
 
 depend:
 	$(CC) -MM $(CFLAGS) $(SRCS) > $(DEPENDS)

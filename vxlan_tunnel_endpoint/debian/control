@@ -1,0 +1,16 @@
+Source: vxlan
+Section: net
+Priority: optional
+Maintainer: CHIBA Yasunobu <y-chiba@bq.jp.nec.com>
+Build-Depends: debhelper (>= 8.0.0), ruby-ronn (>= 0.7.3)
+Standards-Version: 3.9.2
+Homepage: https://github.com/trema
+
+Package: vxlan
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Virtual Extensible Local Area Network (VXLAN) implementation on Linux userspace
+ vxlan is a Virtual Extensible Local Area Network (VXLAN) Tunnel End Point
+ (VTEP) implementation on Linux userspace. It runs on userspace without
+ depending any kernel modules and create a virtual network interface for
+ each virtual network.

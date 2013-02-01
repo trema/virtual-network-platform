@@ -1,0 +1,2 @@
+VXLAND_DIR="/usr/sbin"
+VXLAND_OPTS="-s -d -i lo"
