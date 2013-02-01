@@ -20,9 +20,10 @@ required_path = File.dirname( __FILE__ ) + '/lib'
 $LOAD_PATH.unshift required_path unless $LOAD_PATH.include? required_path
 
 require 'optparse'
-
+begin
 require 'rubygems'
-
+rescue LoadError
+end
 require 'json'
 require 'sinatra/base'
 
@@ -35,8 +36,6 @@ require 'webrick_wrapper'
 
 class RestApi < Sinatra::Base
 
-  set :port, 8080
-  set :bind, '0.0.0.0'
   set :server, [ 'webrick_wrapper' ]
 
   logger = Log.instance
@@ -362,11 +361,11 @@ class RestApi < Sinatra::Base
   option.on( '-p arg', '--db-password=arg', "Database password to use for login (default '#{ db_config[ 'password' ] }')" ) do | arg |
     db_config[ 'password' ] = arg
   end
-  option.on( '--address=arg', "Listen address (default '#{ settings.bind }')" ) do | arg |
-    set :bind, arg
+  option.on( '--address=arg', "Listen address (default '#{ config[ 'listen_address' ] }')" ) do | arg |
+    config[ 'listen-address' ] = arg
   end
-  option.on( '--port=arg', "Listen port number (default '#{ settings.port }')" ) do | arg |
-    set :port, arg
+  option.on( '--port=arg', "Listen port number (default '#{ config[ 'listen_port' ] }')" ) do | arg |
+    config[ 'listen-port' ] = arg
   end
   option.on( '--pid-file=arg', "Pid file (default '#{ config[ 'pid_file' ] }')" ) do | arg |
     config[ 'pid_file' ] = arg
@@ -397,6 +396,8 @@ class RestApi < Sinatra::Base
   end
   config[ 'daemon' ] = false if Log.instance.level == Log::DEBUG
   logger.log_file = config[ 'log_file' ] unless config[ 'log_file' ].nil?
+  set :port, config[ 'listen_port' ]
+  set :bind, config[ 'listen_address' ]
 
   run!
 

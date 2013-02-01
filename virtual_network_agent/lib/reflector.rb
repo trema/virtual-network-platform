@@ -16,7 +16,10 @@
 #
 
 require 'open3'
+begin
 require 'rubygems'
+rescue LoadError
+end
 require 'rest_client'
 require 'json'
 

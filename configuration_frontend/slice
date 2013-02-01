@@ -19,8 +19,11 @@
 required_path = File.dirname( __FILE__ ) + '/lib'
 $LOAD_PATH.unshift required_path unless $LOAD_PATH.include? required_path
 
+require 'optparse'
+begin
 require 'rubygems'
-require 'gli'
+rescue LoadError
+end
 
 require 'agent'
 require 'log'
@@ -32,349 +35,323 @@ logger.level = Log::INFO
 
 ActiveRecord::Base.logger = logger
 
-include GLI::App
-
-program_desc "configure a network slice"
-
+option = OptionParser.new
 db_config = DB::Configure.instance
-desc "Database host"
-flag [ :h, 'db-host' ], :default_value => db_config[ 'host' ]
+option.on( '-h arg', '--db-host=arg' ) do | arg |
+  db_config[ 'host' ] = arg
+end
+option.on( '--db-port=arg' ) do | arg |
+  db_config[ 'port' ] = arg
+end
+option.on( '-u arg', '--db-user=arg' ) do | arg |
+  db_config[ 'username' ] = arg
+end
+option.on( '-p arg', '--db-password=arg' ) do | arg |
+  db_config[ 'password' ] = arg
+end
+option.on( '-d', '--debug' ) do | arg |
+  logger.level = Log::DEBUG
+end
+option.on( '--help' ) do | arg |
+  help
+  exit 0
+end
 
-desc "Database port number to use for connection"
-flag [ 'db-port' ], :default_value => db_config[ 'port' ]
+@subcommands = Hash.new do | hash, key |
+  help_and_exit "Unknown command '#{ key }'"
+end
 
-desc "Database user for login"
-flag [ :u, 'db-user' ], :default_value => db_config[ 'username' ]
+def command subcommand, &a_proc
+  @subcommands[ subcommand ] = a_proc
+end
 
-desc "Database password to use for login"
-flag [ :p, 'db-password' ], :default_value => db_config[ 'password' ]
-
-desc "Debug mode"
-switch [ :d, :debug ], :negatable => false
-
-desc "Debug this application"
-switch [ :D, :GLI_DEBUG ], :negatable => false
-
-desc "Show this message"
-switch [ :help ], :negatable => false
-
-pre do | global_options, command, options, args |
+def help
   db_config = DB::Configure.instance
-  db_config[ 'host' ] = global_options[ 'db-host' ]
-  db_config[ 'port' ] = global_options[ 'db-port' ]
-  db_config[ 'username' ] = global_options[ 'db-user' ] if not global_options[ 'db-user' ].nil?
-  db_config[ 'password' ] = global_options[ 'db-password' ] if not global_options[ 'db-password' ].nil?
+  puts <<EOS
+Usage: slice [options] command [arguments...]
 
-  if global_options[ :debug ]
-    logger.level = Log::DEBUG if global_options[ :debug ]
+options
+    -h, --db-host=arg     - Database host (default: '#{ db_config[ 'host' ]}')
+    --db-port=arg         - Database port number to use for connection (default: '#{ db_config[ 'port' ]}')
+    -u, --db-user=arg     - Database user for login (default: '#{ db_config[ 'username' ]}')
+    -p, --db-password=arg - Database password to use for login (default: '#{ db_config[ 'password' ]}')
+    --help                - Show this message
+    -d, --debug           - Debug mode
+
+commands
+    list                         - List summary of networks
+    create [id [description]]    - Create a new network
+    modify id [description]      - Update details of network
+    show id                      - Show details of network
+    destroy id                   - Remove the network
+    reset id                     - Reset the network
+    show-port net_id [id]        - Retrieve detail of the port
+    add-port [-i id] net_id datapath_id (number|name) [vid [description]]
+                                 - Create a port on the network
+    delete-port net_id id        - Remove a port from the network
+    show-mac net_id id [address] - Retrieve detail of the mac address
+    add-mac net_id id address    - Create a mac address on the port
+    delete-mac net_id id address - Remove a mac address from the port.
+    show-switch                  - Retrieve detail of the switch
+EOS
+end
+
+def help_and_exit message = nil
+  puts message unless message.nil?
+  help
+  exit 1
+end
+
+def run args
+  if args.empty?
+    help_and_exit
   end
-  if global_options[ :GLI_DEBUG ]
-    logger.level = Log::DEBUG
-    ENV[ 'GLI_DEBUG' ] = 'true'
-  end
+
   DB.connect
-  true
+  begin
+    @subcommands[ ARGV.shift ].call ARGV
+  rescue => e
+    puts e.message
+    raise if Log.instance.level == Log::DEBUG
+  end
 end
 
 # Network
 
-desc "List summary of networks"
-command :list do | c |
-  c.action do | global_options, options, args |
-    parameters = {}
-    help_now! "Too many arguments" unless args.size == 0
-    parameters[ :require_updated_at ] = true
-    response = Network.list parameters
-    raise "No slice found" unless response.size != 0
-    response.sort! { | a, b | a[ :id ] <=> b[ :id ] }
-    printf "%-8s%-32s%-21s%s\n", "ID", "Description", "State", "Updated At"
-    response.each do | each |
-      printf "%-8s%-32s%-21s%s\n", each[ :id ], each[ :description ], each[ :state ], each[ :updated_at ]
-    end
+command 'list' do | args |
+  parameters = {}
+  help_and_exit "Too many arguments" unless args.size == 0
+  parameters[ :require_updated_at ] = true
+  response = Network.list parameters
+  raise "No slice found" unless response.size != 0
+  response.sort! { | a, b | a[ :id ] <=> b[ :id ] }
+  printf "%-8s%-32s%-21s%s\n", "ID", "Description", "State", "Updated At"
+  response.each do | each |
+    printf "%-8s%-32s%-21s%s\n", each[ :id ], each[ :description ], each[ :state ], each[ :updated_at ]
   end
 end
 
-desc "Create a new network"
-arg_name "[slice_id [desctiption]]"
-command :create do | c |
-  c.action do | global_options, options, args |
-    parameters = {}
-    parameters[ :id ] = args.shift
-    parameters[ :description ] = args.shift
-    help_now! "Too many arguments" unless args.size == 0
-    Network.create( parameters )
-    puts "A slice is created successfully."
-  end
+command 'create' do | args |
+  parameters = {}
+  parameters[ :id ] = args.shift
+  parameters[ :description ] = args.shift
+  help_and_exit "Too many arguments" unless args.size == 0
+  Network.create( parameters )
+  puts "A slice is created successfully."
 end
 
-desc "Update details of network"
-arg_name "slice_id desctiption"
-command :modify do | c |
-  c.action do | global_options, options, args |
-    parameters = {}
-    parameters[ :id ] = args.shift or help_now! "Too few arguments"
-    parameters[ :description ] = args.shift or help_now! "Too few arguments"
-    help_now! "Too many arguments" unless args.size == 0
-    Network.update( parameters )
-    puts "A slice is modified successfully."
-  end
+command 'modify' do | args |
+  parameters = {}
+  parameters[ :id ] = args.shift or help_and_exit "Too few arguments"
+  parameters[ :description ] = args.shift or help_and_exit "Too few arguments"
+  help_and_exit "Too many arguments" unless args.size == 0
+  Network.update( parameters )
+  puts "A slice is modified successfully."
 end
 
-desc "Show details of network"
-arg_name "slice_id"
-command :show do | c |
-  c.action do | global_options, options, args |
-    parameters = {}
-    parameters[ :id ] = args.shift or help_now! "Too few arguments"
-    help_now! "Too many arguments" unless args.size == 0
-    parameters[ :require_updated_at ] = true
-    response = Network.show( parameters )
-    net_id = response[ :id ]
-    puts "[Description]\n#{ response[ :description ] }"
-    puts "[State]\n#{ response[ :state ] }"
-    puts "[Updated At]\n#{ response[ :updated_at ] }"
-    puts "[Ports]"
-    indent = "  "
-    show_ports net_id, indent
-  end
+command 'show' do | args |
+  parameters = {}
+  parameters[ :id ] = args.shift or help_and_exit "Too few arguments"
+  help_and_exit "Too many arguments" unless args.size == 0
+  parameters[ :require_updated_at ] = true
+  response = Network.show( parameters )
+  net_id = response[ :id ]
+  puts "[Description]\n#{ response[ :description ] }"
+  puts "[State]\n#{ response[ :state ] }"
+  puts "[Updated At]\n#{ response[ :updated_at ] }"
+  puts "[Ports]"
+  indent = "  "
+  show_ports net_id, indent
 end
 
-desc "Remove the network"
-arg_name "slice_id"
-command :destroy do | c |
-  c.action do | global_options, options, args |
-    parameters = {}
-    parameters[ :id ] = args.shift or help_now! "Too few arguments"
-    help_now! "Too many arguments" unless args.size == 0
-    Network.destroy( parameters )
-    puts "A slice is destroyed successfully."
-  end
+command 'destroy' do | args |
+  parameters = {}
+  parameters[ :id ] = args.shift or help_and_exit "Too few arguments"
+  help_and_exit "Too many arguments" unless args.size == 0
+  Network.destroy( parameters )
+  puts "A slice is destroyed successfully."
 end
 
-desc "Reset the network"
-arg_name "slice_id"
-command :reset do | c |
-  c.action do | global_options, options, args |
-    parameters = {}
-    parameters[ :id ] = args.shift or help_now! "Too few arguments"
-    help_now! "Too many arguments" unless args.size == 0
-    Network.reset( parameters )
-    puts "A slice is resetted successfully."
-  end
+command 'reset' do | args |
+  parameters = {}
+  parameters[ :id ] = args.shift or help_and_exit "Too few arguments"
+  help_and_exit "Too many arguments" unless args.size == 0
+  Network.reset( parameters )
+  puts "A slice is resetted successfully."
 end
 
 # Port
 
-desc "Retrieve detail of the port"
-arg_name "slice_id [port_id]"
-command 'show-port' do | c |
-  c.action do | global_options, options, args |
-    parameters = {}
-    parameters[ :net_id ] = args.shift or help_now! "Too few arguments"
-    parameters[ :id ] = args.shift
-    help_now! "Too many arguments" unless args.size == 0
-    parameters[ :require_updated_at ] = true
-    net_id = parameters[ :net_id ]
-    if parameters[ :id ].nil?
-      show_ports net_id
-    else
-      response = Network.show_port( parameters )
-      port_id = response[ :id ]
-      display_port response
-      puts "[Mac addresses]"
-      indent = "  "
-      show_mac_addresses net_id, port_id, indent
-    end
+command 'show-port' do | args |
+  parameters = {}
+  parameters[ :net_id ] = args.shift or help_and_exit "Too few arguments"
+  parameters[ :id ] = args.shift
+  help_and_exit "Too many arguments" unless args.size == 0
+  parameters[ :require_updated_at ] = true
+  net_id = parameters[ :net_id ]
+  if parameters[ :id ].nil?
+    show_ports net_id
+  else
+    response = Network.show_port( parameters )
+    port_id = response[ :id ]
+    display_port response
+    puts "[Mac addresses]"
+    indent = "  "
+    show_mac_addresses net_id, port_id, indent
   end
 end
 
-desc "Create a port on the network"
-arg_name "slice_id dpid port [vid [description]]"
-command 'add-port' do | c |
-  c.desc "Port id"
-  c.flag [ :i, :id ], :type => Integer
-
-  c.action do | global_options, options, args |
-    parameters = {}
-    parameters[ :net_id ] = args.shift or help_now! "Too few arguments"
-    parameters[ :datapath_id ] = args.shift or help_now! "Too few arguments"
-    parameters[ :id ] = options[ :id ]
-    port = args.shift or help_now! "Too few arguments"
-    if /^[[:digit:]]+$/ =~ port
-      parameters[ :number ] = port
-    else
-      parameters[ :name ] = port
-    end
-    parameters[ :vid ] = args.shift
-    parameters[ :description ] = args.shift
-    help_now! "Too many arguments" unless args.size == 0
-    Network.create_port( parameters )
-    puts "A port is added successfully."
+command 'add-port' do | args |
+  options = {}
+  option = OptionParser.new
+  option.on( '-i arg', '--id=arg' ) do | arg |
+    options[ 'id' ] = arg
   end
+  option.order! args
+  parameters = {}
+  parameters[ :net_id ] = args.shift or help_and_exit "Too few arguments"
+  parameters[ :datapath_id ] = args.shift or help_and_exit "Too few arguments"
+  parameters[ :id ] = options[ 'id' ]
+  port = args.shift or help_and_exit "Too few arguments"
+  if /^[[:digit:]]+$/ =~ port
+    parameters[ :number ] = port
+  else
+    parameters[ :name ] = port
+  end
+  parameters[ :vid ] = args.shift
+  parameters[ :description ] = args.shift
+  help_and_exit "Too many arguments" unless args.size == 0
+  Network.create_port( parameters )
+  puts "A port is added successfully."
 end
 
-desc "Remove a port from the network"
-arg_name "slice_id port_id"
-command 'delete-port' do | c |
-  c.action do | global_options, options, args |
-    parameters = {}
-    parameters[ :net_id ] = args.shift or help_now! "Too few arguments"
-    parameters[ :id ] = args.shift or help_now! "Too few arguments"
-    help_now! "Too many arguments" unless args.size == 0
-    Network.delete_port( parameters )
-    puts "A port is deleted successfully."
-  end
+command 'delete-port' do | args |
+  parameters = {}
+  parameters[ :net_id ] = args.shift or help_and_exit "Too few arguments"
+  parameters[ :id ] = args.shift or help_and_exit "Too few arguments"
+  help_and_exit "Too many arguments" unless args.size == 0
+  Network.delete_port( parameters )
+  puts "A port is deleted successfully."
 end
 
 # MAC address
 
-desc "Retrieve detail of the mac address"
-arg_name "slice_id port_id [mac_address]"
-command 'show-mac' do | c |
-  c.action do | global_options, options, args |
-    parameters = {}
-    parameters[ :net_id ] = args.shift or help_now! "Too few arguments"
-    parameters[ :id ] = args.shift or help_now! "Too few arguments"
-    parameters[ :address ] = args.shift
-    help_now! "Too many arguments" unless args.size == 0
-    parameters[ :require_updated_at ] = true
-    if not parameters[ :address ].nil?
-      display_mac_address Network.show_local_mac_address( parameters )
-      indent = "  "
-      mac_addresses = Network.show_remote_mac_addresses( parameters )
-      puts "[Remotes]"
-      if mac_addresses.empty?
-        puts "#{ indent }No mac addresses found."
-      else
-        mac_addresses.collect do | each |
-          display_mac_address each, "#{ indent }  "
-        end
-      end
+command 'show-mac' do | args |
+  parameters = {}
+  parameters[ :net_id ] = args.shift or help_and_exit "Too few arguments"
+  parameters[ :id ] = args.shift or help_and_exit "Too few arguments"
+  parameters[ :address ] = args.shift
+  help_and_exit "Too many arguments" unless args.size == 0
+  parameters[ :require_updated_at ] = true
+  if not parameters[ :address ].nil?
+    display_mac_address Network.show_local_mac_address( parameters )
+    indent = "  "
+    mac_addresses = Network.show_remote_mac_addresses( parameters )
+    puts "[Remotes]"
+    if mac_addresses.empty?
+      puts "#{ indent }No mac addresses found."
     else
-      show_mac_addresses parameters[ :net_id ], parameters[ :id ]
+      mac_addresses.collect do | each |
+        display_mac_address each, "#{ indent }  "
+      end
     end
+  else
+    show_mac_addresses parameters[ :net_id ], parameters[ :id ]
   end
 end
 
-desc "Create a mac address on the port"
-arg_name "slice_id port_id mac_address"
-command 'add-mac' do | c |
-  c.action do | global_options, options, args |
-    parameters = {}
-    parameters[ :net_id ] = args.shift or help_now! "Too few arguments"
-    parameters[ :id ] = args.shift or help_now! "Too few arguments"
-    parameters[ :address ] = args.shift or help_now! "Too few arguments"
-    help_now! "Too many arguments" unless args.size == 0
-    Network.create_mac_address( parameters )
-    puts "A MAC address is added successfully."
-  end
+command 'add-mac' do | args |
+  parameters = {}
+  parameters[ :net_id ] = args.shift or help_and_exit "Too few arguments"
+  parameters[ :id ] = args.shift or help_and_exit "Too few arguments"
+  parameters[ :address ] = args.shift or help_and_exit "Too few arguments"
+  help_and_exit "Too many arguments" unless args.size == 0
+  Network.create_mac_address( parameters )
+  puts "A MAC address is added successfully."
 end
 
-desc "Remove a mac address from the port."
-arg_name "slice_id port_id mac_address"
-command 'delete-mac' do | c |
-  c.action do | global_options, options, args |
-    parameters = {}
-    parameters[ :net_id ] = args.shift or help_now! "Too few arguments"
-    parameters[ :id ] = args.shift or help_now! "Too few arguments"
-    parameters[ :address ] = args.shift or help_now! "Too few arguments"
-    help_now! "Too many arguments" unless args.size == 0
-    Network.delete_mac_address( parameters )
-  end
+command 'delete-mac' do | args |
+  parameters = {}
+  parameters[ :net_id ] = args.shift or help_and_exit "Too few arguments"
+  parameters[ :id ] = args.shift or help_and_exit "Too few arguments"
+  parameters[ :address ] = args.shift or help_and_exit "Too few arguments"
+  help_and_exit "Too many arguments" unless args.size == 0
+  Network.delete_mac_address( parameters )
 end
 
 # Agent
 
-desc "Retrieve detail of the switch"
-arg_name "[datapath_id]"
-command 'show-switch' do | c |
-  c.action do | global_options, options, args |
-    parameters = {}
-    parameters[ :datapath_id ] = args.shift
-    help_now! "Too many arguments" unless args.size == 0
-    if parameters[ :datapath_id ].nil?
-      response = Agent.list( parameters )
-      if response.empty?
-        puts "No switches found."
-      else
-        response.collect do | each |
-	  display_agent each
-        end
-      end
+command 'show-switch' do | args |
+  parameters = {}
+  parameters[ :datapath_id ] = args.shift
+  help_and_exit "Too many arguments" unless args.size == 0
+  if parameters[ :datapath_id ].nil?
+    response = Agent.list( parameters )
+    if response.empty?
+      puts "No switches found."
     else
-      response = Agent.show( parameters )
-      if response.empty?
-        puts "No switches found."
-      else
-	display_agent response
+      response.collect do | each |
+        display_agent each
       end
+    end
+  else
+    response = Agent.show( parameters )
+    if response.empty?
+      puts "No switches found."
+    else
+      display_agent response
     end
   end
 end
 
 
 if ENV[ 'TEST_OF_REGISTRATION' ] == 'true'
-  desc "Register a new switch (test only)"
-  arg_name "datapath_id uri tep"
-  command 'register-switch' do | c |
-    c.action do | global_options, options, args |
-      parameters = {}
-      parameters[ :datapath_id ] = args.shift or help_now! "Too few arguments"
-      parameters[ :control_uri ] = args.shift or help_now! "Too few arguments"
-      parameters[ :tunnel_endpoint ] = args.shift or help_now! "Too few arguments"
-      help_now! "Too many arguments" unless args.size == 0
-      Agent.register( parameters )
-      puts "A switch is registered successfully."
-    end
+  command 'register-switch' do | args |
+    parameters = {}
+    parameters[ :datapath_id ] = args.shift or help_and_exit "Too few arguments"
+    parameters[ :control_uri ] = args.shift or help_and_exit "Too few arguments"
+    parameters[ :tunnel_endpoint ] = args.shift or help_and_exit "Too few arguments"
+    help_and_exit "Too many arguments" unless args.size == 0
+    Agent.register( parameters )
+    puts "A switch is registered successfully."
   end
 end
 
 if ENV[ 'TEST_OF_UNRESET_SWITCH' ] == 'true'
-  desc "Unregister the switch (test only)"
-  arg_name "datapath_id"
-  command 'unregister-switch' do | c |
-    c.action do | global_options, options, args |
-      parameters = {}
-      parameters[ :datapath_id ] = args.shift or help_now! "Too few arguments"
-      help_now! "Too many arguments" unless args.size == 0
-      Agent.unregister( parameters )
-      puts "A switch is unregistered successfully."
-    end
+  command 'unregister-switch' do | args |
+    parameters = {}
+    parameters[ :datapath_id ] = args.shift or help_and_exit "Too few arguments"
+    help_and_exit "Too many arguments" unless args.size == 0
+    Agent.unregister( parameters )
+    puts "A switch is unregistered successfully."
   end
 end
 
 if ENV[ 'TEST_OF_RESET_SWITCH' ] == 'true'
-  desc "Reset a switch (test only)"
-  arg_name "datapath_id"
-  command 'reset-switch' do | c |
-    c.action do | global_options, options, args |
-      parameters = {}
-      parameters[ :datapath_id ] = args.shift or help_now! "Too few arguments"
-      parameters[ :action ] = 'reset'
-      help_now! "Too many arguments" unless args.size == 0
-      Agent.action( parameters )
-      puts "A switch is reset successfully."
-    end
+  command 'reset-switch' do | args |
+    parameters = {}
+    parameters[ :datapath_id ] = args.shift or help_and_exit "Too few arguments"
+    parameters[ :action ] = 'reset'
+    help_and_exit "Too many arguments" unless args.size == 0
+    Agent.action( parameters )
+    puts "A switch is reset successfully."
   end
 end
 
 # Reflector
 
 if ENV[ 'TEST_OF_REFLECTOR' ] == 'true'
-  desc "Retrieve detail of the tunnel-endpoints"
-  command 'list-tep' do | c |
-    c.action do | global_options, options, args |
-      help_now! "Too many arguments" unless args.size == 0
-      response = Reflector.list
-      if response.empty?
-	  puts "No tunnel-endpoints found."
-      else
-	response do | slice_id, teps |
-	  puts "[Slice Id: #{ slice_id }]"
-	  puts "%-20s%s" % [ "IP address", "Port" ]
-	  teps.list.each do | tep |
-	    puts "%-20s%s" % [ tep[ :ip ], tep[ :port ] ]
-	  end
+  command 'list-tep' do | args |
+    help_and_exit "Too many arguments" unless args.size == 0
+    response = Reflector.list
+    if response.empty?
+      puts "No tunnel-endpoints found."
+    else
+      response do | slice_id, teps |
+	puts "[Slice Id: #{ slice_id }]"
+	puts "%-20s%s" % [ "IP address", "Port" ]
+	teps.list.each do | tep |
+	  puts "%-20s%s" % [ tep[ :ip ], tep[ :port ] ]
 	end
       end
     end
@@ -433,4 +410,5 @@ def display_agent response
   puts "Tunnel endpoint: #{ response[ :tunnel_endpoint ] }"
 end
 
-exit run( ARGV )
+option.order! ARGV
+run ARGV

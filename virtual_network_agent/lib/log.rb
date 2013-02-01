@@ -15,8 +15,11 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 
-require 'rubygems'
 require 'singleton'
+begin
+require 'rubygems'
+rescue LoadError
+end
 require 'webrick'
 
 class Log < WEBrick::Log
