@@ -1,41 +1,61 @@
-reflectorctl(1) -- VXLAN packet reflector configuration command
-===============================================================
+reflectorctl(1) -- VXLAN packet reflector utility
+=================================================
 
 ## SYNOPSIS
 
-`reflectorctl` COMMAND [OPTION]...
+`reflectorctl` -a -n VNI -i IPV4_ADDRESS [ -p UDP_PORT ]
+
+`reflectorctl` -d -n VNI -i IPV4_ADDRESS
+
+`reflectorctl` -s -n VNI -i IPV4_ADDRESS -p UDP_PORT
+
+`reflectorctl` -l [ -n VNI ]
+
+`reflectorctl` -h
 
 ## DESCRIPTION
 
-This is the configuration command for reflectord(1).
+The `reflectorctl` program is a configuration utility for reflectord(1).
 
-## COMMANDS
+One of the following commands is a mandatory argument.
 
   * `-a`, `--add_tep`:
-    Add a tunnel endpoint.
+    Request to add a TEP for a specific virtual network instance.
+    If `-p` option is omitted, destination port numbers are kept and
+    not modified.
 
   * `-d`, `--del_tep`:
-    Delete a tunnel endpoint.
+    Request to delete a TEP for a specific virtual network instance.
 
   * `-s`, `--set_tep`:
-    Set tunnel endpoint parameters.
+    Request to set parameters for a specific TEP.
 
   * `-l`, `--list_tep`:
-    List tunnel endpoints.
+    Request to show TEPs and configuration parameters.
 
   * `-h`, `--help`:
     Show help and exit.
 
-## OPTIONS
+The followings are options for commands above.
 
   * `-n`, `--vni`=VNI:
-    Virtual Network Identifier.
+    Specify a virtual network identifier (VNI) in decimal or
+    hexadecimal.
 
   * `-i`, `--ip`=IPV4_ADDRESS:
-    IP address.
+    Specify a destination IPv4 unicast address for sending VXLAN
+    packets.
 
   * `-p`, `--port`=UDP_PORT:
-    Destination UDP port.
+    Specify a destination UDP port for sending VXLAN packets.
+
+## EXIT STATUS
+
+  * 0: Succeeded.
+  * 1: Invalid parameter.
+  * 4: Duplicated TEP entry found.
+  * 5: TEP entry not found.
+  * 255: Any other error.
 
 ## AUTHOR
 

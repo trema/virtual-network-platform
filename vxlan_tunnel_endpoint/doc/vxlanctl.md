@@ -1,68 +1,124 @@
-vxlanctl(1) -- VXLAN tunnel endpoint configuration command
-==========================================================
+vxlanctl(1) -- VXLAN Tunnel End Point Utility
+=============================================
 
 ## SYNOPSIS
 
-`vxlanctl` COMMAND [OPTION]...
+`vxlanctl` -a -n VNI [ -i IPV4_ADDRESS ] [ -p UDP_PORT ] [ -t SECONDS ]
+
+`vxlanctl` -s -n VNI [ -i IPV4_ADDRESS ] [ -p UDP_PORT ] [ -t SECONDS ]
+
+`vxlanctl` -w -n VNI
+
+`vxlanctl` -o -n VNI
+
+`vxlanctl` -d -n VNI
+
+`vxlanctl` -g [-q]
+
+`vxlanctl` -l [-g] [-n VNI] [-q]
+
+`vxlanctl` -f -n VNI
+
+`vxlanctl` -e -n VNI -m MAC_ADDRESS -i IPV4_ADDRESS [-t AGING_TIME]
+
+`vxlanctl` -b -n VNI [-m MAC_ADDRESS]
+
+`vxlanctl` -h
 
 ## DESCRIPTION
 
-This is the configuration command for vxland(1).
+The `vxlanctl` program is a configuration utility for vxland(1).
 
-## COMMANDS
+One of the following commands is a mandatory argument.
 
   * `-a`, `--add_instance`:
-    Add a VXLAN instance.
+    Request to add a virtual network instance.
+    If `-i` option is omitted, an IP address is inherited from the
+    global configuration. If a multicast address is specified with
+    `-i` option, IGMP membership report is sent out. A single
+    multicast address may be shared by multiple virtual network
+    instances.
+    If `-p` option is omitted, a port is inherited from the global
+    configuration.
+    If `-t` option is omitted, a value is inherited from the global
+    configuration.
 
   * `-s`, `--set_instance`:
-    Set VXLAN parameters.
+    Request to change one or more parameters related to a virtual
+    network instance.
 
   * `-w`, `--inactivate_instance`:
-    Inactivate a VXLAN instance.
+    Request to temporarily inactivate a virtual network instance.
 
   * `-o`, `--activate_instance`:
-    Activate a VXLAN instance.
+    Request to activate a virtual network instance.
 
   * `-d`, `--del_instance`:
-    Delete a VXLAN instance.
+    Request to delete a virtual network instance.
 
   * `-g`, `--show_global`:
-    Show global settings.
+    Show global configuration parameters.
 
   * `-l`, `--list_instances`:
-    List all VXLAN instances.
+    Request to list all virtual network instances and configuration
+    parameters.
 
   * `-f`, `--show_fdb`:
-    Show forwarding database.
+    Request to show forwarding database entries for a specific
+    virtual network instance.
 
   * `-e`, `--add_fdb_entry`:
-    Add a static forwarding database entry.
+    Request to add a forwarding database entry. Manually installed
+    forwarding database entries override dynamic entries.
+    If `-t` option is omitted, 0 is chosen as a aging time value.
+    0 means the entry is never aged out.
 
   * `-b`, `--delete_fdb_entry`:
-    Delete a static forwarding database entry.
+    Request to delete forwarding database entries.
+    If `-m` option is omitted, all forwarding database entries are
+    deleted.
 
   * `-h`, `--help`:
     Show help and exit.
 
-## OPTIONS
+The followings are options for commands above.
 
   * `-n`, `--vni`=VNI:
-    Virtual Network Identifier.
+    Specify a virtual network identifier (VNI) in decimal or
+    hexadecimal.
 
   * `-i`, `--ip`=IPV4_ADDRESS:
-    IP address.
+    When adding or setting virtual network instance with `-a` or `-s`
+    command, specify a destination IPv4 address for sending packets
+    which require flooding (broadcast/multicast/unknown unicast). Any
+    multicast/unicast address can be specified.
+    When adding a static forwarding database entry with `-e` command,
+    specify a destination IPv4 unicast address for sending VXLAN
+    packets for the target.
 
   * `-p`, `--port`=UDP_PORT:
-    UDP port.
+    When adding or updating virtual network instance with `-a` or `-s`
+    command, specify a destination UDP port for sending packets which
+    require flooding.
 
   * `-m`, `--mac`=MAC_ADDRESS:
-    MAC address.
+    Specify a target MAC address in XX:XX:XX:XX:XX:XX format.
 
   * `-t`, `--aging_time`=SECONDS:
-    Aging time in seconds.
+    Specify a maximum aging time value (0 - 86400 seconds) for entries
+    in the forwarding database in decimal. 0 means entries are never
+    aged out.
 
   * `-q`, `--quiet`:
     Don't output header part of command output.
+
+## EXIT STATUS
+
+  * 0: Succeeded.
+  * 1: Invalid parameter.
+  * 5: Duplicated instance found.
+  * 6: Specified instance not found.
+  * 255: Any other error.
 
 ## AUTHOR
 
@@ -77,4 +133,4 @@ permitted by law.
 
 ## SEE ALSO
 
-vxland(1), reflectord(1), reflectorctl(1)
+vxland(1), vxlanctl(1), reflectord(1)

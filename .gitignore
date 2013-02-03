@@ -2,6 +2,7 @@
 *.a
 *~
 *.swp
+*.1
 .depends
 virtual_network_manager/src/virtual_network_manager
 vxlan_tunnel_endpoint/src/reflectorctl

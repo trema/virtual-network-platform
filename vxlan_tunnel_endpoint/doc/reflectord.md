@@ -7,25 +7,41 @@ reflectord(1) -- VXLAN packet reflector
 
 ## DESCRIPTION
 
-VXLAN packet reflector which allows you to deploy VXLAN-based virtual
-networks without multicast capable underlay network.
+The `reflectord` program works with vland(1) and allows you to deploy
+VXLAN-based virtual networks without multicast capable underlay
+network.
 
-## OPTIONS
+A network interface for sending/receiving VXLAN packets must be
+specified with `-i` option.
 
   * `-i`, `--interface`=INTERFACE:
-    Set network interface for sending/receiving VXLAN packets.
+    Specify a network interface for sending/receiving VXLAN packets.
+    The network interface may or may not have an IP address on startup.
+    IP address may be assigned, changed, or revoked in operation.
+
+The following options are not mandatory arugments.
 
   * `-p`, `--port`=UDP_PORT:
-    Set UDP port for receiving VXLAN packets
+    Specify a UDP port for receiving VXLAN packets in decimal.
+    If omitted, default port number (60000) is chosen.
 
   * `-s`, `--syslog`:
     Output log messages to syslog.
+    By default, log messages are shown on stdout/stderr.
 
   * `-d`, `--daemonize`:
-    Daemonize.
+    Daemonize. By default, Packet Reflector runs in the foreground.
 
   * `-h`, `--help`:
     Show help and exit.
+
+## EXIT STATUS
+
+  * 0: Succeeded.
+  * 1: Invalid parameter.
+  * 2: Another Packet Reflector is running.
+  * 3: Port already in use.
+  * 255: Any other error.
 
 ## AUTHOR
 
