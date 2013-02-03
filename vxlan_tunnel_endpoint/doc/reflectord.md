@@ -1,4 +1,4 @@
-reflectord(1) -- VXLAN packet reflector
+reflectord(1) -- VXLAN Packet Reflector
 =======================================
 
 ## SYNOPSIS

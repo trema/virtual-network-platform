@@ -1,4 +1,4 @@
-reflectorctl(1) -- VXLAN packet reflector utility
+reflectorctl(1) -- VXLAN Packet Reflector Utility
 =================================================
 
 ## SYNOPSIS
