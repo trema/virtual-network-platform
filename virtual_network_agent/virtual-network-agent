@@ -88,11 +88,18 @@ class RestApi < Sinatra::Base
   # Overlay Network
 
   get '/overlay_networks/?' do
-    status 405
+    if settings.reflector_mode
+      status 405
+    else
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: List summary of overlay networks associated."
+      content_type :json, :charset => 'utf-8'
+      status 200
+      body json_generate OverlayNetwork.list
+    end
   end
 
   post '/overlay_networks/?' do
-    if settings.reflector_mode 
+    if settings.reflector_mode
       status 405
     else
       logger.debug "#{ __FILE__ }:#{ __LINE__ }: Create a new overlay network associated."
@@ -127,7 +134,7 @@ class RestApi < Sinatra::Base
   end
 
   delete '/overlay_networks/:vni/?' do | vni |
-    if settings.reflector_mode 
+    if settings.reflector_mode
       status 405
     else
       logger.debug "#{ __FILE__ }:#{ __LINE__ }: Remove the overlay network identified by net_id."
@@ -159,11 +166,20 @@ class RestApi < Sinatra::Base
   #
 
   get '/reflector/:vni/?' do | vni |
-    status 405
+    if settings.reflector_mode
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: List summary of tunnel endpoint associated."
+      requires = [ :vni, :ip ]
+      parameters = json_parse( request, requires )
+      content_type :json, :charset => 'utf-8'
+      status 202
+      body no_message_body Reflector.list_endpoints( parameters )
+    else
+      status 405
+    end
   end
 
   post '/reflector/:vni/?' do | vni |
-    if settings.reflector_mode 
+    if settings.reflector_mode
       logger.debug "#{ __FILE__ }:#{ __LINE__ }: Create a tunnel endpoint on the vni in the request URI."
       requires = [ :vni, :ip ]
       parameters = json_parse( request, requires )
@@ -198,7 +214,7 @@ class RestApi < Sinatra::Base
   end
 
   delete '/reflector/:vni/:tunnel_endpoint/?' do | vni, tunnel_endpoint |
-    if settings.reflector_mode 
+    if settings.reflector_mode
       logger.debug "#{ __FILE__ }:#{ __LINE__ }: Remove a tunnel endpoint from the vni."
       parameters = { :vni => vni, :ip => tunnel_endpoint }
       content_type :json, :charset => 'utf-8'

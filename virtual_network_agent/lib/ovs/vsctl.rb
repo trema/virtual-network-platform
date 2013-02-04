@@ -54,6 +54,13 @@ module OVS
         Vsctl.list_ports
       end
 
+      def exists? port_name
+        list.each do | each |
+          return true if port_name == each
+	end
+	false
+      end
+
     end
 
   end

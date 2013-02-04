@@ -67,7 +67,8 @@ module Vxlan
 	vxlanctl( '--list_instances', options ).split( "\n").each do | row |
 	  row = $1 if /^\s*(\S+(?:\s+\S+)*)\s*$/ =~ row
           vni, address, port, aging_time, state = row.split( /\s*\|\s*/, 5 )
-	  list [ vni.hex ] = { :address => address, :port => port, :aging_time => aging_time, :state => state }
+	  port = 0 if port == '-'
+	  list [ vni.hex ] = { :address => address, :port => port.to_i, :aging_time => aging_time, :state => state }
 	end
 	list
       end

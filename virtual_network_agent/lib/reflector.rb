@@ -58,6 +58,14 @@ class Reflector
       # nop
     end
 
+    def list_endpoints parameters
+      raise BadReuestError.new "Vni must be specified." if parameters[ :vni ].nil?
+
+      vni = convert_vni parameters[ :vni ]
+
+      tunnel_endpoint.list vni
+    end
+
     def add_endpoint parameters
       raise BadReuestError.new "Vni must be specified." if parameters[ :vni ].nil?
       raise BadReuestError.new "IP address must be specified." if parameters[ :ip ].nil?

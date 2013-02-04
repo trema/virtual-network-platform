@@ -57,6 +57,18 @@ class OverlayNetwork
       raise "Invalid responce code (#{ response.code })" unless response.code == 202
     end
 
+    def list parameters = {}
+      ovs_ports = ovs_port.list
+      instances = []
+      vxlan_instance.list.each_pair do | vni, value |
+        port_name = vxlan_instance.name( vni )
+	if ovs_ports.index( port_name )
+	  instances << { vni => value }
+	end
+      end
+      instances
+    end
+
     def create parameters
       raise BadReuestError.new "Vni must be specified." if parameters[ :vni ].nil?
       raise BadReuestError.new "Broadcast address must be specified." if parameters[ :broadcast ].nil?
@@ -64,12 +76,16 @@ class OverlayNetwork
       vni = convert_vni parameters[ :vni ]
       broadcast_address = convert_broadcast_address parameters[ :broadcast ]
 
-      if vxlan_instance.exists?( vni )
+      port_name = vxlan_instance.name( vni )
+
+      if ovs_port.exists?( port_name )
 	raise DuplicatedOverlayNetwork.new vni
+      end
+      if vxlan_instance.exists?( vni )
+        vxlan_instance.delete( vni )
       end
       begin
         vxlan_instance.add( vni, broadcast_address )
-	port_name = vxlan_instance.name( vni )
         ovs_port.add port_name
       rescue =>e
         raise NetworkAgentError.new e.message
@@ -81,13 +97,16 @@ class OverlayNetwork
 
       vni = convert_vni parameters[ :vni ]
 
-      unless vxlan_instance.exists?( vni )
+      port_name = vxlan_instance.name( vni )
+
+      unless ovs_port.exists?( port_name )
 	raise NoOverlayNetworkFound.new vni
       end
       begin
-	port_name = vxlan_instance.name( vni )
         ovs_port.delete port_name
-        vxlan_instance.delete( vni )
+        if vxlan_instance.exists?( vni )
+          vxlan_instance.delete( vni )
+        end
       rescue =>e
         raise NetworkAgentError.new e.message
       end

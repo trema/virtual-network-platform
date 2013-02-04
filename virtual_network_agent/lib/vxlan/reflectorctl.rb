@@ -22,6 +22,18 @@ module Vxlan
 
   module Reflector
 
+    class Vni
+      def list
+	vni = []
+	Ctl.list_tunnel_endpoints().each_key do | key |
+	  if not vni.index[ key ]
+	    vni << key
+	  end
+	end
+	vni
+      end
+    end
+
     class TunnelEndpoint
       class << self
 	def add vni, address, port = nil
@@ -30,6 +42,10 @@ module Vxlan
 
 	def delete vni, address
 	  Ctl.delete_tunnel_endpoint vni, address
+	end
+
+	def list vni
+	  Ctl.list_tunnel_endpoints vni
 	end
 
       end
@@ -49,6 +65,23 @@ module Vxlan
 	def delete_tunnel_endpoint vni, address
 	  options = [ '--vni', vni, '--ip', address ]
 	  reflectorctl '--del_tep', options
+	end
+
+	def list_tunnel_endpoints vni = nil
+	  list = {}
+	  line_no = 0
+	  options = []
+	  if not vni.nil?
+	    options = options + [ '--vni', vni ]
+	  end
+	  reflectorctl( '--list_tep', options ).split( "\n").each do | row |
+	    next if ( line_no = line_no + 1 ) <= 2 # skip header
+	    row = $1 if /^\s*(\S+(?:\s+\S+)*)\s*$/ =~ row
+	    vni, address, port, packet_count, octet_count = row.split( /\s*\|\s*/, 5 )
+	    port = 0 if port == '-'
+	    list [ vni.hex ] = { :address => address, :port => port.to_i, :packet_count => packet_count.to_i, :octet_count => octet_count.to_i }
+	  end
+	  list
 	end
 
 	private
