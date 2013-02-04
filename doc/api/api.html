@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="UTF-8">
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="api.css" type="text/css">
+  <title>Virtual Network Management API</title>
+</head>
+<body>
+
+<h1>Virtual Network Management API</h1>
+
+<table>
+<tr>
+  <td rowspan="3">Path</td>
+  <td rowspan="3">Method</td>
+  <td colspan="4">Request</td>
+  <td rowspan="3">Behavior</td>
+  <td colspan="3">Response</td>
+</tr>
+
+<tr>
+  <td colspan="2">Parameters</td>
+  <td rowspan="2">Content-Type</td>
+  <td rowspan="2">Body (example)</td>
+  <td rowspan="2">Code</td>
+  <td rowspan="2">Content-Type</td>
+  <td rowspan="2">Body (example)</td>
+</tr>
+
+<tr>
+  <td>Key</td>
+  <td>Value</td>
+</tr>
+
+<!-- GET /networks -->
+<tr>
+  <td rowspan="7">/networks</td>
+  <td rowspan="2">GET</td>
+  <td rowspan="2">-</td>
+  <td rowspan="2">-</td>
+  <td rowspan="2">-</td>
+  <td rowspan="2">-</td>
+  <td rowspan="2">List summary of networks associated.</td>
+  <td>200 OK</td>
+  <td>application/json</td>
+  <td><a href="list_networks.json">list_networks.json</a></td>
+</tr>
+
+<tr>
+  <td>500 Internal error.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<!-- POST /networks -->
+<tr>
+  <td rowspan="5">POST</td>
+  <td>id</td>
+  <td>An unique id of the network 'id' is automatically assigned if it is not specified.</td>
+  <td rowspan="5">application/json</td>
+  <td rowspan="5"><a href="create_network.json">create_network.json</a></td>
+  <td rowspan="5">Create a new network associated.</td>
+  <td>202 Accepted.</td>
+  <td>application/json</td>
+  <td><a href="create_network.json">create_network.json</a></td>
+</tr>
+
+<tr>
+  <td rowspan="4">description</td>
+  <td rowspan="4">Description of the creating network (optional).</td>
+  <td>400 Bad Request.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<tr>
+  <td>422 The specified parameters are unacceptable.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<tr >
+  <td>486 Request is not allowed at this moment since an update is in progress.</td>
+  <td >-</td>
+  <td >-</td>
+</tr>
+
+<tr>
+  <td>500 Internal error.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<!-- GET /networks/<net_id> -->
+<tr>
+  <td rowspan="12">/networks/&lt;net_id&gt;</td>
+  <td rowspan="3">GET</td>
+  <td rowspan="3">-</td>
+  <td rowspan="3">-</td>
+  <td rowspan="3">-</td>
+  <td rowspan="3">-</td>
+  <td rowspan="3">Show details of network identified by net_id.</td>
+  <td>200 OK</td>
+  <td>application/json</td>
+  <td><a href="show_network.json">show_network.json</a></td>
+</tr>
+
+<tr>
+  <td>404 Not found.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<tr>
+  <td>500 Internal error.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<!-- PUT /networks/<net_id> -->
+<tr>
+  <td rowspan="5">PUT</td>
+  <td rowspan="5">description</td>
+  <td rowspan="5">Description of the network (optional).</td>
+  <td rowspan="5">application/json</td>
+  <td rowspan="5"><a href="modify_network.json">modify_network.json</a></td>
+  <td rowspan="5">Update details of network identified by net_id.</td>
+  <td>202 Accepted.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<tr>
+  <td>400 Bad Request.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<tr>
+  <td>404 Not found.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<tr>
+  <td>486 Request is not allowed at this moment since an update is in progress.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<tr>
+  <td>500 Internal error.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<!-- DELETE /networks/<net_id> -->
+<tr>
+  <td rowspan="4">DELETE</td>
+  <td rowspan="4">-</td>
+  <td rowspan="4">-</td>
+  <td rowspan="4">-</td>
+  <td rowspan="4">-</td>
+  <td rowspan="4">Delete the network identified by net_id.</td>
+  <td>202 Accepted.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<tr>
+  <td>404 Not found.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<tr>
+  <td>486 Request is not allowed at this moment since an update is in progress.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<tr>
+  <td>500 Internal error.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<!-- DELETE /networks/<net_id>/ports -->
+<tr>
+<td rowspan="9">/networks/&lt;net_id&gt;/ports</td>
+  <td rowspan="3">GET</td>
+  <td rowspan="3">-</td>
+  <td rowspan="3">-</td>
+  <td rowspan="3">-</td>
+  <td rowspan="3">-</td>
+  <td rowspan="3">List all the ports currently defined.</td>
+  <td>200 OK.</td>
+  <td>application/json</td>
+  <td><a href="show_ports.json">show_ports.json</a></td>
+</tr>
+
+<tr>
+  <td>404 Not found.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<tr>
+  <td>500 Internal error.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<!-- POST /networks/<net_id>/ports -->
+<tr>
+  <td rowspan="6">POST</td>
+  <td>id</td>
+  <td>An unique id of the logical port (optional). 'id' is automatically assigned
+      if it is not specified.</td>
+  <td rowspan="6">application/json</td>
+  <td rowspan="6"><a href="create_port.json">create_port.json</a></td>
+  <td rowspan="6">Create a logical port on the network specified in the request URI.</td>
+  <td>202 Accepted.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<tr>
+  <td>datapath_id</td>
+  <td>A datapath id of the switch (mandatory).</td>
+  <td>400 Bad Request.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<tr>
+  <td>number</td>
+  <td rowspan="2">Port number and name of the logical port (exclusive).</td>
+  <td>404 Not found.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+<tr>
+
+<td>name</td>
+  <td>422 The specified parameters are unacceptable.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<tr>
+  <td>vid</td>
+  <td>VLAN identifier of the logical port (optional).</td>
+  <td>486 Request is not allowed at this moment since an update is in progress.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<tr>
+  <td>description</td>
+  <td>Description of the logical port (optional).</td>
+  <td>500 Internal error.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<!-- GET /networks/<net_id>/ports/<port_id> -->
+<tr>
+  <td rowspan="6">/networks/&lt;net_id&gt; /ports/&lt;port_id&gt;</td>
+  <td rowspan="2">GET</td>
+  <td rowspan="2">-</td>
+  <td rowspan="2">-</td>
+  <td rowspan="2">-</td>
+  <td rowspan="2">-</td>
+  <td rowspan="2">Retrieve detail of the port port_id configured for the network net_id.</td>
+  <td>200 OK.</td>
+  <td>application/json</td>
+  <td><a href="show_port.json">show_port.json</a></td>
+</tr>
+
+<tr>
+  <td>404 Not found.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<!-- DELETE /networks/<net_id>/ports/<port_id> -->
+<tr>
+  <td rowspan="4">DELETE</td>
+  <td rowspan="4">-</td>
+  <td rowspan="4">-</td>
+  <td rowspan="4">-</td>
+  <td rowspan="4">-</td>
+  <td rowspan="4">Delete a port from the network.</td>
+  <td>202 Accepted.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<tr>
+  <td>404 Not found.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<tr>
+  <td>486 Request is not allowed at this moment since an update is in progress.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<tr>
+  <td>500 Internal error.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<!-- GET /networks/<net_id>/ports/<port_id>/mac_addresses -->
+<tr>
+  <td rowspan="9">/networks/&lt;net_id&gt; /ports/&lt;port_id&gt; /mac_addresses</td>
+  <td rowspan="3">GET</td>
+  <td rowspan="3">-</td>
+  <td rowspan="3">-</td>
+  <td rowspan="3">-</td>
+  <td rowspan="3">-</td>
+  <td rowspan="3">List all the mac addresses currently defined.</td>
+  <td>200 OK.</td>
+  <td>application/json</td>
+  <td><a href="show_mac_addresses.json">show_mac_addresses.json</a></td>
+</tr>
+
+<tr>
+  <td>404 Not found.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<tr>
+  <td>500 Internal error.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<!-- POST /networks/<net_id>/ports/<port_id>/mac_addresses -->
+<tr>
+  <td rowspan="6">POST</td>
+  <td rowspan="6">address</td>
+  <td rowspan="6">MAC addresses of the logical port (mandatory).</td>
+  <td rowspan="6">application/json</td>
+  <td rowspan="6"><a href="create_mac_address.json">create_mac_address.json</a></td>
+  <td rowspan="6">Create a mac address on the logical port in the request URI.</td>
+  <td>202 Accepted.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<tr>
+  <td>400 Bad Request.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<tr>
+  <td>404 Not found.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<tr>
+  <td>422 The specified parameters are unacceptable.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<tr>
+  <td>486 Request is not allowed at this moment since an update is in progress.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<tr>
+  <td>500 Internal error.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<!-- GET /networks/<net_id>/ports/<port_id>/mac_addresses/<mac_address> -->
+<tr>
+  <td rowspan="7">/networks/&lt;net_id&gt;/ports/&lt;port_id&gt;/mac_addresses/&lt;mac_address&gt;</td>
+  <td rowspan="3">GET</td>
+  <td rowspan="3">-</td>
+  <td rowspan="3">-</td>
+  <td rowspan="3">-</td>
+  <td rowspan="3">-</td>
+  <td rowspan="3">Retrieve detail of the mac address mac_address configured for the port prt_id.</td>
+  <td>200 OK.</td>
+  <td>application/json</td>
+  <td><a href="show_mac_address.json">show_mac_address.json</a></td>
+</tr>
+
+<tr>
+  <td>404 Not found.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<tr>
+  <td>500 Internal error.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<!-- DELETE /networks/<net_id>/ports/<port_id>/mac_addresses/<mac_address> -->
+<tr>
+  <td rowspan="4">DELETE</td>
+  <td rowspan="4">-</td>
+  <td rowspan="4">-</td>
+  <td rowspan="4">-</td>
+  <td rowspan="4">-</td>
+  <td rowspan="4">Delete a mac address from the port.</td>
+  <td>202 Accepted.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<tr>
+  <td>404 Not found.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<tr>
+  <td>486 Request is not allowed at this moment since an update is in progress.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+<tr>
+  <td>500 Internal error.</td>
+  <td>-</td>
+  <td>-</td>
+</tr>
+
+</table>
+
+</body>
+</html>
