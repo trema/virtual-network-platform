@@ -467,7 +467,7 @@ handle_http_transaction_from_main( http_transaction *transaction ) {
   http_request *request = &transaction->request;
   uint32_t content_length = 0;
   if ( request->content.body != NULL && request->content.body->length > 0 ) {
-    content_length = ( uint32_t ) request->content.body->length - 1; // We only accept null-terminated string.
+    content_length = ( uint32_t ) --request->content.body->length; // We only accept null-terminated string.
   }
 
   debug( "Handling a transaction from main thread ( method = %#x, uri = %s, content_length = %u, content_type = %s, content_body = %p ).",
