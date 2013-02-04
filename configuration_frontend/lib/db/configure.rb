@@ -26,20 +26,13 @@ module DB
     extend Forwardable
 
     def initialize
-      config_file = File.dirname( __FILE__ ) + '/configure.yml'
-      default_config = ( YAML.load_file( config_file ) or {} )
-      if default_config.has_key? 'adapter'
-        raise 'Not supported' unless default_config[ 'adapter' ] == 'mysql'
-      end
-      @config = default_config
+      @config = {}
     end
 
     def_delegator :@config, :[]
     def_delegator :@config, :[]=
-
-    def to_hash
-      @config
-    end
+    def_delegator :@config, :update
+    def_delegator :@config, :to_hash
 
   end
 

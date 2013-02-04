@@ -19,26 +19,31 @@ require 'forwardable'
 require 'singleton'
 require 'yaml'
 
+require 'db'
+
 class Configure
   include Singleton
   extend Forwardable
 
   def initialize
-    config_file = File.dirname( __FILE__ ) + '/configure.yml'
-    default_config = ( YAML.load_file( config_file ) or {} )
-    if default_config.has_key? 'daemon'
-      default_config[ 'daemon' ] = ( default_config[ 'daemon' ] == 'true' )
-    else
-      default_config[ 'daemon' ] = false
-    end
-    @config = default_config
+    @config = {}
+    config_file = File.dirname( __FILE__ ) + '/default.yml'
+    load_file config_file
+  end
+
+  def load_file config_file
+    config = ( YAML.load_file( config_file ) or {} )
+    @config.update config
+    db_config = DB::Configure.instance
+    db_config.update( @config[ 'db' ] )
   end
 
   def_delegator :@config, :[]
   def_delegator :@config, :[]=
+  def_delegator :@config, :to_hash
 
-  def to_hash
-    @config
+  def db
+    DB::Configure.instance
   end
 
 end

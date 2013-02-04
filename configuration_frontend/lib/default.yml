@@ -16,3 +16,11 @@
 #
 listen_port: 8081
 listen_address: 0.0.0.0
+daemon: false
+db:
+  adapter: mysql
+  host: localhost
+  port: 3306
+  username: root
+  password: root123
+  database: vnet

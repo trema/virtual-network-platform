@@ -369,6 +369,10 @@ class RestApi < Sinatra::Base
   config = Configure.instance
   db_config = DB::Configure.instance
   option = OptionParser.new
+  option.on( '-c arg', '--config-file=arg', "Configuration file" ) do | arg |
+    config.load_file arg
+  end
+
   option.on( '-h arg', '--db-host=arg', "Database host (default '#{ db_config[ 'host' ] }')" ) do | arg |
     db_config[ 'host' ] = arg
   end

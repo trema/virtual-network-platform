@@ -26,6 +26,7 @@ rescue LoadError
 end
 
 require 'agent'
+require 'configure'
 require 'log'
 require 'network'
 require 'reflector'
@@ -36,7 +37,7 @@ logger.level = Log::INFO
 ActiveRecord::Base.logger = logger
 
 option = OptionParser.new
-db_config = DB::Configure.instance
+db_config = Configure.instance.db
 option.on( '-h arg', '--db-host=arg' ) do | arg |
   db_config[ 'host' ] = arg
 end
@@ -71,6 +72,7 @@ def help
 Usage: slice [options] command [arguments...]
 
 options
+    -c, --config-file=arg - Configuration file
     -h, --db-host=arg     - Database host (default: '#{ db_config[ 'host' ]}')
     --db-port=arg         - Database port number to use for connection (default: '#{ db_config[ 'port' ]}')
     -u, --db-user=arg     - Database user for login (default: '#{ db_config[ 'username' ]}')
