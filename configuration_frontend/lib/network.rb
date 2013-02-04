@@ -32,6 +32,13 @@ class Network
       else
         raise DuplicatedSlice.new slice_id if DB::Slice.exists?( slice_id )
       end
+      if DB::OverlayNetwork.exists?( slice_id )
+        begin
+          DB::OverlayNetwork.delete( slice_id )
+        rescue
+          raise NetworkManagementError.new
+        end
+      end
       network = DB::OverlayNetwork.new
       network.slice_id = slice_id
       network.save!
@@ -75,11 +82,11 @@ class Network
 	  destroy_all_mac_addresses slice_id
 	end
       end
-      begin
-        DB::OverlayNetwork.delete( slice_id )
-      rescue
-        raise NetworkManagementError.new
-      end
+      #begin
+      #  DB::OverlayNetwork.delete( slice_id )
+      #rescue
+      #  raise NetworkManagementError.new
+      #end
     end
 
     def list parameters = {}
@@ -660,10 +667,10 @@ class Network
 
     def delete_overlay_ports slice_id
       logger.debug "#{__FILE__}:#{__LINE__}: Deleting overlay ports (slice_id = #{ slice_id })"
-      get_active_switches( slice_id ).each do | each |
+      get_inactive_switches( slice_id ).each do | each |
         delete_overlay_port slice_id, each
       end
-      switches = get_inactive_switches( slice_id )
+      switches = get_active_switches( slice_id )
       if switches.size == 1
         delete_overlay_port slice_id, switches.first
       end
@@ -711,8 +718,9 @@ class Network
 		         DB::PORT_STATE_UPDATING ],
 		     :conditions => [
 		       "slice_id = ? AND type = ?",
-		       slice_id, DB::PORT_TYPE_CUSTOMER ] ).each do | each |
-	switches << each.datapath_id if each.sum == 0
+		       slice_id, DB::PORT_TYPE_CUSTOMER ],
+		     :group => "datapath_id" ).each do | each |
+	switches << each.datapath_id if each.sum.to_i == 0
       end
       switches
     end
