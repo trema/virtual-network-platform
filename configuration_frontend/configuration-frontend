@@ -84,13 +84,26 @@ class RestApi < Sinatra::Base
     e.message + "\n"
   end
 
+  # Debug
+
+  before do
+    logger.debug "url='#{ request.path_info }'"
+    request.body.rewind
+    logger.debug "body='#{ request.body.read }'"
+  end
+
+  after do
+    logger.debug "status=#{ status }"
+    logger.debug "body='#{ body }'"
+  end
+
   # Network
 
   get '/networks/?' do
     logger.debug "#{__FILE__}:#{__LINE__}: List summary of networks associated."
     content_type :json, :charset => 'utf-8'
     status 200
-    json_generate Network.list
+    body json_generate Network.list
   end
 
   post '/networks/?' do
@@ -99,15 +112,15 @@ class RestApi < Sinatra::Base
     parameters = json_parse( request, requires )
     content_type :json, :charset => 'utf-8'
     status 202
-    json_generate Network.create( parameters )
+    body json_generate Network.create( parameters )
   end
 
   put '/networks/?' do
-    405
+    status 405
   end
 
   delete '/networks/?' do
-    405
+    status 405
   end
 
   #
@@ -117,11 +130,11 @@ class RestApi < Sinatra::Base
     parameters = { :id => net_id }
     content_type :json, :charset => 'utf-8'
     status 200
-    json_generate Network.show( parameters )
+    body json_generate Network.show( parameters )
   end
 
   post '/networks/:net_id/?' do | net_id |
-    405
+    status 405
   end
 
   put '/networks/:net_id/?' do | net_id |
@@ -131,7 +144,7 @@ class RestApi < Sinatra::Base
     parameters[ :id ] = net_id
     content_type :json, :charset => 'utf-8'
     status 202
-    no_message_body Network.update( parameters )
+    body no_message_body Network.update( parameters )
   end
 
   delete '/networks/:net_id/?' do | net_id |
@@ -139,7 +152,7 @@ class RestApi < Sinatra::Base
     parameters = { :id => net_id }
     content_type :json, :charset => 'utf-8'
     status 202
-    no_message_body Network.destroy( parameters )
+    body no_message_body Network.destroy( parameters )
   end
 
   # Port
@@ -149,7 +162,7 @@ class RestApi < Sinatra::Base
     parameters = { :net_id => net_id }
     content_type :json, :charset => 'utf-8'
     status 200
-    json_generate Network.show_ports( parameters )
+    body json_generate Network.show_ports( parameters )
   end
 
   post '/networks/:net_id/ports/?' do | net_id |
@@ -159,15 +172,15 @@ class RestApi < Sinatra::Base
     parameters[ :net_id ] = net_id
     content_type :json, :charset => 'utf-8'
     status 202
-    no_message_body Network.create_port( parameters )
+    body no_message_body Network.create_port( parameters )
   end
 
   put '/networks/:net_id/ports/?' do | net_id |
-    405
+    status 405
   end
 
   delete '/networks/:net_id/ports/?' do | net_id |
-    405
+    status 405
   end
 
   #
@@ -177,15 +190,15 @@ class RestApi < Sinatra::Base
     parameters = { :net_id => net_id, :id => port_id }
     content_type :json, :charset => 'utf-8'
     status 200
-    json_generate Network.show_port( parameters )
+    body json_generate Network.show_port( parameters )
   end
 
   post '/networks/:net_id/ports/:port_id/?' do | net_id, port_id |
-    405
+    status 405
   end
 
   put '/networks/:net_id/ports/:port_id/?' do | net_id, port_id |
-    405
+    status 405
   end
 
   delete '/networks/:net_id/ports/:port_id/?' do | net_id, port_id |
@@ -193,7 +206,7 @@ class RestApi < Sinatra::Base
     parameters = { :net_id => net_id, :id => port_id }
     content_type :json, :charset => 'utf-8'
     status 202
-    no_message_body Network.delete_port( parameters )
+    body no_message_body Network.delete_port( parameters )
   end
 
   # MAC address
@@ -203,7 +216,7 @@ class RestApi < Sinatra::Base
     parameters = { :net_id => net_id, :id => port_id }
     content_type :json, :charset => 'utf-8'
     status 202
-    json_generate Network.show_mac_addresses( parameters )
+    body json_generate Network.show_mac_addresses( parameters )
   end
 
   post '/networks/:net_id/ports/:port_id/mac_addresses/?' do | net_id, port_id |
@@ -213,15 +226,15 @@ class RestApi < Sinatra::Base
     parameters.merge!( { :net_id => net_id, :id => port_id } )
     content_type :json, :charset => 'utf-8'
     status 202
-    no_message_body Network.create_mac_address( parameters )
+    body no_message_body Network.create_mac_address( parameters )
   end
 
   put '/networks/:net_id/ports/?' do | net_id |
-    405
+    status 405
   end
 
   delete '/networks/:net_id/ports/?' do | net_id |
-    405
+    status 405
   end
 
   get '/networks/:net_id/ports/:port_id/mac_addresses/:mac_address/?' do | net_id, port_id, mac_address |
@@ -229,46 +242,46 @@ class RestApi < Sinatra::Base
     parameters = { :net_id => net_id, :id => port_id, :address => mac_address }
     content_type :json, :charset => 'utf-8'
     status 202
-    json_generate Network.show_local_mac_address( parameters )
+    body json_generate Network.show_local_mac_address( parameters )
   end
 
   post '/networks/:net_id/ports/:port_id/mac_addresses/:mac_address/?' do | net_id, port_id, mac_address |
-    405
+    status 405
   end
 
   put '/networks/:net_id/ports/:port_id/mac_addresses/:mac_address/?' do | net_id, port_id, mac_address |
-    405
+    status 405
   end
 
   delete '/networks/:net_id/ports/:port_id/mac_addresses/:mac_address/?' do | net_id, port_id, mac_address |
     logger.debug "#{__FILE__}:#{__LINE__}: Remove a mac address from the port."
     parameters = { :net_id => net_id, :id => port_id, :address => mac_address }
     status 202
-    no_message_body Network.delete_mac_address( parameters )
+    body no_message_body Network.delete_mac_address( parameters )
   end
 
   # Agent
 
   get '/agents/?' do
-    405
+    status 405
   end
 
   post '/agents/?' do
-    405
+    status 405
   end
 
   put '/agents/?' do
-    405
+    status 405
   end
 
   delete '/agents/?' do
-    405
+    status 405
   end
 
   #
 
   get '/agents/:datapath_id/?' do | datapath_id |
-    405
+    status 405
   end
 
   post '/agents/:datapath_id/?' do | datapath_id |
@@ -277,7 +290,7 @@ class RestApi < Sinatra::Base
     parameters = json_parse( request, requires )
     parameters[ :datapath_id ] = datapath_id
     status 202
-    no_message_body Agent.register( parameters )
+    body no_message_body Agent.register( parameters )
   end
 
   put '/agents/:datapath_id/?' do | datapath_id |
@@ -286,32 +299,32 @@ class RestApi < Sinatra::Base
     parameters = json_parse( request, requires )
     parameters[ :datapath_id ] = datapath_id
     status 202
-    no_message_body Agent.action( parameters )
+    body no_message_body Agent.action( parameters )
   end
 
   delete '/agents/:datapath_id/?' do | datapath_id |
     logger.debug "#{__FILE__}:#{__LINE__}: unregister the switch identified by datapath_id."
     parameters = { :datapath_id => datapath_id }
     status 202
-    no_message_body Agent.unregister( parameters )
+    body no_message_body Agent.unregister( parameters )
   end
 
   # Reflector
 
   get '/reflector/?' do
-    405
+    status 405
   end
 
   post '/reflector/?' do
-    405
+    status 405
   end
 
   put '/reflector/?' do
-    405
+    status 405
   end
 
   delete '/reflector/?' do
-    405
+    status 405
   end
 
   # Reflector
@@ -320,37 +333,37 @@ class RestApi < Sinatra::Base
     logger.debug "#{__FILE__}:#{__LINE__}: List of tunnel-endpoints associated."
     content_type :json, :charset => 'utf-8'
     status 200
-    json_generate Reflector.list
+    body json_generate Reflector.list
   end
 
   post '/reflector/config/?' do
-    405
+    status 405
   end
 
   put '/reflector/config/?' do
-    405
+    status 405
   end
 
   delete '/reflector/config/?' do
-    405
+    status 405
   end
 
   #
 
   get '/*' do
-    404
+    status 404
   end
 
   post '/*' do
-    404
+    status 404
   end
 
   put '/*' do
-    404
+    status 404
   end
 
   delete '/*' do
-    404
+    status 404
   end
 
   config = Configure.instance

@@ -44,13 +44,8 @@ class RestApi < Sinatra::Base
   def json_parse request, requires = []
     logger = Log.instance
     request.body.rewind
-    body = request.body.read.gsub( /\000/, '' ) # TODO
-    begin
-      parameters = JSON.parse( body, :symbolize_names => true )
-    rescue
-      logger.debug "body = '#{ body }'"
-      raise
-    end
+    body = request.body.read.gsub( /\000.*$/, '' ) # XXX
+    parameters = JSON.parse( body, :symbolize_names => true )
     requires.each do | each |
       raise BadReuestError.new unless parameters.has_key? each
     end
@@ -77,146 +72,159 @@ class RestApi < Sinatra::Base
     e.message + "\n"
   end
 
+  # Debug
+
+  before do
+    logger.debug "url='#{ request.path_info }'"
+    request.body.rewind
+    logger.debug "body='#{ request.body.read }'"
+  end
+
+  after do
+    logger.debug "status=#{ status }"
+    logger.debug "body='#{ body }'"
+  end
+
   # Overlay Network
 
   get '/overlay_networks/?' do
-    405
+    status 405
   end
 
   post '/overlay_networks/?' do
     if settings.reflector_mode 
-      405
+      status 405
     else
-      logger.debug "#{__FILE__}:#{__LINE__}: Create a new overlay network associated."
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: Create a new overlay network associated."
       requires = [ :vni, :broadcast ]
       parameters = json_parse( request, requires )
       content_type :json, :charset => 'utf-8'
       status 202
-      no_message_body OverlayNetwork.create( parameters )
+      body no_message_body OverlayNetwork.create( parameters )
     end
   end
 
   put '/overlay_networks/?' do
-    405
+    status 405
   end
 
   delete '/overlay_networks/?' do
-    405
+    status 405
   end
 
   #
 
   get '/overlay_networks/:vni/?' do | vni |
-    405
+    status 405
   end
 
   post '/overlay_networks/:vni/?' do | vni |
-    405
+    status 405
   end
 
   put '/networks/:vni/?' do | vni |
-    405
+    status 405
   end
 
   delete '/overlay_networks/:vni/?' do | vni |
     if settings.reflector_mode 
-      405
+      status 405
     else
-      logger.debug "#{__FILE__}:#{__LINE__}: Remove the overlay network identified by net_id."
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: Remove the overlay network identified by net_id."
       parameters = { :vni => vni }
       content_type :json, :charset => 'utf-8'
       status 202
-      no_message_body OverlayNetwork.destroy( parameters )
+      body no_message_body OverlayNetwork.destroy( parameters )
     end
   end
 
   # Reflector
 
   get '/reflector/?' do
-    405
+    status 405
   end
 
   post '/reflector/?' do
-    405
+    status 405
   end
 
   put '/reflector/?' do
-    405
+    status 405
   end
 
   delete '/reflector/?' do
-    405
+    status 405
   end
 
   #
 
   get '/reflector/:vni/?' do | vni |
-    405
+    status 405
   end
 
   post '/reflector/:vni/?' do | vni |
     if settings.reflector_mode 
-      logger.debug "#{__FILE__}:#{__LINE__}: Create a tunnel endpoint on the vni in the request URI."
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: Create a tunnel endpoint on the vni in the request URI."
       requires = [ :vni, :ip ]
       parameters = json_parse( request, requires )
       content_type :json, :charset => 'utf-8'
       status 202
-      no_message_body Reflector.add_endpoint( parameters )
+      body no_message_body Reflector.add_endpoint( parameters )
     else
-      405
+      status 405
     end
   end
 
   put '/reflector/:vni/?' do | vni |
-    405
+    status 405
   end
 
   delete '/reflector/:vni/?' do | vni |
-    405
+    status 405
   end
 
   #
 
   get '/reflector/:vni/:tunnel_endpoint/?' do | vni, tunnel_endpoint |
-    405
+    status 405
   end
 
   post '/reflector/:vni/:tunnel_endpoint/?' do | vni, tunnel_endpoint |
-    405
+    status 405
   end
 
   put '/reflector/:vni/:tunnel_endpoint/?' do | vni, tunnel_endpoint |
-    405
+    status 405
   end
 
   delete '/reflector/:vni/:tunnel_endpoint/?' do | vni, tunnel_endpoint |
     if settings.reflector_mode 
-      logger.debug "#{__FILE__}:#{__LINE__}: Remove a tunnel endpoint from the vni."
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: Remove a tunnel endpoint from the vni."
       parameters = { :vni => vni, :ip => tunnel_endpoint }
       content_type :json, :charset => 'utf-8'
       status 202
-      no_message_body Reflector.delete_endpoint( parameters )
+      body no_message_body Reflector.delete_endpoint( parameters )
     else
-      405
+      status 405
     end
   end
 
   #
 
   get '/*' do
-    404
+    status 404
   end
 
   post '/*' do
-    404
+    status 404
   end
 
   put '/*' do
-    404
+    status 404
   end
 
   delete '/*' do
-    404
+    status 404
   end
 
   config = Configure.instance
