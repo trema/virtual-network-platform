@@ -1,110 +1,110 @@
 #! /bin/sh
-#
-# Start/Stop the BISCO Virtual Network Agent
-#
+
 ### BEGIN INIT INFO
-# Provides:		bisco_vnet_agent
-# Required-Start:	$remote_fs $local_fs
-# REquired-Stop:	$remote_fs $local_fs
-# Default-Start:	2 3 4 5
-# Default-Stop:		0 1 6
-# Short-Description:	BISCO Virtual Netowrk Agent
-#
+# Provides:          virtual_network_agent
+# Required-Start:    $remote_fs $network openvswitch-switch
+# Required-Stop:     $remote_fs $network openvswitch-switch
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start Virtual Network Agent
+# Description:       This script starts or stops Virtual Network Agent
 ### END INIT INFO
 
-NAME=bisco_vnet_agent
-DAEMON=/usr/sbin/bisco_vnet_agent
-CONFIG=/etc/default/bisco_vnet_agent
-PIDFILE=/var/run/bisco_vnet_agent.pid
-VN_NOTIFIER=/usr/sbin/vn_notifier
-VXLAN_REGISTER=/usr/sbin/ovs_vxlanregister
-PR_REGISTER=/usr/sbin/prregister
-VN_NOTIFIER_LOG=/var/log/vn_notifier.log
-VXLAN_REGISTER_LOG=/var/log/ovs_vxlanregister.log
-PR_REGISTER_LOG=/var/log/prregister.log
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+DESC="Virtual Network Agent"
+NAME=virtual_network_agent
+SCRIPTNAME=/etc/init.d/$NAME
 
-if [ ! -x $DAEMON ]; then
-    echo "$DAEMON does not exist" 
-    exit 0
+. /lib/init/vars.sh
+
+. /lib/lsb/init-functions
+
+if [ -f /etc/default/$NAME ]; then
+    . /etc/default/$NAME
 fi
 
-if [ ! -f $CONFIG ]; then
-    echo "$CONFIG does not exist"
-    exit 0
+if [ -n "$VIRTUAL_NETWORK_AGENT_DIR" ]; then
+    DAEMON=$VIRTUAL_NETWORK_AGENT_DIR/$NAME
+else
+    DAEMON=/usr/sbin/$NAME
 fi
 
-if [ `id -u` != "0" ]; then
-    echo "Root privilege is required."
-    exit 0
+[ -x "$DAEMON" ] || exit 0
+
+if [ -n "$VIRTUAL_NETWORK_AGENT_PIF_FILE" ]; then
+  PIDFILE=$VIRTUAL_NETWORK_AGENT_PIF_FILE
+else
+  PIDFILE=/var/run/$NAME.pid
 fi
 
-. $CONFIG
+if [ -n "$VIRTUAL_NETWORK_AGENT_OPTS" ]; then
+    DAEMON_ARGS=$VIRTUAL_NETWORK_AGENT_OPTS
+else
+    DAEMON_ARGS=""
+fi
 
-start()
+
+do_start()
 {
-    if [ -f $PIDFILE ]; then 
-	echo "Pid file ($PIDFILE) exists"
-	exit 0
-    fi
+    # Quick hack to start MySQL (which starts with Upstart) before starting
+    # Virtual Network Manager
+    start mysql 1>/dev/null 2>&1
+    sleep 1
 
-    echo "Starting" `basename $DAEMON`
-    $DAEMON 1> /dev/null 2>&1 &
-    echo $! > $PIDFILE
-
-    if [ "$AGENT_MODE" = "ovs" ]; then
-	$VXLAN_REGISTER 1>> $VXLAN_REGISTER_LOG 2>&1
-	$VN_NOTIFIER start 1>> $VN_NOTIFIER_LOG 2>&1
-    fi
-    if [ "$AGENT_MODE" = "reflector" ]; then
-	$PR_REGISTER 1>> $PR_REGISTER_LOG 2>&1
-    fi
+    TREMA_HOME=$TREMA_HOME start-stop-daemon --start --quiet --pidfile $PIDFILE \
+	--exec $DAEMON --test > /dev/null || return 1
+    TREMA_HOME=$TREMA_HOME start-stop-daemon --start --quiet --pidfile $PIDFILE \
+	--exec $DAEMON -- $DAEMON_ARGS || return 2
 }
 
-stop()
+do_stop()
 {
-    if [ -f $PIDFILE ]; then 
-	kill `cat $PIDFILE`
-	echo -n "Waiting for" `basename $DAEMON` "to be terminated."
-	while true
-	do
-	    pidof $DAEMON > /dev/null 2>&1
-	    if [ "$?" != "0" ]; then
-		break
-	    fi
-	    echo -n "."
-	    sleep 1
-	done
-	echo
-	rm -f $PIDFILE
-        if [ "$AGENT_MODE" = "ovs" ]; then
-            $VN_NOTIFIER stop 1>> $VN_NOTIFIER_LOG 2>&1
-        fi
-    else
-	echo "$DAEMON is not running"
-	exit 0
-    fi
+    start-stop-daemon --stop --quiet --retry=TERM/30/KILL/5 --pidfile $PIDFILE
+    RETVAL="$?"
+    return "$RETVAL"
 }
 
-
-case $1 in
+case "$1" in
     start)
-	start
+	[ "$VERBOSE" != no ] && log_daemon_msg "Starting $DESC" "$NAME"
+	do_start
+	case "$?" in
+	    0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+	    2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+	esac
 	;;
-
     stop)
-	stop
+	[ "$VERBOSE" != no ] && log_daemon_msg "Stopping $DESC" "$NAME"
+	do_stop
+	case "$?" in
+	    0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+	    2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+	esac
 	;;
-
-    restart)
-	stop
-	sleep 1
-	start
+    status)
+	status_of_proc "$DAEMON" "$NAME" && exit 0 || exit $?
+       ;;
+    restart|force-reload)
+	log_daemon_msg "Restarting $DESC" "$NAME"
+	do_stop
+	case "$?" in
+	    0|1)
+		do_start
+		case "$?" in
+		    0) log_end_msg 0 ;;
+		    1) log_end_msg 1 ;;
+		    *) log_end_msg 1 ;;
+		esac
+		;;
+	    *)
+		log_end_msg 1
+		;;
+	esac
 	;;
-
     *)
-	echo "$0 {start|stop|restart}"
-	exit 2
+	echo "Usage: $SCRIPTNAME {start|stop|status|restart|force-reload}" >&2
+	exit 3
 	;;
 esac
 
-exit 0
+:

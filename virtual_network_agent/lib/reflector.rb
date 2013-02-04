@@ -97,7 +97,7 @@ class Reflector
     end
 
     def url
-      config[ 'controller_uri' ] + "config"
+      config.controller_uri + "config"
     end
 
     def tunnel_endpoint

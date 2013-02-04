@@ -92,15 +92,15 @@ module Vxlan
 
 	def reflectorctl command, options = []
 	  result = ""
-	  Open3.popen3( "#{ config[ 'reflectorctl' ]} #{ command } #{ options.join ' ' }" ) do | stdin, stdout, stderr |
+	  Open3.popen3( "#{ config.reflectorctl } #{ command } #{ options.join ' ' }" ) do | stdin, stdout, stderr |
 	    stdin.close
 	    error = stderr.read
 	    result << stdout.read
-	    raise "Permission denied #{ config[ 'reflectorctl' ]}" if /Permission denied/ =~ result
-	    raise "#{ error } #{ config[ 'reflectorctl' ]}" unless error.length == 0
+	    raise "Permission denied #{ config.reflectorctl }" if /Permission denied/ =~ result
+	    raise "#{ error } #{ config.reflectorctl }" unless error.length == 0
 	  end
 	  unless $?.success?
-	    raise "Cannot execute #{ config[ 'reflectorctl' ]} (exit status #{ $?.exitstatus })"
+	    raise "Cannot execute #{ config.reflectorctl } (exit status #{ $?.exitstatus })"
 	  end
 	  result
 	end

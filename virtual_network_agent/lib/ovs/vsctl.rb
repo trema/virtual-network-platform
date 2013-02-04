@@ -135,15 +135,15 @@ module OVS
 
       def ovs_vsctl options, command, args = []
 	result = ""
-	Open3.popen3( "#{ config[ 'ovs-vsctl' ]} #{ options.join ' ' } #{ command } #{ args.join ' ' }" ) do | stdin, stdout, stderr |
+	Open3.popen3( "#{ config.vsctl } #{ options.join ' ' } #{ command } #{ args.join ' ' }" ) do | stdin, stdout, stderr |
 	  stdin.close
 	  error = stderr.read
 	  result << stdout.read
-	  raise "Permission denied #{ config[ 'ovs-vsctl' ]}" if /Permission denied/ =~ error
-	  raise "#{ error } #{ config[ 'ovs-vsctl' ]}" unless error.length == 0
+	  raise "Permission denied #{ config.vsctl }" if /Permission denied/ =~ error
+	  raise "#{ error } #{ config.vsctl }" unless error.length == 0
 	end
 	unless $?.success?
-	  raise "Cannot execute #{ config[ 'ovs-vsctl' ]} (exit status #{ $?.exitstatus })"
+	  raise "Cannot execute #{ config.vsctl } (exit status #{ $?.exitstatus })"
 	end
 	result
       end

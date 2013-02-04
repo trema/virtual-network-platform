@@ -21,7 +21,7 @@ module DB
     def initialize uri
       raise StandardError.new "Invalid uri (#{ uri })" unless %r,^(http|https)://[[:graph:]]+$, =~ uri
       @uri = uri
-      @uri << '/' unless %r,/$, =~ @uri
+      @uri << '/' if %r,/$, !~ @uri
     end
 
     def to_s

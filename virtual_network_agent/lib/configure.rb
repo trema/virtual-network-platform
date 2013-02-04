@@ -19,37 +19,50 @@ require 'forwardable'
 require 'singleton'
 require 'yaml'
 
+require 'ovs'
+require 'vxlan'
+
 class Configure
   include Singleton
   extend Forwardable
 
   def initialize
-    config_file = File.dirname( __FILE__ ) + '/configure.yml'
-    default_config = ( YAML.load_file( config_file ) or {} )
-    if default_config.has_key? 'controller_uri'
-      default_config[ 'controller_uri' ] << '/' unless %r,/$, =~ default_config[ 'controller_uri' ]
+    @config = {}
+  end
+
+  def load_file config_file
+    config = ( YAML.load_file( config_file ) or {} )
+    @config.update config
+    ovs_config = OVS::Configure.instance
+    ovs_config.update( @config[ 'ovs' ] )
+    vxlan_config = Vxlan::Configure.instance
+    vxlan_config.update( @config[ 'vxlan' ] )
+  end
+
+  def controller_uri
+    if %r,/$, !~ @config[ 'controller_uri' ]
+      @config[ 'controller_uri' ] << '/'
     end
-    if default_config.has_key? 'uri'
-      default_config[ 'uri' ] << '/' unless %r,/$, =~ default_config[ 'uri' ]
+    @config[ 'controller_uri' ]
+  end
+
+  def uri
+    if %r,/$, !~ @config[ 'uri' ]
+      @config[ 'uri' ] << '/'
     end
-    if default_config.has_key? 'reflector_mode'
-      default_config[ 'reflector_mode' ] = ( default_config[ 'reflector_mode' ] == 'true' )
-    else
-      default_config[ 'reflector_mode' ] = false
-    end
-    if default_config.has_key? 'daemon'
-      default_config[ 'daemon' ] = ( default_config[ 'daemon' ] == 'true' )
-    else
-      default_config[ 'daemon' ] = false
-    end
-    @config = default_config
+    @config[ 'uri' ]
   end
 
   def_delegator :@config, :[]
   def_delegator :@config, :[]=
+  def_delegator :@config, :to_hash
 
-  def to_hash
-    @config
+  def ovs
+    OVS::Configure.instance
+  end
+
+  def vxlan
+    Vxlan::Configure.instance
   end
 
 end

@@ -26,17 +26,19 @@ module OVS
     extend Forwardable
 
     def initialize
-      config_file = File.dirname( __FILE__ ) + '/configure.yml'
-      default_config = ( YAML.load_file( config_file ) or {} )
-      default_config[ 'ovs-vsctl' ] = which default_config[ 'ovs-vsctl' ]
-      @config = default_config
+      @config = {}
     end
 
     def_delegator :@config, :[]
     def_delegator :@config, :[]=
+    def_delegator :@config, :update
+    def_delegator :@config, :to_hash
 
-    def to_hash
-      @config
+    def vsctl
+      if %r,^/, !~ @config[ 'vxlanctl' ]
+        @config[ 'ovs-vsctl' ] = which @config[ 'ovs-vsctl' ]
+      end
+      @config[ 'ovs-vsctl' ]
     end
 
     private
@@ -44,11 +46,11 @@ module OVS
     def which command
       return command if %r,^/, =~ command
       ENV[ 'PATH' ].split( ':' ).each do | each |
-	each << '/' unless %r,/$, =~ each
-	path = each + command
+        each << '/' if %r,/$, !~ each
+        path = each + command
         if File.executable_real?( path )
-	  return path
-	end
+          return path
+        end
       end
       command
     end

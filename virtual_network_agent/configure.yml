@@ -14,5 +14,17 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-ovs-vsctl: ovs-vsctl
-bridge: br0
+controller_uri: http://127.0.0.1:8081/
+uri: http://127.0.0.1:8082/
+tunnel_endpoint: 10.0.0.1
+listen_port: 8082
+listen_address: 0.0.0.0
+daemon: true
+pid_file: /var/run/virtual_network_agent.pid
+log_file: /var/log/virtual_network_agent.log
+ovs:
+  ovs-vsctl: ovs-vsctl
+  bridge: br0
+vxlan:
+  reflectorctl: ../vxlan_tunnel_endpoint/src/reflectorctl
+  vxlanctl: ../vxlan_tunnel_endpoint/src/vxlanctl

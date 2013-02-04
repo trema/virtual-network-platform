@@ -14,8 +14,15 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-controller_uri: http://127.0.0.1:8081/
-uri: http://127.0.0.1:8082/
-tunnel_endpoint: 10.0.0.1
-listen_port: 8082
+listen_port: 8081
 listen_address: 0.0.0.0
+daemon: true
+pid_file: /var/run/configuration_frontend.pid
+log_file: /var/log/configuration_frontend.log
+db:
+  adapter: mysql
+  host: localhost
+  port: 3306
+  username: root
+  password: password
+  database: vnet

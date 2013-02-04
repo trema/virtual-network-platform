@@ -26,22 +26,26 @@ module Vxlan
     extend Forwardable
 
     def initialize
-      config_file = File.dirname( __FILE__ ) + '/configure.yml'
-      default_config = ( YAML.load_file( config_file ) or {} )
-      if %r,^/, !~ default_config[ 'reflectorctl' ]
-        default_config[ 'reflectorctl' ] = File.dirname( __FILE__ ) + '/' + default_config[ 'reflectorctl' ]
-      end
-      if %r,^/, !~ default_config[ 'vxlanctl' ]
-        default_config[ 'vxlanctl' ] = File.dirname( __FILE__ ) + '/' + default_config[ 'vxlanctl' ]
-      end
-      @config = default_config
+      @config = {}
     end
 
     def_delegator :@config, :[]
     def_delegator :@config, :[]=
+    def_delegator :@config, :update
+    def_delegator :@config, :to_hash
 
-    def to_hash
-      @config
+    def vxlanctl
+      if %r,^/, !~ @config[ 'vxlanctl' ]
+        @config[ 'vxlanctl' ] = File.dirname( __FILE__ ) + '/../../' + @config[ 'vxlanctl' ]
+      end
+      @config[ 'vxlanctl' ]
+    end
+
+    def reflectorctl
+      if %r,^/, !~ @config[ 'reflectorctl' ]
+        @config[ 'reflectorctl' ] = File.dirname( __FILE__ ) + '/../../' + @config[ 'reflectorctl' ]
+      end
+      @config[ 'reflectorctl' ]
     end
 
   end

@@ -26,7 +26,7 @@ class OverlayNetwork
     @registered = false
 
     def startup
-      body = JSON.pretty_generate( {  :control_uri => config[ 'uri' ], :tunnel_endpoint => config[ 'tunnel_endpoint' ] } )
+      body = JSON.pretty_generate( {  :control_uri => config.uri, :tunnel_endpoint => config[ 'tunnel_endpoint' ] } )
       logger.debug "register #{ register_url }"
       logger.debug "#{ body }"
       begin
@@ -136,7 +136,7 @@ class OverlayNetwork
 
     def register_url
       datapath_id = ovs_bridge.datapath_id
-      config[ 'controller_uri' ] + "agents/" + datapath_id.to_s
+      config.controller_uri + "agents/" + datapath_id.to_s
     end
     alias :unregister_url :register_url
 

@@ -366,10 +366,12 @@ class RestApi < Sinatra::Base
     status 404
   end
 
+  config_file = File.dirname( __FILE__ ) + '/configure.yml'
   config = Configure.instance
-  db_config = DB::Configure.instance
+  config.load_file( config_file )
+  db_config = config.db
   option = OptionParser.new
-  option.on( '-c arg', '--config-file=arg', "Configuration file" ) do | arg |
+  option.on( '-c arg', '--config-file=arg', "Configuration file (default #{ config_file })" ) do | arg |
     config.load_file arg
   end
 
@@ -392,12 +394,20 @@ class RestApi < Sinatra::Base
     config[ 'listen-port' ] = arg
   end
   option.on( '--pid-file=arg', "Pid file (default '#{ config[ 'pid_file' ] }')" ) do | arg |
-    config[ 'pid_file' ] = arg
+    if arg.empty?
+      config[ 'pid_file' ] = nil
+    else
+      config[ 'pid_file' ] = arg
+    end
   end
   option.on( '--log-file=arg', "Log file (default '#{ config[ 'log_file' ] }')" ) do | arg |
-    config[ 'log_file' ] = arg
+    if arg.empty?
+      config[ 'log_file' ] = nil
+    else
+      config[ 'log_file' ] = arg
+    end
   end
-  option.on( '-b', '--daemon', "Daemonize (default '#{ config[ 'daemon' ] }')" ) do | arg |
+  option.on( '-b', '--[no-]daemon', "Daemonize (default '#{ config[ 'daemon' ] }')" ) do | arg |
     config[ 'daemon' ] = arg
   end
   option.on( '-d', '--debug', "Debug mode" ) do | arg |
@@ -418,7 +428,6 @@ class RestApi < Sinatra::Base
     puts option.help
     exit 1
   end
-  config[ 'daemon' ] = false if Log.instance.level == Log::DEBUG
   logger.log_file = config[ 'log_file' ] unless config[ 'log_file' ].nil?
   set :port, config[ 'listen_port' ]
   set :bind, config[ 'listen_address' ]

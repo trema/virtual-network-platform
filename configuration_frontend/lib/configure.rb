@@ -27,8 +27,6 @@ class Configure
 
   def initialize
     @config = {}
-    config_file = File.dirname( __FILE__ ) + '/default.yml'
-    load_file config_file
   end
 
   def load_file config_file
