@@ -34,13 +34,6 @@ module Vxlan
     def_delegator :@config, :update
     def_delegator :@config, :to_hash
 
-    def vxlanctl
-      if %r,^/, !~ @config[ 'vxlanctl' ]
-        @config[ 'vxlanctl' ] = File.dirname( __FILE__ ) + '/../../' + @config[ 'vxlanctl' ]
-      end
-      @config[ 'vxlanctl' ]
-    end
-
   end
 
 end

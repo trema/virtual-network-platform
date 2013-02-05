@@ -16,3 +16,4 @@
 #
 
 require 'vxlan/instance'
+require 'vxlan/reflector'

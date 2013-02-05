@@ -21,6 +21,5 @@ daemon: true
 pid_file: /var/run/virtual_network_agent.pid
 log_file: /var/log/virtual_network_agent.log
 vxlan:
-  adapter: vxlan_tunnel_endpoint
   vxlan_tunnel_endpoint:
     reflectorctl: ../vxlan_tunnel_endpoint/src/reflectorctl

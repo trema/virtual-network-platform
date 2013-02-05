@@ -84,7 +84,7 @@ def convert_port value
   rescue BadReuestError
     raise BadReuestError.new "Port number (#{ value }) is illegal format."
   end
-  if i <= 0 or i > 0xffff
+  if i < 0 or i > 0xffff
     raise BadReuestError.new "Port number (#{ value }) is illegal range."
   end
   i

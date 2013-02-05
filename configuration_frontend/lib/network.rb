@@ -177,6 +177,8 @@ class Network
     def show_ports parameters
       raise BadReuestError.new "Slice id must be specified." if parameters[ :net_id ].nil?
       slice_id = convert_slice_id parameters[ :net_id ]
+
+      find_slice( slice_id )
      
       DB::Port.find( :all,
 		     :readonly => true,
@@ -302,6 +304,9 @@ class Network
 
       slice_id = convert_slice_id parameters[ :net_id ]
       port_id = convert_port_id parameters[ :id ]
+
+      find_slice( slice_id )
+      find_port( slice_id, port_id )
 
       DB::MacAddress.find( :all,
 		          :readonly => true,

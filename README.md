@@ -174,7 +174,7 @@ the MySQL "root" user. We assume here that the password is set to
 
         $ sudo cp configuration_frontend/config/configuration_frontend \
         /etc/default
-Edit the configuration file (/etc/default/configuration_frontend) as
+Edit the configuration file (/etc/default/configuration\_frontend) as
 follows:
 
         (TBD)
@@ -201,7 +201,7 @@ follows:
 
         $ sudo cp virtual_network_agent/config/virtual_network_agent \
         /etc/default
-Edit the configuration file (/etc/default/virtual_network_agent) as
+Edit the configuration file (/etc/default/virtual\_network\_agent) as
 follows:
 
         (TBD)

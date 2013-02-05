@@ -119,8 +119,9 @@ class ReflectorAgent < Sinatra::Base
   post '/reflector/:vni/?' do | vni |
     if settings.reflector_mode
       logger.debug "#{ __FILE__ }:#{ __LINE__ }: Create a tunnel endpoint on the vni in the request URI."
-      requires = [ :vni, :ip ]
+      requires = [ :ip, :port ]
       parameters = json_parse( request, requires )
+      parameters[ :vni ] = vni
       content_type :json, :charset => 'utf-8'
       status 202
       body no_message_body Reflector.add_endpoint( parameters )

@@ -110,9 +110,6 @@ module Vxlan
 	    result << stdout.read
 	    raise "#{ error } #{ config[ 'ip' ] }" unless error.length == 0
 	  end
-	  unless $?.success?
-	    raise "Cannot execute #{ config[ 'ip' ] } (exit status #{ $?.exitstatus })"
-	  end
 	  result
 	end
 

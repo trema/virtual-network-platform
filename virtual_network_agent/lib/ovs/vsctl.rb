@@ -142,9 +142,6 @@ module OVS
 	  raise "Permission denied #{ config[ 'vsctl' ] }" if /Permission denied/ =~ error
 	  raise "#{ error } #{ config[ 'vsctl' ] }" unless error.length == 0
 	end
-	unless $?.success?
-	  raise "Cannot execute #{ config[ 'vsctl' ] } (exit status #{ $?.exitstatus })"
-	end
 	result
       end
 

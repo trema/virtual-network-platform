@@ -86,20 +86,18 @@ module Vxlan
 	end
 
 	def vxlanctl command, options = []
-	  full_path_vxlanctl = config[ 'vxlanctl' ]
-          if %r,^/, !~ full_path_vxlanctl
-            full_path_vxlanctl = File.dirname( __FILE__ ) + '/../../' + full_path_vxlanctl
+	  full_path = config[ 'vxlanctl' ]
+          if %r,^/, !~ full_path
+            full_path = File.dirname( __FILE__ ) + '/../../' + full_path
           end
 	  result = ""
-	  Open3.popen3( "#{ full_path_vxlanctl } #{ command } #{ options.join ' ' }" ) do | stdin, stdout, stderr |
+	  Open3.popen3( "#{ full_path } #{ command } #{ options.join ' ' }" ) do | stdin, stdout, stderr |
 	    stdin.close
 	    error = stderr.read
 	    result << stdout.read
-	    raise "Permission denied #{ config.vxlanctl }" if /Permission denied/ =~ result
-	    raise "#{ error } #{ config.vxlanctl }" unless error.length == 0
-	  end
-	  unless $?.success?
-	    raise "Cannot execute #{ config.vxlanctl } (exit status #{ $?.exitstatus })"
+	    raise "Permission denied #{ full_path }" if /Permission denied/ =~ result
+	    raise "#{ result } #{ full_path }" if /Failed to/ =~ result
+	    raise "#{ error } #{ full_path }" unless error.length == 0
 	  end
 	  result
 	end

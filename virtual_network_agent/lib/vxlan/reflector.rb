@@ -87,20 +87,22 @@ module Vxlan
 	private
 
 	def config
-	  Configure.instance
+	  Vxlan::Configure.instance[ 'vxlan_tunnel_endpoint' ]
 	end
 
 	def reflectorctl command, options = []
+	  full_path = config[ 'reflectorctl' ]
+          if %r,^/, !~ full_path
+            full_path = File.dirname( __FILE__ ) + '/../../' + full_path
+          end
 	  result = ""
-	  Open3.popen3( "#{ config.reflectorctl } #{ command } #{ options.join ' ' }" ) do | stdin, stdout, stderr |
+	  Open3.popen3( "#{ full_path } #{ command } #{ options.join ' ' }" ) do | stdin, stdout, stderr |
 	    stdin.close
 	    error = stderr.read
 	    result << stdout.read
-	    raise "Permission denied #{ config.reflectorctl }" if /Permission denied/ =~ result
-	    raise "#{ error } #{ config.reflectorctl }" unless error.length == 0
-	  end
-	  unless $?.success?
-	    raise "Cannot execute #{ config.reflectorctl } (exit status #{ $?.exitstatus })"
+	    raise "Permission denied #{ full_path }" if /Permission denied/ =~ result
+	    raise "#{ result } #{ full_path }" if /Failed to/ =~ result
+	    raise "#{ error } #{ full_path }" unless error.length == 0
 	  end
 	  result
 	end
