@@ -1,2 +1,2 @@
-[{"vid":"65535","port_name":"vm001-eth0","port_no":"65535","datapath_id":"2","id":"1","description":"Port vm001-eth0 on Switch #2","state":"confirmed"},{"vid":"65535","port_name":"vm001-eth0","port_no":"65535","datapath_id":"1","id":"0","description":"Port vm001-eth0 on Switch #1","state":"confirmed"}]
+[{"vid":65535,"port_name":"vm001-eth0","port_no":65535,"datapath_id":"2","id":1,"description":"Port vm001-eth0 on Switch #2","state":"confirmed"},{"vid":65535,"port_name":"vm001-eth0","port_no":65535,"datapath_id":"1","id":0,"description":"Port vm001-eth0 on Switch #1","state":"confirmed"}]
 

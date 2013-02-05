@@ -1,54 +1,169 @@
 <!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
-  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-  <link rel="icon" href="favicon.ico" type="image/x-icon">
-  <link rel="stylesheet" href="api.css" type="text/css">
   <title>Virtual Network Management API</title>
+  <style type="text/css">
+    body 
+    {
+      background-color: #f8f8ff;
+      margin: 0px 0px 0px 0px;
+      padding: 12px;
+      font-family : Verdana, Arial, Helvetica, sans-serif;
+    }
+
+    table
+    {
+      margin: 12px;
+      border: 1px #e3e3e3 solid;
+      border-collapse: collapse;
+      border-spacing: 0;
+      table-layout: fixed;
+      word-wrap: break-word;
+      width: 98%;
+    }
+
+    th
+    {
+      padding: 5px;
+      border: 1px #e3e3e3 solid;
+      border-width: 0 0 1px 1px;
+      text-align: center;
+    }
+
+    th.request, th.response
+    {
+      width: 45%;
+    }
+
+    th.response
+    {
+      width: 40%;
+    }
+
+    td
+    {
+      padding: 5px;
+      border: 1px #e3e3e3 solid;
+      border-width: 0 0 1px 1px;
+      text-align: left;
+    }
+
+    h1
+    {
+      font-size : 20pt;
+      border-top: solid 1px blue;
+      border-bottom: solid 1px blue;
+      padding: 5px;
+      text-align: center;
+    }
+
+    h2
+    {
+      font-size : 16pt;
+      border-left: blue 8px solid;
+      border-bottom: blue 1px solid;
+      background: #f5f5f5;
+      padding: 5px 0 5px 15px;
+      text-align: left;
+    }
+
+    h3
+    {
+      font-size : 14pt;
+      border-left: blue 8px solid;
+      background: #f5f5f5;
+      padding: 5px 0 5px 15px;
+
+      text-align: left;
+    }
+
+    p.footer
+    {
+      font-size: 14px;
+      margin: 10px;
+      text-align: right;
+      background: #f5f5f5;
+      color: #808080;
+    }
+  </style>
 </head>
 <body>
 
 <h1>Virtual Network Management API</h1>
 
+<h2>Basics</h2>
+<h3>Request and Response</h3>
+<p>
+Request messages which require body part, they must be properly formatted with the JSON
+(JavaScript Object Notation). Content-Type must be <i>application/json</i> and
+other types are not accepted.
+</p>
+<p>
+Response codes may be "200 OK" or "202 Accepted" if a requested operation is successfully
+completed or accepted. "202 Accepted" must be interpreted as the request is just accepted
+and does not mean the operation is successfully completed. The client must proactively
+check if the operation is successfully completed or not after receiving 202 response.
+</p>
+<p>
+Response codes may be 4XX or 5XX if a requested operation is not successfully completed.
+Only typical errors are shown in the tables below and you must prepare for other response
+codes. Error responses may contain body other format than application/json (e.g. text/plain)
+for describing errors in detail.
+</p>
+
+<h3>JSON formatting</h3>
+<p>
+Any integer values smaller than or equal to 32-bit are represented as integer values.
+They must not be text strings.
+</p>
+<p>
+64-bit integer values are represented as text strings for compatibility with different
+JSON implementations. Several JSON implementations do not accept integer values greater
+than 32-bit.
+</p>
+
+<h2>API</h2>
+
+<!-- /networks -->
+<h3>/networks</h3>
+
 <table>
 <tr>
-  <td rowspan="3">Path</td>
-  <td rowspan="3">Method</td>
-  <td colspan="4">Request</td>
-  <td rowspan="3">Behavior</td>
-  <td colspan="3">Response</td>
+  <th rowspan="3">Method</th>
+  <th colspan="4" class="request">Request</th>
+  <th rowspan="3">Behavior</th>
+  <th colspan="3" class="response">Response</th>
 </tr>
 
 <tr>
-  <td colspan="2">Parameters</td>
-  <td rowspan="2">Content-Type</td>
-  <td rowspan="2">Body (example)</td>
-  <td rowspan="2">Code</td>
-  <td rowspan="2">Content-Type</td>
-  <td rowspan="2">Body (example)</td>
+  <th colspan="2">Parameters</th>
+  <th rowspan="2">Content-Type</th>
+  <th rowspan="2">Body (example)</th>
+  <th rowspan="2">Code</th>
+  <th rowspan="2">Content-Type</th>
+  <th rowspan="2">Body (example)</th>
 </tr>
 
 <tr>
-  <td>Key</td>
-  <td>Value</td>
+  <th>Key</th>
+  <th>Description</th>
 </tr>
 
 <!-- GET /networks -->
 <tr>
-  <td rowspan="7">/networks</td>
   <td rowspan="2">GET</td>
   <td rowspan="2">-</td>
   <td rowspan="2">-</td>
   <td rowspan="2">-</td>
   <td rowspan="2">-</td>
-  <td rowspan="2">List summary of networks associated.</td>
+  <td rowspan="2">List existing networks.</td>
   <td>200 OK</td>
   <td>application/json</td>
   <td><a href="list_networks.json">list_networks.json</a></td>
 </tr>
 
 <tr>
-  <td>500 Internal error.</td>
+  <td>500 Internal error</td>
   <td>-</td>
   <td>-</td>
 </tr>
@@ -57,63 +172,89 @@
 <tr>
   <td rowspan="5">POST</td>
   <td>id</td>
-  <td>An unique id of the network 'id' is automatically assigned if it is not specified.</td>
+  <td>A unique identifier of the network.
+      The value must be an unsigned integer value smaller than 16777216.
+      If omitted, the value is automatically assigned.</td>
   <td rowspan="5">application/json</td>
   <td rowspan="5"><a href="create_network.json">create_network.json</a></td>
   <td rowspan="5">Create a new network associated.</td>
-  <td>202 Accepted.</td>
+  <td>202 Accepted</td>
   <td>application/json</td>
   <td><a href="create_network.json">create_network.json</a></td>
 </tr>
 
 <tr>
   <td rowspan="4">description</td>
-  <td rowspan="4">Description of the creating network (optional).</td>
-  <td>400 Bad Request.</td>
+  <td rowspan="4">Description (text string) of the network.
+                  If omitted, an empty string is saved.</td>
+  <td>400 Bad request</td>
   <td>-</td>
   <td>-</td>
 </tr>
 
 <tr>
-  <td>422 The specified parameters are unacceptable.</td>
+  <td>422 Specified parameters are unacceptable</td>
   <td>-</td>
   <td>-</td>
 </tr>
 
-<tr >
-  <td>486 Request is not allowed at this moment since an update is in progress.</td>
+<tr>
+  <td>486 Another update is in progress</td>
   <td >-</td>
   <td >-</td>
 </tr>
 
 <tr>
-  <td>500 Internal error.</td>
+  <td>500 Internal error</td>
   <td>-</td>
   <td>-</td>
 </tr>
+</table>
 
+<!-- /networks/<net_id> -->
+<h3>/networks/&lt;net_id&gt;</h3>
+<table>
+<tr>
+  <th rowspan="3">Method</th>
+  <th colspan="4" class="request">Request</th>
+  <th rowspan="3">Behavior</th>
+  <th colspan="3" class="response">Response</th>
+</tr>
+
+<tr>
+  <th colspan="2">Parameters</th>
+  <th rowspan="2">Content-Type</th>
+  <th rowspan="2">Body (example)</th>
+  <th rowspan="2">Code</th>
+  <th rowspan="2">Content-Type</th>
+  <th rowspan="2">Body (example)</th>
+</tr>
+
+<tr>
+  <th>Key</th>
+  <th>Description</th>
+</tr>
 <!-- GET /networks/<net_id> -->
 <tr>
-  <td rowspan="12">/networks/&lt;net_id&gt;</td>
   <td rowspan="3">GET</td>
   <td rowspan="3">-</td>
   <td rowspan="3">-</td>
   <td rowspan="3">-</td>
   <td rowspan="3">-</td>
-  <td rowspan="3">Show details of network identified by net_id.</td>
+  <td rowspan="3">Show details of the network identified by net_id.</td>
   <td>200 OK</td>
   <td>application/json</td>
   <td><a href="show_network.json">show_network.json</a></td>
 </tr>
 
 <tr>
-  <td>404 Not found.</td>
+  <td>404 Not found</td>
   <td>-</td>
   <td>-</td>
 </tr>
 
 <tr>
-  <td>500 Internal error.</td>
+  <td>500 Internal error</td>
   <td>-</td>
   <td>-</td>
 </tr>
@@ -122,35 +263,36 @@
 <tr>
   <td rowspan="5">PUT</td>
   <td rowspan="5">description</td>
-  <td rowspan="5">Description of the network (optional).</td>
+  <td rowspan="5">Description (text string) of the network.
+                  This is a mandatory parameter.</td>
   <td rowspan="5">application/json</td>
   <td rowspan="5"><a href="modify_network.json">modify_network.json</a></td>
-  <td rowspan="5">Update details of network identified by net_id.</td>
-  <td>202 Accepted.</td>
+  <td rowspan="5">Update details of the network identified by net_id.</td>
+  <td>202 Accepted</td>
   <td>-</td>
   <td>-</td>
 </tr>
 
 <tr>
-  <td>400 Bad Request.</td>
+  <td>400 Bad request</td>
   <td>-</td>
   <td>-</td>
 </tr>
 
 <tr>
-  <td>404 Not found.</td>
+  <td>404 Not found</td>
   <td>-</td>
   <td>-</td>
 </tr>
 
 <tr>
-  <td>486 Request is not allowed at this moment since an update is in progress.</td>
+  <td>486 Another update is in progress</td>
   <td>-</td>
   <td>-</td>
 </tr>
 
 <tr>
-  <td>500 Internal error.</td>
+  <td>500 Internal error</td>
   <td>-</td>
   <td>-</td>
 </tr>
@@ -163,51 +305,74 @@
   <td rowspan="4">-</td>
   <td rowspan="4">-</td>
   <td rowspan="4">Delete the network identified by net_id.</td>
-  <td>202 Accepted.</td>
+  <td>202 Accepted</td>
   <td>-</td>
   <td>-</td>
 </tr>
 
 <tr>
-  <td>404 Not found.</td>
+  <td>404 Not found</td>
   <td>-</td>
   <td>-</td>
 </tr>
 
 <tr>
-  <td>486 Request is not allowed at this moment since an update is in progress.</td>
+  <td>486 Another update is in progress</td>
   <td>-</td>
   <td>-</td>
 </tr>
 
 <tr>
-  <td>500 Internal error.</td>
+  <td>500 Internal error</td>
   <td>-</td>
   <td>-</td>
 </tr>
+</table>
 
+<!-- /networks/<net_id>/ports -->
+<h3>/networks/&lt;net_id&gt;/ports</h3>
+<table>
+<tr>
+  <th rowspan="3">Method</th>
+  <th colspan="4" class="request">Request</th>
+  <th rowspan="3">Behavior</th>
+  <th colspan="3" class="response">Response</th>
+</tr>
+
+<tr>
+  <th colspan="2">Parameters</th>
+  <th rowspan="2">Content-Type</th>
+  <th rowspan="2">Body (example)</th>
+  <th rowspan="2">Code</th>
+  <th rowspan="2">Content-Type</th>
+  <th rowspan="2">Body (example)</th>
+</tr>
+
+<tr>
+  <th>Key</th>
+  <th>Description</th>
+</tr>
 <!-- DELETE /networks/<net_id>/ports -->
 <tr>
-<td rowspan="9">/networks/&lt;net_id&gt;/ports</td>
   <td rowspan="3">GET</td>
   <td rowspan="3">-</td>
   <td rowspan="3">-</td>
   <td rowspan="3">-</td>
   <td rowspan="3">-</td>
-  <td rowspan="3">List all the ports currently defined.</td>
-  <td>200 OK.</td>
+  <td rowspan="3">List all switch ports associated with the network identified by net_id.</td>
+  <td>200 OK</td>
   <td>application/json</td>
   <td><a href="show_ports.json">show_ports.json</a></td>
 </tr>
 
 <tr>
-  <td>404 Not found.</td>
+  <td>404 Not found</td>
   <td>-</td>
   <td>-</td>
 </tr>
 
 <tr>
-  <td>500 Internal error.</td>
+  <td>500 Internal error</td>
   <td>-</td>
   <td>-</td>
 </tr>
@@ -216,71 +381,104 @@
 <tr>
   <td rowspan="6">POST</td>
   <td>id</td>
-  <td>An unique id of the logical port (optional). 'id' is automatically assigned
-      if it is not specified.</td>
+  <td>A unique identifier of the switch port.
+      The value must be an unsigned 32-bit integer value.
+      If omitted, the value is automatically assigned.</td>
   <td rowspan="6">application/json</td>
   <td rowspan="6"><a href="create_port.json">create_port.json</a></td>
-  <td rowspan="6">Create a logical port on the network specified in the request URI.</td>
-  <td>202 Accepted.</td>
+  <td rowspan="6">Attach a switch port to the network identified by net_id.</td>
+  <td>202 Accepted</td>
   <td>-</td>
   <td>-</td>
 </tr>
 
 <tr>
   <td>datapath_id</td>
-  <td>A datapath id of the switch (mandatory).</td>
-  <td>400 Bad Request.</td>
+  <td>Datapath identifier of the switch which the switch port belongs.
+      The value must be an unsigned 64-bit integer value represented as a text string.
+      This is a mandatory parameter.</td>
+  <td>400 Bad request</td>
   <td>-</td>
   <td>-</td>
 </tr>
 
 <tr>
   <td>number</td>
-  <td rowspan="2">Port number and name of the logical port (exclusive).</td>
-  <td>404 Not found.</td>
+  <td rowspan="2">Port number and name of the switch port.
+                  Port number must be an unsigned integer less than or equal to 65280.
+                  Port name must be a text string.
+                  <i>number</i> and <i>name</i> are exclusive and one of them must be provided.</td>
+  <td>404 Not found</td>
   <td>-</td>
   <td>-</td>
 </tr>
 <tr>
 
 <td>name</td>
-  <td>422 The specified parameters are unacceptable.</td>
+  <td>422 Specified parameters are unacceptable</td>
   <td>-</td>
   <td>-</td>
 </tr>
 
 <tr>
   <td>vid</td>
-  <td>VLAN identifier of the logical port (optional).</td>
-  <td>486 Request is not allowed at this moment since an update is in progress.</td>
+  <td>VLAN identifier of the switch port.
+      You can multiplex multiple networks on a single switch port with 802.1q VLAN.
+      The value must be an unsigned integer value smaller than 4096 or equal to 65535.
+      If 65535 is specified, no VLAN is associated.</td>
+  <td>486 Another update is in progress</td>
   <td>-</td>
   <td>-</td>
 </tr>
 
 <tr>
   <td>description</td>
-  <td>Description of the logical port (optional).</td>
-  <td>500 Internal error.</td>
+  <td>Description (text string) of the switch port.
+      If omitted, empty string is saved.</td>
+  <td>500 Internal error</td>
   <td>-</td>
   <td>-</td>
 </tr>
+</table>
 
+<!-- /networks/<net_id>/ports/<port_id> -->
+<h3>/networks/&lt;net_id&gt;/ports/&lt;port_id&gt;</h3>
+<table>
+<tr>
+  <th rowspan="3">Method</th>
+  <th colspan="4" class="request">Request</th>
+  <th rowspan="3">Behavior</th>
+  <th colspan="3" class="response">Response</th>
+</tr>
+
+<tr>
+  <th colspan="2">Parameters</th>
+  <th rowspan="2">Content-Type</th>
+  <th rowspan="2">Body (example)</th>
+  <th rowspan="2">Code</th>
+  <th rowspan="2">Content-Type</th>
+  <th rowspan="2">Body (example)</th>
+</tr>
+
+<tr>
+  <th>Key</th>
+  <th>Description</th>
+</tr>
 <!-- GET /networks/<net_id>/ports/<port_id> -->
 <tr>
-  <td rowspan="6">/networks/&lt;net_id&gt; /ports/&lt;port_id&gt;</td>
   <td rowspan="2">GET</td>
   <td rowspan="2">-</td>
   <td rowspan="2">-</td>
   <td rowspan="2">-</td>
   <td rowspan="2">-</td>
-  <td rowspan="2">Retrieve detail of the port port_id configured for the network net_id.</td>
-  <td>200 OK.</td>
+  <td rowspan="2">Show details of the switch port identified by port_id and net_id.</td>
+  <td>200 OK</td>
   <td>application/json</td>
   <td><a href="show_port.json">show_port.json</a></td>
 </tr>
 
 <tr>
-  <td>404 Not found.</td>
+  <td>404 Not found</td>
   <td>-</td>
   <td>-</td>
 </tr>
@@ -292,52 +490,75 @@
   <td rowspan="4">-</td>
   <td rowspan="4">-</td>
   <td rowspan="4">-</td>
-  <td rowspan="4">Delete a port from the network.</td>
-  <td>202 Accepted.</td>
+  <td rowspan="4">Detach the switch port identified by port_id from the network identified by net_id.</td>
+  <td>202 Accepted</td>
   <td>-</td>
   <td>-</td>
 </tr>
 
 <tr>
-  <td>404 Not found.</td>
+  <td>404 Not found</td>
   <td>-</td>
   <td>-</td>
 </tr>
 
 <tr>
-  <td>486 Request is not allowed at this moment since an update is in progress.</td>
+  <td>486 Another update is in progress</td>
   <td>-</td>
   <td>-</td>
 </tr>
 
 <tr>
-  <td>500 Internal error.</td>
+  <td>500 Internal error</td>
   <td>-</td>
   <td>-</td>
 </tr>
+</table>
 
+<!-- /networks/<net_id>/ports/<port_id>/mac_addresses -->
+<h3>/networks/&lt;net_id&gt;/ports/&lt;port_id&gt;/mac_addresses</h3>
+<table>
+<tr>
+  <th rowspan="3">Method</th>
+  <th colspan="4" class="request">Request</th>
+  <th rowspan="3">Behavior</th>
+  <th colspan="3" class="response">Response</th>
+</tr>
+
+<tr>
+  <th colspan="2">Parameters</th>
+  <th rowspan="2">Content-Type</th>
+  <th rowspan="2">Body (example)</th>
+  <th rowspan="2">Code</th>
+  <th rowspan="2">Content-Type</th>
+  <th rowspan="2">Body (example)</th>
+</tr>
+
+<tr>
+  <th>Key</th>
+  <th>Description</th>
+</tr>
 <!-- GET /networks/<net_id>/ports/<port_id>/mac_addresses -->
 <tr>
-  <td rowspan="9">/networks/&lt;net_id&gt; /ports/&lt;port_id&gt; /mac_addresses</td>
   <td rowspan="3">GET</td>
   <td rowspan="3">-</td>
   <td rowspan="3">-</td>
   <td rowspan="3">-</td>
   <td rowspan="3">-</td>
-  <td rowspan="3">List all the mac addresses currently defined.</td>
-  <td>200 OK.</td>
+  <td rowspan="3">List all the mac addresses associated with the switch port.</td>
+  <td>200 OK</td>
   <td>application/json</td>
   <td><a href="show_mac_addresses.json">show_mac_addresses.json</a></td>
 </tr>
 
 <tr>
-  <td>404 Not found.</td>
+  <td>404 Not found</td>
   <td>-</td>
   <td>-</td>
 </tr>
 
 <tr>
-  <td>500 Internal error.</td>
+  <td>500 Internal error</td>
   <td>-</td>
   <td>-</td>
 </tr>
@@ -346,67 +567,91 @@
 <tr>
   <td rowspan="6">POST</td>
   <td rowspan="6">address</td>
-  <td rowspan="6">MAC addresses of the logical port (mandatory).</td>
+  <td rowspan="6">MAC addresses to be associated with the switch port.
+                  This is a mandatory parameter.</td>
   <td rowspan="6">application/json</td>
   <td rowspan="6"><a href="create_mac_address.json">create_mac_address.json</a></td>
-  <td rowspan="6">Create a mac address on the logical port in the request URI.</td>
-  <td>202 Accepted.</td>
+  <td rowspan="6">Associate a MAC address to the switch port identified by port_id and net_id.</td>
+  <td>202 Accepted</td>
   <td>-</td>
   <td>-</td>
 </tr>
 
 <tr>
-  <td>400 Bad Request.</td>
+  <td>400 Bad request</td>
   <td>-</td>
   <td>-</td>
 </tr>
 
 <tr>
-  <td>404 Not found.</td>
+  <td>404 Not found</td>
   <td>-</td>
   <td>-</td>
 </tr>
 
 <tr>
-  <td>422 The specified parameters are unacceptable.</td>
+  <td>422 Specified parameters are unacceptable</td>
   <td>-</td>
   <td>-</td>
 </tr>
 
 <tr>
-  <td>486 Request is not allowed at this moment since an update is in progress.</td>
+  <td>486 Another update is in progress</td>
   <td>-</td>
   <td>-</td>
 </tr>
 
 <tr>
-  <td>500 Internal error.</td>
+  <td>500 Internal error</td>
   <td>-</td>
   <td>-</td>
 </tr>
+</table>
 
+<!-- /networks/<net_id>/ports/<port_id>/mac_addresses/<mac_address> -->
+<h3>/networks/&lt;net_id&gt;/ports/&lt;port_id&gt;/mac_addresses/&lt;mac_addresses&gt;</h3>
+<table>
+<tr>
+  <th rowspan="3">Method</th>
+  <th colspan="4" class="request">Request</th>
+  <th rowspan="3">Behavior</th>
+  <th colspan="3" class="response">Response</th>
+</tr>
+
+<tr>
+  <th colspan="2">Parameters</th>
+  <th rowspan="2">Content-Type</th>
+  <th rowspan="2">Body (example)</th>
+  <th rowspan="2">Code</th>
+  <th rowspan="2">Content-Type</th>
+  <th rowspan="2">Body (example)</th>
+</tr>
+
+<tr>
+  <th>Key</th>
+  <th>Description</th>
+</tr>
 <!-- GET /networks/<net_id>/ports/<port_id>/mac_addresses/<mac_address> -->
 <tr>
-  <td rowspan="7">/networks/&lt;net_id&gt;/ports/&lt;port_id&gt;/mac_addresses/&lt;mac_address&gt;</td>
   <td rowspan="3">GET</td>
   <td rowspan="3">-</td>
   <td rowspan="3">-</td>
   <td rowspan="3">-</td>
   <td rowspan="3">-</td>
-  <td rowspan="3">Retrieve detail of the mac address mac_address configured for the port prt_id.</td>
-  <td>200 OK.</td>
+  <td rowspan="3">Check existence of the MAC address.</td>
+  <td>200 OK</td>
   <td>application/json</td>
   <td><a href="show_mac_address.json">show_mac_address.json</a></td>
 </tr>
 
 <tr>
-  <td>404 Not found.</td>
+  <td>404 Not found</td>
   <td>-</td>
   <td>-</td>
 </tr>
 
 <tr>
-  <td>500 Internal error.</td>
+  <td>500 Internal error</td>
   <td>-</td>
   <td>-</td>
 </tr>
@@ -418,31 +663,34 @@
   <td rowspan="4">-</td>
   <td rowspan="4">-</td>
   <td rowspan="4">-</td>
-  <td rowspan="4">Delete a mac address from the port.</td>
-  <td>202 Accepted.</td>
+  <td rowspan="4">Detach the MAC address from the switch port.</td>
+  <td>202 Accepted</td>
   <td>-</td>
   <td>-</td>
 </tr>
 
 <tr>
-  <td>404 Not found.</td>
+  <td>404 Not found</td>
   <td>-</td>
   <td>-</td>
 </tr>
 
 <tr>
-  <td>486 Request is not allowed at this moment since an update is in progress.</td>
+  <td>486 Another update is in progress</td>
   <td>-</td>
   <td>-</td>
 </tr>
 
 <tr>
-  <td>500 Internal error.</td>
+  <td>500 Internal error</td>
   <td>-</td>
   <td>-</td>
 </tr>
-
 </table>
+
+<p class="footer">
+Copyright (C) 2012-2013 NEC Corporation
+</p>
 
 </body>
 </html>
