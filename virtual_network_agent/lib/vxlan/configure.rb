@@ -41,13 +41,6 @@ module Vxlan
       @config[ 'vxlanctl' ]
     end
 
-    def reflectorctl
-      if %r,^/, !~ @config[ 'reflectorctl' ]
-        @config[ 'reflectorctl' ] = File.dirname( __FILE__ ) + '/../../' + @config[ 'reflectorctl' ]
-      end
-      @config[ 'reflectorctl' ]
-    end
-
   end
 
 end

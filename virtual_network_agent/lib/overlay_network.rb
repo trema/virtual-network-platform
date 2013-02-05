@@ -58,10 +58,10 @@ class OverlayNetwork
     end
 
     def list parameters = {}
-      ovs_ports = ovs_port.list
+      ovs_ports = OVS::Port.list
       instances = []
-      vxlan_instance.list.each_pair do | vni, value |
-        port_name = vxlan_instance.name( vni )
+      Vxlan::Instance.list.each_pair do | vni, value |
+        port_name = Vxlan::Instance.name( vni )
 	if ovs_ports.index( port_name )
 	  instances << { vni => value }
 	end
@@ -76,17 +76,17 @@ class OverlayNetwork
       vni = convert_vni parameters[ :vni ]
       broadcast_address = convert_broadcast_address parameters[ :broadcast ]
 
-      port_name = vxlan_instance.name( vni )
+      port_name = Vxlan::Instance.name( vni )
 
-      if ovs_port.exists?( port_name )
+      if OVS::Port.exists?( port_name )
 	raise DuplicatedOverlayNetwork.new vni
       end
-      if vxlan_instance.exists?( vni )
-        vxlan_instance.delete( vni )
+      if Vxlan::Instance.exists?( vni )
+        Vxlan::Instance.delete( vni )
       end
       begin
-        vxlan_instance.add( vni, broadcast_address )
-        ovs_port.add port_name
+        Vxlan::Instance.add( vni, broadcast_address )
+        OVS::Port.add port_name
       rescue =>e
         raise NetworkAgentError.new e.message
       end
@@ -97,15 +97,15 @@ class OverlayNetwork
 
       vni = convert_vni parameters[ :vni ]
 
-      port_name = vxlan_instance.name( vni )
+      port_name = Vxlan::Instance.name( vni )
 
-      unless ovs_port.exists?( port_name )
+      unless OVS::Port.exists?( port_name )
 	raise NoOverlayNetworkFound.new vni
       end
       begin
-        ovs_port.delete port_name
-        if vxlan_instance.exists?( vni )
-          vxlan_instance.delete( vni )
+        OVS::Port.delete port_name
+        if Vxlan::Instance.exists?( vni )
+          Vxlan::Instance.delete( vni )
         end
       rescue =>e
         raise NetworkAgentError.new e.message
@@ -113,18 +113,6 @@ class OverlayNetwork
     end
 
     private
-
-    def ovs_port
-      OVS::Port
-    end
-
-    def ovs_bridge
-      OVS::Bridge
-    end
-
-    def vxlan_instance
-      Vxlan::Instance
-    end
 
     def logger
       Log.instance
@@ -135,7 +123,7 @@ class OverlayNetwork
     end
 
     def register_url
-      datapath_id = ovs_bridge.datapath_id
+      datapath_id = OVS::Bridge.datapath_id
       config.controller_uri + "agents/" + datapath_id.to_s
     end
     alias :unregister_url :register_url

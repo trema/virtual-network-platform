@@ -23,7 +23,7 @@ require 'sinatra'
 
 require 'configure'
 require 'log'
-require 'notify'
+require 'overlay_network'
 
 class Daemon
   def self.start
@@ -56,7 +56,7 @@ class WEBrickWrapper < Rack::Handler::WEBrick
        logger.debug "Start-callback start"
        loop do
 	 begin
-	   Notify.startup
+	   OverlayNetwork.startup
 	   break
 	 rescue => e
 	   logger.error e.message
@@ -71,7 +71,7 @@ class WEBrickWrapper < Rack::Handler::WEBrick
      config = Configure.instance
      logger.debug "Stop-callback start"
      begin
-       Notify.shutdown
+       OverlayNetwork.shutdown
      rescue => e
        logger.error e.message
        logger.debug e.backtrace.join( "\n" )

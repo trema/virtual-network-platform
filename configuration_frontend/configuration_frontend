@@ -393,18 +393,18 @@ class RestApi < Sinatra::Base
   option.on( '--port=arg', "Listen port number (default '#{ config[ 'listen_port' ] }')" ) do | arg |
     config[ 'listen-port' ] = arg
   end
-  option.on( '--pid-file=arg', "Pid file (default '#{ config[ 'pid_file' ] }')" ) do | arg |
-    if arg.empty?
-      config[ 'pid_file' ] = nil
-    else
+  option.on( '--[no-]pid-file=arg', "Pid file (default '#{ config[ 'pid_file' ] }')" ) do | arg |
+    if arg
       config[ 'pid_file' ] = arg
+    else
+      config[ 'pid_file' ] = nil
     end
   end
-  option.on( '--log-file=arg', "Log file (default '#{ config[ 'log_file' ] }')" ) do | arg |
-    if arg.empty?
-      config[ 'log_file' ] = nil
-    else
+  option.on( '--[no-]log-file=arg', "Log file (default '#{ config[ 'log_file' ] }')" ) do | arg |
+    if arg
       config[ 'log_file' ] = arg
+    else
+      config[ 'log_file' ] = nil
     end
   end
   option.on( '-b', '--[no-]daemon', "Daemonize (default '#{ config[ 'daemon' ] }')" ) do | arg |

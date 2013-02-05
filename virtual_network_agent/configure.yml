@@ -26,5 +26,4 @@ ovs:
   ovs-vsctl: ovs-vsctl
   bridge: br0
 vxlan:
-  reflectorctl: ../vxlan_tunnel_endpoint/src/reflectorctl
   vxlanctl: ../vxlan_tunnel_endpoint/src/vxlanctl

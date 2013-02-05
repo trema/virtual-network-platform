@@ -35,7 +35,6 @@ require 'webrick_wrapper'
 
 class RestApi < Sinatra::Base
 
-  set :reflector_mode, false
   set :server, [ 'webrick_wrapper' ]
 
   logger = Log.instance
@@ -88,27 +87,19 @@ class RestApi < Sinatra::Base
   # Overlay Network
 
   get '/overlay_networks/?' do
-    if settings.reflector_mode
-      status 405
-    else
-      logger.debug "#{ __FILE__ }:#{ __LINE__ }: List summary of overlay networks associated."
-      content_type :json, :charset => 'utf-8'
-      status 200
-      body json_generate OverlayNetwork.list
-    end
+    logger.debug "#{ __FILE__ }:#{ __LINE__ }: List summary of overlay networks associated."
+    content_type :json, :charset => 'utf-8'
+    status 200
+    body json_generate OverlayNetwork.list
   end
 
   post '/overlay_networks/?' do
-    if settings.reflector_mode
-      status 405
-    else
-      logger.debug "#{ __FILE__ }:#{ __LINE__ }: Create a new overlay network associated."
-      requires = [ :vni, :broadcast ]
-      parameters = json_parse( request, requires )
-      content_type :json, :charset => 'utf-8'
-      status 202
-      body no_message_body OverlayNetwork.create( parameters )
-    end
+    logger.debug "#{ __FILE__ }:#{ __LINE__ }: Create a new overlay network associated."
+    requires = [ :vni, :broadcast ]
+    parameters = json_parse( request, requires )
+    content_type :json, :charset => 'utf-8'
+    status 202
+    body no_message_body OverlayNetwork.create( parameters )
   end
 
   put '/overlay_networks/?' do
@@ -134,95 +125,11 @@ class RestApi < Sinatra::Base
   end
 
   delete '/overlay_networks/:vni/?' do | vni |
-    if settings.reflector_mode
-      status 405
-    else
-      logger.debug "#{ __FILE__ }:#{ __LINE__ }: Remove the overlay network identified by net_id."
-      parameters = { :vni => vni }
-      content_type :json, :charset => 'utf-8'
-      status 202
-      body no_message_body OverlayNetwork.destroy( parameters )
-    end
-  end
-
-  # Reflector
-
-  get '/reflector/?' do
-    status 405
-  end
-
-  post '/reflector/?' do
-    status 405
-  end
-
-  put '/reflector/?' do
-    status 405
-  end
-
-  delete '/reflector/?' do
-    status 405
-  end
-
-  #
-
-  get '/reflector/:vni/?' do | vni |
-    if settings.reflector_mode
-      logger.debug "#{ __FILE__ }:#{ __LINE__ }: List summary of tunnel endpoint associated."
-      requires = [ :vni, :ip ]
-      parameters = json_parse( request, requires )
-      content_type :json, :charset => 'utf-8'
-      status 202
-      body no_message_body Reflector.list_endpoints( parameters )
-    else
-      status 405
-    end
-  end
-
-  post '/reflector/:vni/?' do | vni |
-    if settings.reflector_mode
-      logger.debug "#{ __FILE__ }:#{ __LINE__ }: Create a tunnel endpoint on the vni in the request URI."
-      requires = [ :vni, :ip ]
-      parameters = json_parse( request, requires )
-      content_type :json, :charset => 'utf-8'
-      status 202
-      body no_message_body Reflector.add_endpoint( parameters )
-    else
-      status 405
-    end
-  end
-
-  put '/reflector/:vni/?' do | vni |
-    status 405
-  end
-
-  delete '/reflector/:vni/?' do | vni |
-    status 405
-  end
-
-  #
-
-  get '/reflector/:vni/:tunnel_endpoint/?' do | vni, tunnel_endpoint |
-    status 405
-  end
-
-  post '/reflector/:vni/:tunnel_endpoint/?' do | vni, tunnel_endpoint |
-    status 405
-  end
-
-  put '/reflector/:vni/:tunnel_endpoint/?' do | vni, tunnel_endpoint |
-    status 405
-  end
-
-  delete '/reflector/:vni/:tunnel_endpoint/?' do | vni, tunnel_endpoint |
-    if settings.reflector_mode
-      logger.debug "#{ __FILE__ }:#{ __LINE__ }: Remove a tunnel endpoint from the vni."
-      parameters = { :vni => vni, :ip => tunnel_endpoint }
-      content_type :json, :charset => 'utf-8'
-      status 202
-      body no_message_body Reflector.delete_endpoint( parameters )
-    else
-      status 405
-    end
+    logger.debug "#{ __FILE__ }:#{ __LINE__ }: Remove the overlay network identified by net_id."
+    parameters = { :vni => vni }
+    content_type :json, :charset => 'utf-8'
+    status 202
+    body no_message_body OverlayNetwork.destroy( parameters )
   end
 
   #
@@ -260,21 +167,18 @@ class RestApi < Sinatra::Base
   option.on( '--tunnel_endpoint=arg', "Tunnel endpoint (default '#{ config[ 'tunnel_endpoint' ] }')" ) do | arg |
     config[ 'tunnel_endpoiunt' ] = arg
   end
-  option.on( '--[no-]reflector-mode', "Enable reflector mode (default '#{ config[ 'reflector_mode' ] }')" ) do | arg |
-    config[ 'reflector_mode' ] = arg
-  end
-  option.on( '--pid-file=arg', "Pid file (default '#{ config[ 'pid_file' ] }')" ) do | arg |
-    if arg.empty?
-      config[ 'pid_file' ] = nil
-    else
+  option.on( '--[no-]pid-file=arg', "Pid file (default '#{ config[ 'pid_file' ] }')" ) do | arg |
+    if arg
       config[ 'pid_file' ] = arg
+    else
+      config[ 'pid_file' ] = nil
     end
   end
-  option.on( '--log-file=arg', "Log file (default '#{ config[ 'log_file' ] }')" ) do | arg |
-    if arg.empty?
-      config[ 'log_file' ] = nil
-    else
+  option.on( '--[no-]log-file=arg', "Log file (default '#{ config[ 'log_file' ] }')" ) do | arg |
+    if arg
       config[ 'log_file' ] = arg
+    else
+      config[ 'log_file' ] = nil
     end
   end
   option.on( '-b', '--[no-]daemon', "Daemonize (default '#{ config[ 'daemon' ] }')" ) do | arg |
@@ -304,8 +208,6 @@ class RestApi < Sinatra::Base
     puts option.help
     exit 1
   end
-  set :reflector_mode, config[ 'reflector_mode' ]
-  p  config[ 'log_file' ]
   logger.log_file = config[ 'log_file' ] unless config[ 'log_file' ].nil?
   set :port, config[ 'listen_port' ]
   set :bind, config[ 'listen_address' ]
