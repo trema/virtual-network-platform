@@ -30,6 +30,7 @@ require 'configure'
 require 'log'
 require 'network'
 require 'reflector'
+require 'switch'
 
 logger = Log.instance
 logger.level = Log::INFO
@@ -106,8 +107,9 @@ commands
     delete-port net_id id        - Remove a port from the network
     show-mac net_id id [address] - Retrieve detail of the mac address
     add-mac net_id id address    - Create a mac address on the port
-    delete-mac net_id id address - Remove a mac address from the port.
+    delete-mac net_id id address - Remove a mac address from the port
     show-switch                  - Retrieve detail of the switch
+    show-switch-ports            - Retrieve detail of the switch ports
 EOS
 end
 
@@ -305,7 +307,7 @@ command 'show-switch' do | args |
     if response.empty?
       puts "No switches found."
     else
-      response.collect do | each |
+      response.each do | each |
         display_agent each
       end
     end
@@ -362,12 +364,31 @@ if ENV[ 'TEST_OF_REFLECTOR' ] == 'true'
     if response.empty?
       puts "No tunnel-endpoints found."
     else
-      response do | slice_id, teps |
+      response.each_pair do | slice_id, teps |
 	puts "[Slice Id: #{ slice_id }]"
 	puts "%-20s%s" % [ "IP address", "Port" ]
-	teps.list.each do | tep |
+	teps.each do | tep |
 	  puts "%-20s%s" % [ tep[ :ip ], tep[ :port ] ]
 	end
+      end
+    end
+  end
+end
+
+# Switch
+
+command 'show-switch-ports' do | args |
+  parameters = {}
+  help_and_exit "Too many arguments" unless args.size == 0
+  response = Switch.list( parameters )
+  if response.empty?
+    puts "No switches found."
+  else
+    response.each_pair do | datapath_id, ports |
+      puts "[Datapath ID: #{ datapath_id }]"
+      puts "%-7s %s" % [ "Port no", "Name" ]
+      ports.each do | port |
+        puts "%7u %s" % [ port[ :port_no ], port[ :name ] ]
       end
     end
   end

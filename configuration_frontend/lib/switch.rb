@@ -18,20 +18,20 @@
 require 'errors'
 require 'db'
 
-class Reflector
+class Switch
   class << self
     def list parameters = {}
-      tunnel_endpoints = Hash.new do | hash, key |
+      switch_ports = Hash.new do | hash, key |
         hash[ key ] = []
       end
       ActiveRecord::Base.connection.select_all(
-        "SELECT DISTINCT P.slice_id, T.local_address, T.local_port" +
-	" FROM ports P, tunnel_endpoints T" +
-        " WHERE P.datapath_id = T.datapath_id" ).each do | each |
-	tunnel_endpoint = { :ip => each[ 'local_address' ], :port => each[ 'local_port' ] }
-	tunnel_endpoints[ each[ 'slice_id' ].to_i ].push tunnel_endpoint
+        "SELECT datapath_id, port_no, name" +
+	" FROM switch_ports" ).each do | each |
+	switch_port = { :port_no => each[ 'port_no' ].to_i, :name => each[ 'name' ] }
+	datapath_id = "0x%016x" % each[ 'datapath_id' ].to_i
+	switch_ports[ datapath_id ].push switch_port
       end
-      tunnel_endpoints
+      switch_ports
     end
 
     private

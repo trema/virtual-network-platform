@@ -82,11 +82,13 @@ class Network
 	  destroy_all_mac_addresses slice_id
 	end
       end
-      #begin
-      #  DB::OverlayNetwork.delete( slice_id )
-      #rescue
-      #  raise NetworkManagementError.new
-      #end
+      if not DB::Port.exists?( [ "slice_id = ? AND type = ?", slice_id, DB::PORT_TYPE_OVERLAY ] )
+        begin
+          DB::OverlayNetwork.delete( slice_id )
+        rescue
+          raise NetworkManagementError.new
+        end
+      end
     end
 
     def list parameters = {}
