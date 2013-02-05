@@ -69,7 +69,7 @@ options
     -d, --debug           - Debug mode
 
 commands
-    list                         - List summary of overlay networks
+    list                  - List summary of overlay networks
 EOS
 end
 
@@ -105,6 +105,27 @@ command 'list' do | args |
     puts "Port: #{ value[ :port ] }" if value.has_key? :port
     puts "Aging Time: #{ value[ :aging_time ] }" if value.has_key? :aging_time
     puts "State: #{ value[ :state ] }" if value.has_key? :state
+  end
+end
+
+if ENV[ 'TEST_OF_CREATE' ] == 'true'
+  command 'create' do | args |
+    parameters = {}
+    parameters[ :vni ] = args.shift or help_and_exit "Too few arguments"
+    parameters[ :broadcast ] = args.shift or help_and_exit "Too few arguments"
+    help_and_exit "Too many arguments" unless args.size == 0
+    OverlayNetwork.create( parameters )
+    puts "A overlay network is created successfully."
+  end
+end
+
+if ENV[ 'TEST_OF_DESTROY' ] == 'true'
+  command 'destroy' do | args |
+    parameters = {}
+    parameters[ :vni ] = args.shift or help_and_exit "Too few arguments"
+    help_and_exit "Too many arguments" unless args.size == 0
+    OverlayNetwork.destroy( parameters )
+    puts "A overlay network is destroyed successfully."
   end
 end
 
