@@ -33,10 +33,14 @@ class Configure
   def load_file config_file
     config = ( YAML.load_file( config_file ) or {} )
     @config.update config
-    ovs_config = OVS::Configure.instance
-    ovs_config.update( @config[ 'ovs' ] )
-    vxlan_config = Vxlan::Configure.instance
-    vxlan_config.update( @config[ 'vxlan' ] )
+    if not @config[ 'ovs' ].nil?
+      ovs_config = OVS::Configure.instance
+      ovs_config.update( @config[ 'ovs' ] )
+    end
+    if not @config[ 'vxlan' ].nil?
+      vxlan_config = Vxlan::Configure.instance
+      vxlan_config.update( @config[ 'vxlan' ] )
+    end
   end
 
   def controller_uri

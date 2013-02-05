@@ -31,7 +31,7 @@ class Reflector
   class << self
     def startup
       logger.debug "get configure #{ url }"
-      response = RestClient.get url, body, :content_type => :json, :accept => :json, :timeout => 10, :open_timeout => 10, :user_agent => "virtual-network-agent"
+      response = RestClient.get url, :content_type => :json, :accept => :json, :timeout => 10, :open_timeout => 10, :user_agent => "reflector_agent"
       logger.debug "response #{ response.code }"
       logger.debug "#{ response.body }"
       raise "Invalid responce code (#{ response.code })" unless response.code == 200
@@ -39,9 +39,9 @@ class Reflector
       if tunnel_endpoints.empty?
         return
       end
-      response do | vni, teps |
+      response.each_pair do | vni, teps |
         vni = convert_vni vni
-	teps.list.each do | tep |
+	teps.each do | tep |
           raise BadReuestError.new "IP address must be specified." if tep[ :ip ].nil?
           raise BadReuestError.new "Port number must be specified." if tep[ :port ].nil?
 

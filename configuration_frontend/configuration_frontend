@@ -34,7 +34,7 @@ require 'network'
 require 'reflector'
 require 'webrick_wrapper'
 
-class RestApi < Sinatra::Base
+class ConfigurationFrontend < Sinatra::Base
 
   set :server, [ 'webrick_wrapper' ]
 
@@ -366,8 +366,8 @@ class RestApi < Sinatra::Base
     status 404
   end
 
-  config_file = File.dirname( __FILE__ ) + '/configure.yml'
   config = Configure.instance
+  config_file = File.dirname( __FILE__ ) + '/configure.yml'
   config.load_file( config_file )
   db_config = config.db
   option = OptionParser.new
@@ -432,6 +432,8 @@ class RestApi < Sinatra::Base
   set :port, config[ 'listen_port' ]
   set :bind, config[ 'listen_address' ]
 
-  run!
+  logger.info "#{ self.name }"
+
+  run! if __FILE__ == $0
 
 end

@@ -25,19 +25,19 @@ module Vxlan
     class Instance
       class << self
 	def add vni, address
-	  Ctl.add_instance vni, address
+	  VxlanCtl.add_instance vni, address
 	end
 
 	def delete vni
-	  Ctl.delete_instance vni
+	  VxlanCtl.delete_instance vni
 	end
 
 	def name vni
-	  Ctl.name vni
+	  VxlanCtl.name vni
 	end
 
 	def list
-	  Ctl.list_instances
+	  VxlanCtl.list_instances
 	end
 
 	def exists? vni
@@ -48,7 +48,7 @@ module Vxlan
 
     end
 
-    class Ctl
+    class VxlanCtl
       class << self
 	def name vni
 	  "vxlan%u" % vni.to_i

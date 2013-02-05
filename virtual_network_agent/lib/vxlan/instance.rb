@@ -49,9 +49,9 @@ module Vxlan
       def adapter
 	case Configure.instance[ 'adapter' ]
 	  when 'linux_kernel'
-	    @@adapter = LinuxKernel::Instance
+	    LinuxKernel::Instance
 	  else
-            @@adapter = VxlanTunnelEndpoint::Instance
+            VxlanTunnelEndpoint::Instance
 	end
       end
 

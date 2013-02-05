@@ -53,10 +53,12 @@ class WEBrickWrapper < Rack::Handler::WEBrick
        end
      end
      Thread.new do
-       logger.debug "Start-callback start"
+       logger.debug "Startup-callback start"
        loop do
 	 begin
-	   OverlayNetwork.startup
+           if not config[ :startup_callback ].nil?
+	     config[ :startup_callback ].send :startup
+	   end
 	   break
 	 rescue => e
 	   logger.error e.message
@@ -64,19 +66,21 @@ class WEBrickWrapper < Rack::Handler::WEBrick
 	 end
 	 sleep 10 + rand( 20 )
        end
-       logger.debug "Start-callback end"
+       logger.debug "Startup-callback end"
      end
    }
    options[ :StopCallback ] = Proc.new {
      config = Configure.instance
-     logger.debug "Stop-callback start"
+     logger.debug "Shutdown-callback start"
      begin
-       OverlayNetwork.shutdown
+       if not config[ :shutdown_callback ].nil?
+         config[ :shutdown_callback ].send :shutdown
+       end
      rescue => e
        logger.error e.message
        logger.debug e.backtrace.join( "\n" )
      end
-     logger.debug "Stop-callback end"
+     logger.debug "Shutdown-callback end"
      if not config[ 'pid_file' ].nil?
        File.unlink( config[ 'pid_file' ] )
      end
