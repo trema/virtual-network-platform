@@ -23,7 +23,12 @@ daemon: true
 pid_file: /var/run/virtual_network_agent.pid
 log_file: /var/log/virtual_network_agent.log
 ovs:
-  ovs-vsctl: ovs-vsctl
+  vsctl: ovs-vsctl
   bridge: br0
 vxlan:
-  vxlanctl: ../vxlan_tunnel_endpoint/src/vxlanctl
+  adapter: vxlan_tunnel_endpoint
+  vxlan_tunnel_endpoint:
+    vxlanctl: ../vxlan_tunnel_endpoint/src/vxlanctl
+  linux_kernel:
+    ip: ip
+    device: eth0

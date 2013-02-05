@@ -48,6 +48,9 @@ end
 option = OptionParser.new
 db_config = config.db
 db_config = Configure.instance.db
+option.on( '-c arg', '--config-file=arg' ) do | arg |
+  config.load_file arg
+end
 option.on( '-h arg', '--db-host=arg' ) do | arg |
   db_config[ 'host' ] = arg
 end

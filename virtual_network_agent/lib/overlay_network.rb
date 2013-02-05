@@ -15,6 +15,11 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 
+begin
+require 'rubygems'
+rescue LoadError
+end
+require 'restclient'
 require 'configure'
 require 'convert'
 require 'log'
@@ -59,11 +64,11 @@ class OverlayNetwork
 
     def list parameters = {}
       ovs_ports = OVS::Port.list
-      instances = []
+      instances = {}
       Vxlan::Instance.list.each_pair do | vni, value |
         port_name = Vxlan::Instance.name( vni )
 	if ovs_ports.index( port_name )
-	  instances << { vni => value }
+	  instances[ vni ] = value
 	end
       end
       instances

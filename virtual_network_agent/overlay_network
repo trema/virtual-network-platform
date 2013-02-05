@@ -1,0 +1,112 @@
+#!/usr/bin/env ruby
+#
+# Copyright (C) 2013 NEC Corporation
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License, version 2, as
+# published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+
+required_path = File.dirname( __FILE__ ) + '/lib'
+$LOAD_PATH.unshift required_path unless $LOAD_PATH.include? required_path
+
+require 'optparse'
+begin
+require 'rubygems'
+rescue LoadError
+end
+
+require 'configure'
+require 'log'
+require 'overlay_network'
+require 'vxlan'
+
+logger = Log.instance
+logger.level = Log::INFO
+
+def config_file
+  File.dirname( __FILE__ ) + '/configure.yml'
+end
+
+Configure.instance.load_file( config_file )
+
+option = OptionParser.new
+option.on( '-c arg', '--config-file=arg' ) do | arg |
+  Configure.instance.load_file arg
+end
+option.on( '-d', '--debug' ) do | arg |
+  logger.level = Log::DEBUG
+end
+option.on( '--help' ) do | arg |
+  help
+  exit 0
+end
+
+@subcommands = Hash.new do | hash, key |
+  help_and_exit "Unknown command '#{ key }'"
+end
+
+def command subcommand, &a_proc
+  @subcommands[ subcommand ] = a_proc
+end
+
+def help
+  puts <<EOS
+Usage: slice [options] command [arguments...]
+
+options
+    -c, --config-file=arg - Configuration file (default: '#{ config_file }')
+    --help                - Show this message
+    -d, --debug           - Debug mode
+
+commands
+    list                         - List summary of overlay networks
+EOS
+end
+
+def help_and_exit message = nil
+  puts message unless message.nil?
+  help
+  exit 1
+end
+
+def run args
+  if args.empty?
+    help_and_exit
+  end
+
+  begin
+    @subcommands[ ARGV.shift ].call ARGV
+  rescue => e
+    puts e.message
+    raise if Log.instance.level == Log::DEBUG
+  end
+end
+
+# Overlay network
+
+command 'list' do | args |
+  parameters = {}
+  help_and_exit "Too many arguments" unless args.size == 0
+  response = OverlayNetwork.list parameters
+  raise "No overlay network found" unless response.size != 0
+  response.each_pair do | vni, value |
+    puts "[VNI: #{ vni }]"
+    puts "Address: #{ value[ :address ] }" if value.has_key? :address
+    puts "Port: #{ value[ :port ] }" if value.has_key? :port
+    puts "Aging Time: #{ value[ :aging_time ] }" if value.has_key? :aging_time
+    puts "State: #{ value[ :state ] }" if value.has_key? :state
+  end
+end
+
+option.order! ARGV
+run ARGV

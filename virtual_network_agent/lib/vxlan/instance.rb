@@ -15,24 +15,47 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 
-require 'forwardable'
-require 'singleton'
-require 'yaml'
+require 'open3'
+require 'vxlan/configure'
+require 'vxlan/linux_kernel'
+require 'vxlan/vxlan_tunnel_endpoint'
 
-module OVS
+module Vxlan
 
-  class Configure
-    include Singleton
-    extend Forwardable
+  class Instance
+    class << self
+      def add vni, address = nil
+        adapter.add vni, address
+      end
 
-    def initialize
-      @config = {}
+      def delete vni
+        adapter.delete vni
+      end
+
+      def name vni
+        adapter.name vni
+      end
+
+      def list
+        adapter.list
+      end
+
+      def exists? vni
+        adapter.exists? vni
+      end
+
+      private
+
+      def adapter
+	case Configure.instance[ 'adapter' ]
+	  when 'linux_kernel'
+	    @@adapter = LinuxKernel::Instance
+	  else
+            @@adapter = VxlanTunnelEndpoint::Instance
+	end
+      end
+
     end
-
-    def_delegator :@config, :[]
-    def_delegator :@config, :[]=
-    def_delegator :@config, :update
-    def_delegator :@config, :to_hash
 
   end
 
