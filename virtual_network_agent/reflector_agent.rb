@@ -223,7 +223,13 @@ class ReflectorAgent < Sinatra::Base
   option.on( '--port=arg', "Listen port number (default '#{ config[ 'listen_port' ] }')" ) do | arg |
     config[ 'listen_port' ] = arg
   end
-  option.on( '-d', '--debug', "Debug mode" ) do | arg |
+  option.on( '-v', '--verbose', "Verbose mode" ) do | arg |
+    Log.instance.level = Log::DEBUG
+  end
+  option.on( '-d', '--debug', "Debug mode (Identical to --no-pid-file --no-log-file --no-daemon --verbose)" ) do | arg |
+    config[ 'pid_file' ] = nil
+    config[ 'log_file' ] = nil
+    config[ 'daemon' ] = false
     Log.instance.level = Log::DEBUG
   end
   option.on( '--help', "Show this message" ) do | arg |

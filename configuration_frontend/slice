@@ -64,7 +64,7 @@ end
 option.on( '-p arg', '--db-password=arg' ) do | arg |
   db_config[ 'password' ] = arg
 end
-option.on( '-d', '--debug' ) do | arg |
+option.on( '-v', '--verbose' ) do | arg |
   logger.level = Log::DEBUG
 end
 option.on( '--help' ) do | arg |
@@ -88,11 +88,11 @@ Usage: slice [options] command [arguments...]
 options
     -c, --config-file=arg - Configuration file (default: '#{ config_file }')
     -h, --db-host=arg     - Database host (default: '#{ db_config[ 'host' ]}')
-    --db-port=arg         - Database port number to use for connection (default: '#{ db_config[ 'port' ]}')
+        --db-port=arg     - Database port number to use for connection (default: '#{ db_config[ 'port' ]}')
     -u, --db-user=arg     - Database user for login (default: '#{ db_config[ 'username' ]}')
     -p, --db-password=arg - Database password to use for login (default: '#{ db_config[ 'password' ]}')
-    --help                - Show this message
-    -d, --debug           - Debug mode
+        --help            - Show this message
+    -v, --verbose         - Verbose mode
 
 commands
     list                         - List summary of networks
@@ -365,11 +365,11 @@ if ENV[ 'TEST_OF_REFLECTOR' ] == 'true'
       puts "No tunnel-endpoints found."
     else
       response.each_pair do | slice_id, teps |
-	puts "[Slice Id: #{ slice_id }]"
-	puts "%-20s%s" % [ "IP address", "Port" ]
-	teps.each do | tep |
-	  puts "%-20s%s" % [ tep[ :ip ], tep[ :port ] ]
-	end
+        puts "[Slice Id: #{ slice_id }]"
+        puts "%-20s%s" % [ "IP address", "Port" ]
+        teps.each do | tep |
+          puts "%-20s%s" % [ tep[ :ip ], tep[ :port ] ]
+        end
       end
     end
   end
