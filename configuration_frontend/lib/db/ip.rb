@@ -21,15 +21,15 @@ module DB
     def initialize ip
       case ip
         when Integer
-	  @ip = ip
-	when /^(?:(?:[[:digit:]]{1,3})\.){3}[[:digit:]]{1,3}$/
-	  @ip = 0
+          @ip = ip
+        when /^(?:(?:[[:digit:]]{1,3})\.){3}[[:digit:]]{1,3}$/
+          @ip = 0
           ip.split(".").each do | each |
             i = each.to_i
             raise "Invalid IP address (#{ ip })" unless i < 256
             @ip = ( @ip << 8 ) + i
-	  end
-	else
+          end
+        else
           raise "Invalid IP address (#{ ip })"
       end
       raise "Invalid IP address (#{ ip })" unless ( @ip >= 0 and @ip <= 0xffffffff )

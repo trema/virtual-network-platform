@@ -34,8 +34,8 @@ module DB
         for i in 1..10
           id = rand( 16777216 )
           find( id )
-	end
-	raise StandardError.new
+        end
+        raise StandardError.new
       rescue ActiveRecord::RecordNotFound
         id
       end

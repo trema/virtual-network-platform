@@ -47,12 +47,12 @@ module Vxlan
       private
 
       def adapter
-	case Configure.instance[ 'adapter' ]
-	  when 'linux_kernel'
-	    LinuxKernel::Instance
-	  else
+        case Configure.instance[ 'adapter' ]
+          when 'linux_kernel'
+            LinuxKernel::Instance
+          else
             VxlanTunnelEndpoint::Instance
-	end
+        end
       end
 
     end

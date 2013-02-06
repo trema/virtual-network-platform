@@ -41,12 +41,12 @@ module DB
       names = {
         MAC_STATE_INSTALLED        => "installed",
         MAC_STATE_READY_TO_INSTALL => "ready-to-install",
-	MAC_STATE_INSTALLING       => "installing",
-	MAC_STATE_INSTALL_FAILED   => "install-failed",
-	MAC_STATE_READY_TO_DELETE  => "ready-to-delete",
-	MAC_STATE_DELETING         => "deleting",
-	MAC_STATE_DELETE_FAILED    => "delete-failed",
-	MAC_STATE_DELETED          => "deleted"
+        MAC_STATE_INSTALLING       => "installing",
+        MAC_STATE_INSTALL_FAILED   => "install-failed",
+        MAC_STATE_READY_TO_DELETE  => "ready-to-delete",
+        MAC_STATE_DELETING         => "deleting",
+        MAC_STATE_DELETE_FAILED    => "delete-failed",
+        MAC_STATE_DELETED          => "deleted"
       }
       names[ @state ] or "MAC_STATE_%d" % @state
     end

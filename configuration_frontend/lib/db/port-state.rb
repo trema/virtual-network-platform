@@ -44,13 +44,13 @@ module DB
         PORT_STATE_CONFIRMED            => "confirmed",
         PORT_STATE_PREPARING_TO_UPDATE  => "preparing-to-update",
         PORT_STATE_READY_TO_UPDATE      => "ready-to-update",
-	PORT_STATE_UPDATING             => "updating",
-	PORT_STATE_UPDATE_FAILED        => "update-failed",
-	PORT_STATE_PREPARING_TO_DESTROY => "preparing-to-destroy",
-	PORT_STATE_READY_TO_DESTROY     => "ready-to-destroy",
-	PORT_STATE_DESTROYING           => "destroying",
-	PORT_STATE_DESTROY_FAILED       => "destroy-failed",
-	PORT_STATE_DESTROYED            => "destroyed"
+        PORT_STATE_UPDATING             => "updating",
+        PORT_STATE_UPDATE_FAILED        => "update-failed",
+        PORT_STATE_PREPARING_TO_DESTROY => "preparing-to-destroy",
+        PORT_STATE_READY_TO_DESTROY     => "ready-to-destroy",
+        PORT_STATE_DESTROYING           => "destroying",
+        PORT_STATE_DESTROY_FAILED       => "destroy-failed",
+        PORT_STATE_DESTROYED            => "destroyed"
       }
       names[ @state ] or "PORT_STATE_%d" % @state
     end

@@ -24,29 +24,29 @@ module Vxlan
 
     class Vni
       def list
-	vni = []
-	Ctl.list_tunnel_endpoints().each_key do | key |
-	  if not vni.index[ key ]
-	    vni << key
-	  end
-	end
-	vni
+        vni = []
+        Ctl.list_tunnel_endpoints().each_key do | key |
+          if not vni.index[ key ]
+            vni << key
+          end
+        end
+        vni
       end
     end
 
     class TunnelEndpoint
       class << self
-	def add vni, address, port = nil
-	  Ctl.add_tunnel_endpoint vni, address, port
+        def add vni, address, port = nil
+          Ctl.add_tunnel_endpoint vni, address, port
         end
 
-	def delete vni, address
-	  Ctl.delete_tunnel_endpoint vni, address
-	end
+        def delete vni, address
+          Ctl.delete_tunnel_endpoint vni, address
+        end
 
-	def list vni
-	  Ctl.list_tunnel_endpoints vni
-	end
+        def list vni
+          Ctl.list_tunnel_endpoints vni
+        end
 
       end
 
@@ -54,58 +54,58 @@ module Vxlan
 
     class Ctl
       class << self
-	def add_tunnel_endpoint vni, address, port = nil
-	  options = [ '--vni', vni, '--ip', address ]
-	  if not port.nil?
-	    options = options + [ '--port', port ]
-	  end
-	  reflectorctl '--add_tep', options
-	end
+        def add_tunnel_endpoint vni, address, port = nil
+          options = [ '--vni', vni, '--ip', address ]
+          if not port.nil?
+            options = options + [ '--port', port ]
+          end
+          reflectorctl '--add_tep', options
+        end
 
-	def delete_tunnel_endpoint vni, address
-	  options = [ '--vni', vni, '--ip', address ]
-	  reflectorctl '--del_tep', options
-	end
+        def delete_tunnel_endpoint vni, address
+          options = [ '--vni', vni, '--ip', address ]
+          reflectorctl '--del_tep', options
+        end
 
-	def list_tunnel_endpoints vni = nil
-	  list = {}
-	  line_no = 0
-	  options = []
-	  if not vni.nil?
-	    options = options + [ '--vni', vni ]
-	  end
-	  reflectorctl( '--list_tep', options ).split( "\n").each do | row |
-	    next if ( line_no = line_no + 1 ) <= 2 # skip header
-	    row = $1 if /^\s*(\S+(?:\s+\S+)*)\s*$/ =~ row
-	    vni, address, port, packet_count, octet_count = row.split( /\s*\|\s*/, 5 )
-	    port = 0 if port == '-'
-	    list [ vni.hex ] = { :address => address, :port => port.to_i, :packet_count => packet_count.to_i, :octet_count => octet_count.to_i }
-	  end
-	  list
-	end
+        def list_tunnel_endpoints vni = nil
+          list = {}
+          line_no = 0
+          options = []
+          if not vni.nil?
+            options = options + [ '--vni', vni ]
+          end
+          reflectorctl( '--list_tep', options ).split( "\n").each do | row |
+            next if ( line_no = line_no + 1 ) <= 2 # skip header
+            row = $1 if /^\s*(\S+(?:\s+\S+)*)\s*$/ =~ row
+            vni, address, port, packet_count, octet_count = row.split( /\s*\|\s*/, 5 )
+            port = 0 if port == '-'
+            list [ vni.hex ] = { :address => address, :port => port.to_i, :packet_count => packet_count.to_i, :octet_count => octet_count.to_i }
+          end
+          list
+        end
 
-	private
+        private
 
-	def config
-	  Vxlan::Configure.instance[ 'vxlan_tunnel_endpoint' ]
-	end
+        def config
+          Vxlan::Configure.instance[ 'vxlan_tunnel_endpoint' ]
+        end
 
-	def reflectorctl command, options = []
-	  full_path = config[ 'reflectorctl' ]
+        def reflectorctl command, options = []
+          full_path = config[ 'reflectorctl' ]
           if %r,^/, !~ full_path
             full_path = File.dirname( __FILE__ ) + '/../../' + full_path
           end
-	  result = ""
-	  Open3.popen3( "#{ full_path } #{ command } #{ options.join ' ' }" ) do | stdin, stdout, stderr |
-	    stdin.close
-	    error = stderr.read
-	    result << stdout.read
-	    raise "Permission denied #{ full_path }" if /Permission denied/ =~ result
-	    raise "#{ result } #{ full_path }" if /Failed to/ =~ result
-	    raise "#{ error } #{ full_path }" unless error.length == 0
-	  end
-	  result
-	end
+          result = ""
+          Open3.popen3( "#{ full_path } #{ command } #{ options.join ' ' }" ) do | stdin, stdout, stderr |
+            stdin.close
+            error = stderr.read
+            result << stdout.read
+            raise "Permission denied #{ full_path }" if /Permission denied/ =~ result
+            raise "#{ result } #{ full_path }" if /Failed to/ =~ result
+            raise "#{ error } #{ full_path }" unless error.length == 0
+          end
+          result
+        end
 
       end
 

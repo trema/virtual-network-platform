@@ -26,10 +26,10 @@ class Switch
       end
       ActiveRecord::Base.connection.select_all(
         "SELECT datapath_id, port_no, name" +
-	" FROM switch_ports" ).each do | each |
-	switch_port = { :port_no => each[ 'port_no' ].to_i, :name => each[ 'name' ] }
-	datapath_id = "0x%016x" % each[ 'datapath_id' ].to_i
-	switch_ports[ datapath_id ].push switch_port
+        " FROM switch_ports" ).each do | each |
+        switch_port = { :port_no => each[ 'port_no' ].to_i, :name => each[ 'name' ] }
+        datapath_id = "0x%016x" % each[ 'datapath_id' ].to_i
+        switch_ports[ datapath_id ].push switch_port
       end
       switch_ports
     end

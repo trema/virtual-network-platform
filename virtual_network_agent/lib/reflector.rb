@@ -41,19 +41,19 @@ class Reflector
       end
       tunnel_endpoints.each_pair do | vni, teps |
         vni = convert_vni vni.to_s
-	teps.each do | tep |
+        teps.each do | tep |
           raise BadReuestError.new "IP address must be specified." if tep[ :ip ].nil?
           raise BadReuestError.new "Port number must be specified." if tep[ :port ].nil?
 
           address = convert_address tep[ :ip ]
           port = convert_port tep[ :port ]
-	  if port == 0
-	    port = nil
-	  end
-	  logger.debug "vni = #{ vni } address = #{ address } port = #{ port }"
+          if port == 0
+            port = nil
+          end
+          logger.debug "vni = #{ vni } address = #{ address } port = #{ port }"
 
-	  tunnel_endpoint.add vni, address, port
-	end
+          tunnel_endpoint.add vni, address, port
+        end
       end
     end
 

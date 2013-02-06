@@ -20,15 +20,15 @@ module DB
   class Mac
     def initialize mac
       case mac
-	when Integer
-	  @mac = mac
-	when /^(?:(?:[[:xdigit:]]{1,2}):){5}[[:xdigit:]]{1,2}/
-	  @mac = 0
+        when Integer
+          @mac = mac
+        when /^(?:(?:[[:xdigit:]]{1,2}):){5}[[:xdigit:]]{1,2}/
+          @mac = 0
           mac.split(":").each do | each |
             i = each.hex
             @mac = ( @mac << 8 ) + i
           end
-	else
+        else
           raise StandardError.new "Invalid MAC address (#{ mac })"
       end
       raise StandardError.new "Invalid MAC address (#{ mac })" unless ( @mac >= 0 and @mac <= 0xffffffffffff )

@@ -20,20 +20,20 @@ module DB
   class DatapathId
     def initialize dpid
       case dpid
-	when Integer
+        when Integer
           if dpid < 0
             @dpid = dpid + ( 1 << 64 )
-	  else
-	    @dpid = dpid
-	  end
-	when /^0[0-7]*$/
-	  @dpid = dpid.oct
-	when /^[1-9][[:digit:]]*$/
-	  @dpid = dpid.to_i
-	when /^0[Xx][[:xdigit:]]+$/
-	  @dpid = dpid.hex
-	else
-	  raise StandardError.new "Datapath id (#{ dpid }) is illegal format."
+          else
+            @dpid = dpid
+          end
+        when /^0[0-7]*$/
+          @dpid = dpid.oct
+        when /^[1-9][[:digit:]]*$/
+          @dpid = dpid.to_i
+        when /^0[Xx][[:xdigit:]]+$/
+          @dpid = dpid.hex
+        else
+          raise StandardError.new "Datapath id (#{ dpid }) is illegal format."
       end
       raise StandardError.new "Datapath id (#{ dpid }) is illegal range." unless ( @dpid >= 0 and @dpid <= 0xffffffffffffffff )
     end

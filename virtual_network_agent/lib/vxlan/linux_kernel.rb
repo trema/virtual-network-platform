@@ -24,27 +24,27 @@ module Vxlan
 
     class Instance
       class << self
-	def add vni, address
-	  IpLink.add vni, address
-	  IpLink.up vni
-	end
+        def add vni, address
+          IpLink.add vni, address
+          IpLink.up vni
+        end
 
-	def delete vni
-	  IpLink.down vni
-	  IpLink.delete vni
-	end
+        def delete vni
+          IpLink.down vni
+          IpLink.delete vni
+        end
 
-	def name vni
-	  IpLink.name vni
-	end
+        def name vni
+          IpLink.name vni
+        end
 
-	def list
-	  IpLink.show
-	end
+        def list
+          IpLink.show
+        end
 
-	def exists? vni
-	  list.has_key? vni
-	end
+        def exists? vni
+          list.has_key? vni
+        end
 
       end
 
@@ -52,66 +52,66 @@ module Vxlan
 
     class IpLink
       class << self
-	def name vni
-	  "vxlan%u" % vni.to_i
-	end
-
-        def add vni, group
-	  port_name = name vni
-	  device = config[ 'device' ]
-	  ip_link 'add', [ port_name, 'type', 'vxlan', 'id', vni, 'group', group, 'dev', device ]
-	end
-
-	def delete vni
-	  port_name = name vni
-	  ip_link 'delete', [ port_name ]
-	end
-
-	def show up_only = true
-	  list = {}
-	  options = []
-	  if up_only
-	    options = options + [ 'up' ]
-	  end
-	  ip_link( 'show', options ).split( "\n").each do | row |
-	    index, port_name, info = row.split( /:\s*/, 3 )
-	    next if /^vxlan(\d+)$/ !~ port_name
-	    vni = $1
-	    state = "UNKNOWN"
-	    if /state\s+(\S+)/ =~ info
-	      state = $1
-	    end
-	    list [ vni.to_i ] = { :port_name => port_name, :state => state }
-	  end
-	  list
-	end
-
-	def up vni
-	  port_name = name vni
-	  ip_link 'set', [ port_name, 'up' ]
-	end
-
-	def down vni
-	  port_name = name vni
-	  ip_link 'set', [ port_name, 'down' ]
-	end
-
-	private
-
-        def config
-	  Vxlan::Configure.instance[ 'linux_kernel' ]
+        def name vni
+          "vxlan%u" % vni.to_i
         end
 
-	def ip_link command, options = []
-	  result = ""
-	  Open3.popen3( "#{ config[ 'ip' ] } link #{ command } #{ options.join ' ' }" ) do | stdin, stdout, stderr |
-	    stdin.close
-	    error = stderr.read
-	    result << stdout.read
-	    raise "#{ error } #{ config[ 'ip' ] }" unless error.length == 0
-	  end
-	  result
-	end
+        def add vni, group
+          port_name = name vni
+          device = config[ 'device' ]
+          ip_link 'add', [ port_name, 'type', 'vxlan', 'id', vni, 'group', group, 'dev', device ]
+        end
+
+        def delete vni
+          port_name = name vni
+          ip_link 'delete', [ port_name ]
+        end
+
+        def show up_only = true
+          list = {}
+          options = []
+          if up_only
+            options = options + [ 'up' ]
+          end
+          ip_link( 'show', options ).split( "\n").each do | row |
+            index, port_name, info = row.split( /:\s*/, 3 )
+            next if /^vxlan(\d+)$/ !~ port_name
+            vni = $1
+            state = "UNKNOWN"
+            if /state\s+(\S+)/ =~ info
+              state = $1
+            end
+            list [ vni.to_i ] = { :port_name => port_name, :state => state }
+          end
+          list
+        end
+
+        def up vni
+          port_name = name vni
+          ip_link 'set', [ port_name, 'up' ]
+        end
+
+        def down vni
+          port_name = name vni
+          ip_link 'set', [ port_name, 'down' ]
+        end
+
+        private
+
+        def config
+          Vxlan::Configure.instance[ 'linux_kernel' ]
+        end
+
+        def ip_link command, options = []
+          result = ""
+          Open3.popen3( "#{ config[ 'ip' ] } link #{ command } #{ options.join ' ' }" ) do | stdin, stdout, stderr |
+            stdin.close
+            error = stderr.read
+            result << stdout.read
+            raise "#{ error } #{ config[ 'ip' ] }" unless error.length == 0
+          end
+          result
+        end
 
       end
 

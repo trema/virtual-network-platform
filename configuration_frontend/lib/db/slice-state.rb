@@ -41,16 +41,16 @@ module DB
 
     def to_s
       names = {
-	SLICE_STATE_CONFIRMED            => "confirmed",
-	SLICE_STATE_PREPARING_TO_UPDATE  => "preparing-to-update",
-	SLICE_STATE_READY_TO_UPDATE      => "ready-to-update",
-	SLICE_STATE_UPDATING             => "updating",
-	SLICE_STATE_UPDATE_FAILED        => "update-failed",
-	SLICE_STATE_PREPARING_TO_DESTROY => "preparing-to-destroy",
-	SLICE_STATE_READY_TO_DESTROY     => "ready-to-destroy",
-	SLICE_STATE_DESTROYING           => "destroying",
-	SLICE_STATE_DESTROY_FAILED       => "destroy-failed",
-	SLICE_STATE_DESTROYED            => "destroyed"
+        SLICE_STATE_CONFIRMED            => "confirmed",
+        SLICE_STATE_PREPARING_TO_UPDATE  => "preparing-to-update",
+        SLICE_STATE_READY_TO_UPDATE      => "ready-to-update",
+        SLICE_STATE_UPDATING             => "updating",
+        SLICE_STATE_UPDATE_FAILED        => "update-failed",
+        SLICE_STATE_PREPARING_TO_DESTROY => "preparing-to-destroy",
+        SLICE_STATE_READY_TO_DESTROY     => "ready-to-destroy",
+        SLICE_STATE_DESTROYING           => "destroying",
+        SLICE_STATE_DESTROY_FAILED       => "destroy-failed",
+        SLICE_STATE_DESTROYED            => "destroyed"
       }
       names[ @state ] or "SLICE_STATE_%d" % @state
     end
@@ -72,7 +72,7 @@ module DB
     def can_destroy?
       @state == SLICE_STATE_CONFIRMED
     end
-    
+
     def can_reset?
       @state != SLICE_STATE_PREPARING_TO_UPDATE and
       @state != SLICE_STATE_PREPARING_TO_DESTROY

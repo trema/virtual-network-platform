@@ -67,9 +67,9 @@ class OverlayNetwork
       instances = {}
       Vxlan::Instance.list.each_pair do | vni, value |
         port_name = Vxlan::Instance.name( vni )
-	if ovs_ports.index( port_name )
-	  instances[ vni ] = value
-	end
+        if ovs_ports.index( port_name )
+          instances[ vni ] = value
+        end
       end
       instances
     end
@@ -84,7 +84,7 @@ class OverlayNetwork
       port_name = Vxlan::Instance.name( vni )
 
       if OVS::Port.exists?( port_name )
-	raise DuplicatedOverlayNetwork.new vni
+        raise DuplicatedOverlayNetwork.new vni
       end
       if Vxlan::Instance.exists?( vni )
         Vxlan::Instance.delete( vni )
@@ -105,7 +105,7 @@ class OverlayNetwork
       port_name = Vxlan::Instance.name( vni )
 
       unless OVS::Port.exists?( port_name )
-	raise NoOverlayNetworkFound.new vni
+        raise NoOverlayNetworkFound.new vni
       end
       begin
         OVS::Port.delete port_name
