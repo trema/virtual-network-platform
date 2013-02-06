@@ -99,6 +99,10 @@ end
 def convert_port_name value
   return "" if value.nil?
 
+  unless /^\S/ =~ value
+    raise BadReuestError.new "Port name ('#{ value }') is illegal format."
+  end
+
   return value if value.length < OFP_MAX_PORT_NAME_LEN
   raise BadReuestError.new "Port name is too long."
 end

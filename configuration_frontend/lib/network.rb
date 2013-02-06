@@ -130,6 +130,9 @@ class Network
       raise BadReuestError.new "Slice id must be specified." if parameters[ :net_id ].nil?
       raise BadReuestError.new "Datapath id must be specified." if parameters[ :datapath_id ].nil?
       raise BadReuestError.new "Port number or name is required." if parameters[ :number ].nil? and parameters[ :name ].nil?
+      if not parameters[ :number ].nil? and not parameters[ :name ].nil?
+        raise UnprocessableEntityError.new "Port number and name are exclusive and one of them must be provided."
+      end
 
       # validate and convert
       port_id = convert_port_id parameters[ :id ]
