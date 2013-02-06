@@ -1,3 +1,2 @@
+# Set the directory that the Virtual Network Agent executable exists.
 VIRTUAL_NETWORK_AGENT_DIR="/somewhere"
-VIRTUAL_NETWORK_AGENT_PIF_FILE="/var/run/virtual_network_agent.pid"
-VIRTUAL_NETWORK_AGENT_OPTS="--config-file $VIRTUAL_NETWORK_AGENT_DIR/configure.yml"

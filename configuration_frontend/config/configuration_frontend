@@ -1,3 +1,2 @@
+# Set the directory that the Configuration Frontend executable exists.
 CONFIGURATION_FRONTEND_DIR="/somewhere"
-CONFIGURATION_FRONTEND_PIF_FILE="/var/run/configuration_frontend.pid"
-CONFIGURATION_FRONTEND_OPTS="--config-file $CONFIGURATION_FRONTEND_DIR/configure.yml"

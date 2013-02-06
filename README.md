@@ -174,10 +174,13 @@ the MySQL "root" user. We assume here that the password is set to
 
         $ sudo cp configuration_frontend/config/configuration_frontend \
         /etc/default
-Edit the configuration file (/etc/default/configuration\_frontend) as
-follows:
+Edit the configuration file as follows:
 
-        (TBD)
+Set the directory that the Configuration Frontend executable exists.
+
+- /etc/default/configuration\_frontend
+
+        CONFIGURATION_FRONTEND_DIR="/somewhere/configuration_frontend"
 
 #### Start all required services
 
@@ -201,10 +204,32 @@ follows:
 
         $ sudo cp virtual_network_agent/config/virtual_network_agent \
         /etc/default
-Edit the configuration file (/etc/default/virtual\_network\_agent) as
-follows:
+Edit the configuration files as follows:
 
-        (TBD)
+Set the directory that the Virtual Network Agent executable exists.
+
+- /etc/default/virtual\_network\_agent
+
+
+        VIRTUAL_NETWORK_AGENT_DIR="/somewhere/virtual_network_agent"
+
+
+Set the Configuration Frontend URL, Virtual Network Agent URL and
+Tunnel endpoint address.
+
+- /somewhere/virtual\_network\_agent/tunnel\_endpoint\_configure.yml
+
+* Set the Configuration Frontend URL for registration.
+
+        controller_uri: http://10.0.0.1:8081/
+
+* Set the Virtual Network Agent URL for incoming connections.
+
+        uri: http://10.0.0.2:8082/
+
+* Set the VXLAN tunnel endpoint address.
+
+        tunnel_endpoint: 10.0.0.2
 
 4. Start Virtual Network Agent
 

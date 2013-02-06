@@ -14,6 +14,7 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="Configuration Frontend"
 NAME=configuration_frontend
 SCRIPTNAME=/etc/init.d/$NAME
+PIDFILE=/var/run/$NAME.pid
 
 . /lib/init/vars.sh
 
@@ -30,19 +31,6 @@ else
 fi
 
 [ -x "$DAEMON" ] || exit 0
-
-if [ -n "$CONFIGURATION_FRONTEND_PIF_FILE" ]; then
-  PIDFILE=$CONFIGURATION_FRONTEND_PIF_FILE
-else
-  PIDFILE=/var/run/$NAME.pid
-fi
-
-if [ -n "$CONFIGURATION_FRONTEND_OPTS" ]; then
-    DAEMON_ARGS=$CONFIGURATION_FRONTEND_OPTS
-else
-    DAEMON_ARGS=""
-fi
-
 
 do_start()
 {
