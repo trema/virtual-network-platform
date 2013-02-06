@@ -44,7 +44,12 @@ class TunnelEndpointAgent < Sinatra::Base
     logger = Log.instance
     request.body.rewind
     body = request.body.read.gsub( /\000.*$/, '' ) # XXX
-    parameters = JSON.parse( body, :symbolize_names => true )
+    begin
+      parameters = JSON.parse( body, :symbolize_names => true )
+    rescue => e
+      logger.debug "body = '#{ body }'"
+      raise BadReuestError.new e.message
+    end
     requires.each do | each |
       raise BadReuestError.new unless parameters.has_key? each
     end

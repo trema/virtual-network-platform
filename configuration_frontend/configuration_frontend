@@ -48,9 +48,9 @@ class ConfigurationFrontend < Sinatra::Base
     body = request.body.read
     begin
       parameters = JSON.parse( body, :symbolize_names => true )
-    rescue
+    rescue => e
       logger.debug "body = '#{ body }'"
-      raise
+      raise BadReuestError.new e.message
     end
     requires.each do | each |
       raise BadReuestError.new unless parameters.has_key? each

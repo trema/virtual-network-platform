@@ -3,7 +3,7 @@
 # Copyright (C) 2012-2013 NEC Corporation
 #
 
-BASE_URI="http://127.0.0.1:8888/networks"
+BASE_URI="http://127.0.0.1:8081/networks"
 
 CURL="curl"
 
@@ -21,7 +21,7 @@ run(){
     if [ -n "$content" ]; then
 	$CURL -v -H "Accept: application/json" \
 	    -H "Content-type: application/json" \
-	    -X $method -d "'$content'" $target
+	    -X $method -d "$content" $target
 	echo
     else
 	$CURL -v -H "Accept: application/json" -X $method $target
@@ -33,14 +33,16 @@ run(){
 tests(){
     run GET ""
     run POST "" create_network.json
-    run PUT "/128" modify_network.json
-    run GET "/128"
-    run POST "/128/ports" create_port.json
-    run GET "/128/ports"
-    run GET "/128"
-    run DELETE "/128/ports/0"
-    run GET "/128/ports"
-    run DELETE "/128"
+    run PUT "/2" modify_network.json
+    run GET "/2"
+    run POST "/2/ports" create_port.json
+    run GET "/2/ports"
+    run GET "/2"
+    sleep 3
+    run DELETE "/2/ports/3"
+    run GET "/2/ports"
+    sleep 3
+    run DELETE "/2"
     run GET ""
 }
 
