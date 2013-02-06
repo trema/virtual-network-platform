@@ -13,4 +13,4 @@ $MYSQL $MYSQL_OPTS < ./create_slice_table.sql
 $MYSQL $MYSQL_OPTS < ./create_switch_table.sql
 $MYSQL $MYSQL_OPTS < ./create_agent_table.sql
 $MYSQL $MYSQL_OPTS < ./create_overlay_network_table.sql
-$MYSQL $MYSQL_OPTS < ./create_status_table.sql
+
