@@ -54,17 +54,17 @@ class WEBrickWrapper < Rack::Handler::WEBrick
      end
      Thread.new do
        logger.debug "Startup-callback start"
-       loop do
-	 begin
-           if not config[ :startup_callback ].nil?
-	     config[ :startup_callback ].send :startup
-	   end
-	   break
-	 rescue => e
-	   logger.error e.message
-	   logger.debug e.backtrace.join( "\n" )
-	 end
-	 sleep 10 + rand( 20 )
+       begin
+         if not config[ :startup_callback ].nil?
+           config[ :startup_callback ].send :startup
+         end
+       rescue => e
+         logger.error e.message
+         logger.debug e.backtrace.join( "\n" )
+
+         logger.debug "sleeping and retry"
+         sleep 10 + rand( 20 )
+         retry
        end
        logger.debug "Startup-callback end"
      end
