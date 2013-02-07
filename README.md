@@ -198,7 +198,7 @@ Set the directory that the Configuration Frontend executable exists.
 
         $ sudo cp virtual_network_agent/init/virtual_network_agent \
         /etc/init.d
-        $ sudo update-rc.d virtual_network_agent defaults
+        $ sudo update-rc.d virtual_network_agent defaults 30 10
 
 3. Setup configuration file
 
