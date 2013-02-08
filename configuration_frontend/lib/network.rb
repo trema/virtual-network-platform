@@ -15,6 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 
+require 'configure'
 require 'errors'
 require 'db'
 require 'convert'
@@ -46,7 +47,11 @@ class Network
         slice = DB::Slice.new
         slice.id = slice_id
         slice.description = description
-        slice.state = DB::SLICE_STATE_CONFIRMED
+        if update_transaction?
+          slice.state = DB::SLICE_STATE_PREPARING_TO_UPDATE
+        else
+          slice.state = DB::SLICE_STATE_CONFIRMED
+        end
         slice.save!
         { :id => slice.id, :description => slice.description, :state => slice.state.to_s }
       rescue ActiveRecord::StatementInvalid
@@ -125,6 +130,23 @@ class Network
       end
     end
 
+    def update_transaction_end parameters
+      raise BadReuestError.new "Slice id must be specified." if parameters[ :id ].nil?
+
+      slice_id = convert_slice_id parameters[ :id ]
+
+      slice = find_slice( slice_id )
+
+      DB::Port.update_all(
+        [ "state = ?", DB::PORT_STATE_READY_TO_UPDATE ],
+          [ "slice_id = ? AND state = ?", slice_id, DB::PORT_STATE_PREPARING_TO_DESTROY ] )
+      DB::Slice.update_all(
+        [ "state = ?", DB::SLICE_STATE_READY_TO_UPDATE ],
+        [ "id = ? AND state = ?",
+          slice_id,
+          DB::SLICE_STATE_PREPARING_TO_UPDATE ] )
+    end
+
     def create_port parameters
       # require param.
       raise BadReuestError.new "Slice id must be specified." if parameters[ :net_id ].nil?
@@ -145,7 +167,11 @@ class Network
 
       slice = find_slice( slice_id )
       raise NetworkManagementError.new if slice.state.failed?
-      raise BusyHereError.new  unless slice.state.can_update?
+      if update_transaction?
+        raise BusyHereError.new unless slice.state == DB::SLICE_STATE_PREPARING_TO_UPDATE
+      else
+        raise BusyHereError.new  unless slice.state.can_update?
+      end
 
       # exists?
       if not port_id.nil?
@@ -161,7 +187,7 @@ class Network
       end
 
       # create port
-      update_slice slice_id do
+      update_slice slice_id, update_transaction? do
         port = DB::Port.new
         port.id = port_id if not port_id.nil?
         port.slice_id = slice_id
@@ -272,7 +298,11 @@ class Network
 
       slice = find_slice( slice_id )
       raise NetworkManagementError.new if slice.state.failed?
-      raise BusyHereError.new  unless slice.state.can_update?
+      if update_transaction?
+        raise BusyHereError.new unless slice.state == DB::SLICE_STATE_PREPARING_TO_UPDATE
+      else
+        raise BusyHereError.new  unless slice.state.can_update?
+      end
 
       port = find_port( slice_id, port_id )
       raise NetworkManagementError.new if port.state.failed?
@@ -287,7 +317,7 @@ class Network
       end
 
       # create mac
-      update_slice slice_id do
+      update_slice slice_id, update_transaction? do
         update_port slice_id, port_id do
           mac_address = DB::MacAddress.new
           mac_address.slice_id = slice_id
@@ -403,6 +433,11 @@ class Network
 
     private
 
+    def update_transaction?
+      config = Configure.instance
+      not config[ 'update_transaction' ].nil? and config[ 'update_transaction' ]
+    end
+
     def find_slice slice_id, parameters = { :readonly => true }
       begin
         slice = DB::Slice.find( slice_id, parameters )
@@ -413,12 +448,14 @@ class Network
       end
     end
 
-    def update_slice slice_id, &a_proc
-      DB::Slice.update_all(
-        [ "state = ?", DB::SLICE_STATE_PREPARING_TO_UPDATE ],
-        [ "id = ? AND ( state = ? OR state = ? )",
-          slice_id,
-          DB::SLICE_STATE_CONFIRMED, DB::SLICE_STATE_READY_TO_UPDATE ] )
+    def update_slice slice_id, update_transaction = false, &a_proc
+      if not update_transaction
+        DB::Slice.update_all(
+          [ "state = ?", DB::SLICE_STATE_PREPARING_TO_UPDATE ],
+          [ "id = ? AND ( state = ? OR state = ? )",
+            slice_id,
+            DB::SLICE_STATE_CONFIRMED, DB::SLICE_STATE_READY_TO_UPDATE ] )
+      end
       begin
         a_proc.call
       rescue
@@ -427,9 +464,11 @@ class Network
           [ "id = ? AND state = ?", slice_id, DB::SLICE_STATE_PREPARING_TO_UPDATE ] )
         raise
       end
-      DB::Slice.update_all(
-        [ "state = ?", DB::SLICE_STATE_READY_TO_UPDATE ],
-        [ "id = ? AND state = ?", slice_id, DB::SLICE_STATE_PREPARING_TO_UPDATE ] )
+      if not update_transaction
+        DB::Slice.update_all(
+          [ "state = ?", DB::SLICE_STATE_READY_TO_UPDATE ],
+          [ "id = ? AND state = ?", slice_id, DB::SLICE_STATE_PREPARING_TO_UPDATE ] )
+      end
     end
 
     def destroy_slice slice_id, &a_proc
@@ -563,7 +602,7 @@ class Network
         a_proc.call
         DB::Port.update_all(
           [ "state = ?", DB::PORT_STATE_READY_TO_UPDATE ],
-          [ "slice_id = ? AND state = ?", slice_id, DB::PORT_STATE_READY_TO_UPDATE ] )
+          [ "slice_id = ? AND state = ?", slice_id, DB::PORT_STATE_PREPARING_TO_DESTROY ] )
         DB::Port.update_all(
           [ "state = ?", DB::PORT_STATE_READY_TO_DESTROY ],
           [ "slice_id = ? AND state = ?", slice_id, DB::PORT_STATE_PREPARING_TO_DESTROY ] )

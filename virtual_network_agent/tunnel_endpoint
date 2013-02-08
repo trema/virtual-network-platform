@@ -34,7 +34,7 @@ logger = Log.instance
 logger.level = Log::INFO
 
 def config_file
-  File.dirname( __FILE__ ) + '/configure.yml'
+  File.dirname( __FILE__ ) + '/tunnel_endpoint_configure.yml'
 end
 
 Configure.instance.load_file( config_file )
@@ -43,7 +43,7 @@ option = OptionParser.new
 option.on( '-c arg', '--config-file=arg' ) do | arg |
   Configure.instance.load_file arg
 end
-option.on( '-d', '--debug' ) do | arg |
+option.on( '-v', '--verbose' ) do | arg |
   logger.level = Log::DEBUG
 end
 option.on( '--help' ) do | arg |
@@ -66,7 +66,7 @@ Usage: slice [options] command [arguments...]
 options
     -c, --config-file=arg - Configuration file (default: '#{ config_file }')
     --help                - Show this message
-    -d, --debug           - Debug mode
+    -v, --verbose         - Verbose mode
 
 commands
     list                  - List summary of overlay networks

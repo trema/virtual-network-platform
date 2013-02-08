@@ -189,7 +189,9 @@ class ReflectorAgent < Sinatra::Base
 
   config = Configure.instance
   config_file = File.dirname( __FILE__ ) + '/configure.yml'
-  config.load_file( config_file )
+  if File.readable? config_file
+    config.load_file( config_file )
+  end
   config_file = File.dirname( __FILE__ ) + '/reflector_configure.yml'
   config.load_file( config_file )
   option = OptionParser.new

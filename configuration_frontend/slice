@@ -67,6 +67,10 @@ end
 option.on( '-v', '--verbose' ) do | arg |
   logger.level = Log::DEBUG
 end
+# --update-transaction: debug only
+option.on( '--update-transaction' ) do | arg |
+  config[ 'update_transaction' ] = arg
+end
 option.on( '--help' ) do | arg |
   help
   exit 0
@@ -129,7 +133,11 @@ def run args
     @subcommands[ ARGV.shift ].call ARGV
   rescue => e
     puts e.message
-    raise if Log.instance.level == Log::DEBUG
+    if Log.instance.level == Log::DEBUG
+      raise
+    else
+      exit 1
+    end
   end
 end
 
@@ -195,6 +203,15 @@ command 'reset' do | args |
   help_and_exit "Too many arguments" unless args.size == 0
   Network.reset( parameters )
   puts "A slice is resetted successfully."
+end
+
+# update-transaction-end: debug only
+command 'update-transaction-end' do | args |
+  parameters = {}
+  parameters[ :id ] = args.shift or help_and_exit "Too few arguments"
+  help_and_exit "Too many arguments" unless args.size == 0
+  Network.update_transaction_end( parameters )
+  puts "A slice is update-transaction-end successfully."
 end
 
 # Port
