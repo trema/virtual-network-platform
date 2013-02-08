@@ -824,8 +824,8 @@ class Network
                             :readonly => true,
                             :select => 'id, datapath_id, port_no, port_name, vid, type as port_type, description, state, updated_at',
                             :conditions => [
-                              "slice_id = ? AND type = ?",
-                              slice_id, DB::PORT_TYPE_CUSTOMER ] )
+                              "slice_id = ? AND id = ? AND type = ?",
+                              slice_id, port_id, DB::PORT_TYPE_CUSTOMER ] )
       raise NoPortFound.new port_id if port.nil?
       logger.debug "#{__FILE__}:#{__LINE__}: port: slice-id=#{ slice_id } port-id #{ port_id } state=#{ port.state.to_s }"
       port
