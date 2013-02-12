@@ -28,6 +28,8 @@ class Network
       slice_id = convert_slice_id parameters[ :id ]
       description = convert_description parameters[ :description ]
 
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: create a new network (slice_id = #{ slice_id }, description = '#{ description }')"
+
       if slice_id.nil?
         slice_id = DB::Slice.generate_id
       else
@@ -48,6 +50,7 @@ class Network
         slice.id = slice_id
         slice.description = description
         if update_transaction?
+          logger.debug "#{ __FILE__ }:#{ __LINE__ }: update-transaction begin (slice_id = #{ slice_id })"
           slice.state = DB::SLICE_STATE_PREPARING_TO_UPDATE
         else
           slice.state = DB::SLICE_STATE_CONFIRMED
@@ -67,6 +70,8 @@ class Network
       slice_id = convert_slice_id parameters[ :id ]
       description = convert_description parameters[ :description ]
 
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: update the network (slice_id = #{ slice_id }, description = '#{ description }')"
+
       slice = find_slice( slice_id, :readonly => false )
       raise NetworkManagementError.new if slice.state.failed?
       slice.description = description
@@ -77,6 +82,8 @@ class Network
       raise BadReuestError.new "Slice id must be specified." if parameters[ :id ].nil?
 
       slice_id = convert_slice_id parameters[ :id ]
+
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: destroy the network (slice_id = #{ slice_id })"
 
       slice = find_slice( slice_id )
       raise NetworkManagementError.new if slice.state.failed?
@@ -97,6 +104,9 @@ class Network
     end
 
     def list parameters = {}
+
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: list of networks"
+
       DB::Slice.find( :all, :readonly => true ).collect do | each |
         response = { :id => each.id, :description => each.description, :state => each.state.to_s }
         response[ :updated_at ] = each.updated_at.to_s( :db ) unless parameters[ :require_updated_at ].nil?
@@ -109,6 +119,8 @@ class Network
 
       slice_id = convert_slice_id parameters[ :id ]
 
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: show details of network (slice_id = #{ slice_id })"
+
       slice = find_slice( slice_id )
       response = { :id => slice.id, :description => slice.description, :state => slice.state.to_s }
       response[ :updated_at ] = slice.updated_at.to_s( :db ) unless parameters[ :require_updated_at ].nil?
@@ -119,6 +131,8 @@ class Network
       raise BadReuestError.new "Slice id must be specified." if parameters[ :id ].nil?
 
       slice_id = convert_slice_id parameters[ :id ]
+
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: show details of networks (slice_id = #{ slice_id })"
 
       slice = find_slice( slice_id )
       raise BusyHereError unless slice.state.can_reset?
@@ -134,6 +148,8 @@ class Network
       raise BadReuestError.new "Slice id must be specified." if parameters[ :id ].nil?
 
       slice_id = convert_slice_id parameters[ :id ]
+
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: update-transaction end (slice_id = #{ slice_id })"
 
       slice = find_slice( slice_id )
 
@@ -165,9 +181,12 @@ class Network
       vid = convert_vid parameters[ :vid ]
       description = convert_description parameters[ :description ]
 
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: create a new port (port_id = #{ port_id }, slice_id = #{ slice_id }, datapath_id = #{ datapath_id }, port_no = #{ port_no }, port_name = '#{ port_name }', vid = #{ vid }, description = '#{ description }')"
+
       slice = find_slice( slice_id )
       raise NetworkManagementError.new if slice.state.failed?
       if update_transaction?
+        logger.debug "#{ __FILE__ }:#{ __LINE__ }: update-transaction (slice_id = #{ slice_id })"
         raise BusyHereError.new unless slice.state == DB::SLICE_STATE_PREPARING_TO_UPDATE
       else
         raise BusyHereError.new  unless slice.state.can_update?
@@ -207,6 +226,8 @@ class Network
       raise BadReuestError.new "Slice id must be specified." if parameters[ :net_id ].nil?
       slice_id = convert_slice_id parameters[ :net_id ]
 
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: list of ports (slice_id = #{ slice_id })"
+
       find_slice( slice_id )
 
       DB::Port.find( :all,
@@ -235,6 +256,8 @@ class Network
       raise BadReuestError.new "Port id must be specified." if parameters[ :id ].nil?
       slice_id = convert_slice_id parameters[ :net_id ]
       port_id = convert_port_id parameters[ :id ]
+
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: show details of port (slice_id = #{ slice_id }, port_id = #{ port_id })"
 
       find_slice( slice_id )
 
@@ -268,6 +291,8 @@ class Network
       port_id = convert_port_id parameters[ :id ]
       slice_id = convert_slice_id parameters[ :net_id ]
 
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: delete the port (slice_id = #{ slice_id }, port_id = #{ port_id })"
+
       slice = find_slice( slice_id )
       raise NetworkManagementError.new if slice.state.failed?
       raise BusyHereError.new  unless slice.state.can_update?
@@ -296,9 +321,12 @@ class Network
       port_id = convert_port_id parameters[ :id ]
       mac = convert_mac parameters[ :address ]
 
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: create a new mac-address (slice_id = #{ slice_id }, port_id = #{ port_id }, mac = #{ mac })"
+
       slice = find_slice( slice_id )
       raise NetworkManagementError.new if slice.state.failed?
       if update_transaction?
+        logger.debug "#{ __FILE__ }:#{ __LINE__ }: update-transaction (slice_id = #{ slice_id })"
         raise BusyHereError.new unless slice.state == DB::SLICE_STATE_PREPARING_TO_UPDATE
       else
         raise BusyHereError.new  unless slice.state.can_update?
@@ -338,6 +366,8 @@ class Network
       slice_id = convert_slice_id parameters[ :net_id ]
       port_id = convert_port_id parameters[ :id ]
 
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: list of mac-addresses (slice_id = #{ slice_id }, port_id = #{ port_id })"
+
       find_slice( slice_id )
       find_port( slice_id, port_id )
 
@@ -358,7 +388,7 @@ class Network
       end
     end
 
-    def show_local_mac_address parameters
+    def show_mac_address parameters
       raise BadReuestError.new "Slice id must be specified." if parameters[ :net_id ].nil?
       raise BadReuestError.new "Port id must be specified." if parameters[ :id ].nil?
       raise BadReuestError.new "Mac address must be specified." if parameters[ :address ].nil?
@@ -366,6 +396,8 @@ class Network
       slice_id = convert_slice_id parameters[ :net_id ]
       port_id = convert_port_id parameters[ :id ]
       mac = convert_mac parameters[ :address ]
+
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: show details of mac-address (slice_id = #{ slice_id }, port_id = #{ port_id }, mac = #{ mac })"
 
       mac_address = find_mac( slice_id, port_id, mac )
       response = { :address => mac_address.mac.to_s, :state => mac_address.state.to_s }
@@ -379,6 +411,8 @@ class Network
 
       slice_id = convert_slice_id parameters[ :net_id ]
       mac = convert_mac parameters[ :address ]
+
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: list of remote mac-addresses (slice_id = #{ slice_id }, mac = #{ mac })"
 
       ports = {}
       DB::Port.find( :all,
@@ -409,6 +443,8 @@ class Network
       slice_id = convert_slice_id parameters[ :net_id ]
       port_id = convert_port_id parameters[ :id ]
       mac = convert_mac parameters[ :address ]
+
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: delete the mac-address (slice_id = #{ slice_id }, port_id = #{ port_id }, mac = #{ mac })"
 
       slice = find_slice( slice_id )
       raise NetworkManagementError.new if slice.state.failed?
@@ -441,7 +477,7 @@ class Network
     def find_slice slice_id, parameters = { :readonly => true }
       begin
         slice = DB::Slice.find( slice_id, parameters )
-        logger.debug "#{__FILE__}:#{__LINE__}: slice: slice-id=#{ slice_id } state=#{ slice.state.to_s }"
+        logger.debug "#{ __FILE__ }:#{ __LINE__ }: slice: slice-id=#{ slice_id } state=#{ slice.state.to_s }"
         slice
       rescue ActiveRecord::RecordNotFound
         raise NoSliceFound.new slice_id
@@ -644,7 +680,7 @@ class Network
     end
 
     def add_overlay_ports slice_id
-      logger.debug "#{__FILE__}:#{__LINE__}: Adding overlay ports (slice_id = #{ slice_id })"
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: Adding overlay ports (slice_id = #{ slice_id })"
 
       ports = get_active_ports slice_id
       switches = get_active_switches_from ports
@@ -667,13 +703,13 @@ class Network
     end
 
     def add_overlay_port slice_id, datapath_id, remote_mac_addresses
-      logger.debug "#{__FILE__}:#{__LINE__}: Adding an overlay port (slice_id = #{ slice_id }, datapath_id = #{ datapath_id }, remote_mac_addresses = [ #{ remote_mac_addresses.join( "," ) })"
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: Adding an overlay port (slice_id = #{ slice_id }, datapath_id = #{ datapath_id }, remote_mac_addresses = [ #{ remote_mac_addresses.join( "," ) })"
 
       port_name = "vxlan%u" % slice_id
 
       overlay_port_id = get_active_overlay_port( slice_id, datapath_id, port_name )
       if not overlay_port_id.nil?
-        logger.debug "#{__FILE__}:#{__LINE__}: An overlay port already exists (slice_id = #{ slice_id }, datapath_id = #{ datapath_id })."
+        logger.debug "#{ __FILE__ }:#{ __LINE__ }: An overlay port already exists (slice_id = #{ slice_id }, datapath_id = #{ datapath_id })."
         return
       end
 
@@ -715,7 +751,7 @@ class Network
     end
 
     def delete_overlay_ports slice_id
-      logger.debug "#{__FILE__}:#{__LINE__}: Deleting overlay ports (slice_id = #{ slice_id })"
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: Deleting overlay ports (slice_id = #{ slice_id })"
       get_inactive_switches( slice_id ).each do | each |
         delete_overlay_port slice_id, each
       end
@@ -729,7 +765,7 @@ class Network
       port_name = "vxlan%u" % slice_id
       overlay_port_id = get_active_overlay_port( slice_id, datapath_id, port_name )
       if overlay_port_id.nil?
-        logger.debug "#{__FILE__}:#{__LINE__}: An overlay port does not exist (slice_id = #{ slice_id }, datapath_id = #{ datapath_id })."
+        logger.debug "#{ __FILE__ }:#{ __LINE__ }: An overlay port does not exist (slice_id = #{ slice_id }, datapath_id = #{ datapath_id })."
         return
       end
       destroy_port slice_id, overlay_port_id, DB::PORT_TYPE_OVERLAY do
@@ -827,7 +863,7 @@ class Network
                               "slice_id = ? AND id = ? AND type = ?",
                               slice_id, port_id, DB::PORT_TYPE_CUSTOMER ] )
       raise NoPortFound.new port_id if port.nil?
-      logger.debug "#{__FILE__}:#{__LINE__}: port: slice-id=#{ slice_id } port-id #{ port_id } state=#{ port.state.to_s }"
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: port: slice-id=#{ slice_id } port-id #{ port_id } state=#{ port.state.to_s }"
       port
     end
 
@@ -839,7 +875,7 @@ class Network
                                            slice_id, port_id, mac.to_i, DB::MAC_TYPE_LOCAL ] )
 
       raise NoMacAddressFound.new mac if mac_address.nil?
-      logger.debug "#{__FILE__}:#{__LINE__}: port: slice-id=#{ slice_id } port-id #{ port_id } mac = #{ mac_address.mac.to_s } state=#{ mac_address.state.to_s }"
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: port: slice-id=#{ slice_id } port-id #{ port_id } mac = #{ mac_address.mac.to_s } state=#{ mac_address.state.to_s }"
       mac_address
     end
 
@@ -847,7 +883,7 @@ class Network
       port_name = "vxlan%u" % slice_id
       overlay_port_id = get_active_overlay_port( slice_id, datapath_id, port_name )
       if overlay_port_id.nil?
-        logger.debug "#{__FILE__}:#{__LINE__}: An overlay port does not exist (slice_id = #{ slice_id }, datapath_id = #{ datapath_id })."
+        logger.debug "#{ __FILE__ }:#{ __LINE__ }: An overlay port does not exist (slice_id = #{ slice_id }, datapath_id = #{ datapath_id })."
         return
       end
       update_overlay_port slice_id, overlay_port_id do
@@ -872,7 +908,7 @@ class Network
       port_name = "vxlan%u" % slice_id
       overlay_port_id = get_active_overlay_port( slice_id, datapath_id, port_name )
       if overlay_port_id.nil?
-        logger.debug "#{__FILE__}:#{__LINE__}: An overlay port does not exist (slice_id = #{ slice_id }, datapath_id = #{ datapath_id })."
+        logger.debug "#{ __FILE__ }:#{ __LINE__ }: An overlay port does not exist (slice_id = #{ slice_id }, datapath_id = #{ datapath_id })."
         return
       end
       update_overlay_port slice_id, overlay_port_id do

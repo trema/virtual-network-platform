@@ -15,15 +15,30 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 
-require 'db/agent'
-require 'db/datapath-id'
-require 'db/log'
-require 'db/mac-address'
-require 'db/mac'
-require 'db/overlay-network'
-require 'db/port'
-require 'db/reflector'
-require 'db/slice'
-require 'db/tunnel_endpoint'
-require 'db/tep'
-require 'db/uri'
+begin
+require 'rubygems'
+rescue LoadError
+end
+require 'active_record'
+
+module DB
+
+  class Log
+    class << self
+      def instance
+        ActiveRecord::Base.logger
+      end
+
+      def logger
+        ActiveRecord::Base.logger
+      end
+
+      def logger= ( logger )
+        ActiveRecord::Base.logger = logger
+      end
+
+    end
+
+  end
+
+end

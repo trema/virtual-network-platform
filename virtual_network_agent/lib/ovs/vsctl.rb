@@ -16,6 +16,7 @@
 
 require 'open3'
 require 'ovs/configure'
+require 'ovs/log'
 
 module OVS
 
@@ -26,7 +27,10 @@ module OVS
       end
 
       def datapath_id
-        Vsctl.datapath_id
+        if @datapath_id.nil?
+          @datapath_id = Vsctl.datapath_id
+        end
+        @datapath_id
       end
 
       def exists? br
@@ -65,16 +69,11 @@ module OVS
 
   end
 
-  class Interface
+  class Controller
     class << self
-      def list
-        Vsctl.list_ifaces
+      def is_connected?
+        Vsctl.is_connected?
       end
-
-      def statistics iface
-        Vsctl.iface_statistics iface
-      end
-
     end
   end
 
@@ -96,12 +95,8 @@ module OVS
         ovs_vsctl( [ '--timeout=1' ], 'list-ports', [ bridge ] ).split( "\n")
       end
 
-      def list_ifaces
-        ovs_vsctl( [ '--timeout=1' ], 'list-ifaces', [ bridge ] ).split( "\n")
-      end
-
       def datapath_id
-        s = ovs_vsctl( [ '--timeout=1' ], 'get', [ 'bridge', bridge, 'other-config:datapath-id' ] ).split( "\n").first
+        s = ovs_vsctl( [ '--timeout=1' ], 'get', [ 'bridge', bridge, 'datapath_id' ] ).split( "\n").first
         if /^"([[:xdigit:]]+)"$/ =~ s
           $1.hex
         else
@@ -109,18 +104,9 @@ module OVS
         end
       end
 
-      def iface_statistics iface
-        s = ovs_vsctl( [ '--timeout=1' ], 'get', [ 'interface', iface, 'statistics' ] )
-        if /^\{(.*)\}$/ =~ s
-          h = {}
-          $1.split( /\s*,\s*/ ).each do | each |
-            key, value = each.split( "=", 2 )
-            h[ key ] = value.to_i
-          end
-          h
-        else
-          raise "Can not get interface statistics"
-        end
+      def is_connected?
+        s = ovs_vsctl( [ '--timeout=1' ], 'get', [ 'controller', bridge, 'is_connected' ] )
+        /true/ =~ s and true or false
       end
 
       private
@@ -134,8 +120,10 @@ module OVS
       end
 
       def ovs_vsctl options, command, args = []
+        command_args = "#{ config[ 'vsctl' ] } #{ options.join ' ' } #{ command } #{ args.join ' ' }"
+        logger.debug "ovs_vsctl: '#{ command_args }'"
         result = ""
-        Open3.popen3( "#{ config[ 'vsctl' ] } #{ options.join ' ' } #{ command } #{ args.join ' ' }" ) do | stdin, stdout, stderr |
+        Open3.popen3( command_args ) do | stdin, stdout, stderr |
           stdin.close
           error = stderr.read
           result << stdout.read
@@ -143,6 +131,10 @@ module OVS
           raise "#{ error } #{ config[ 'vsctl' ] }" unless error.length == 0
         end
         result
+      end
+
+      def logger
+        Log.instance
       end
 
     end

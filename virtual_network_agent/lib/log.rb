@@ -43,9 +43,12 @@ class Log < WEBrick::Log
   def log_file= ( log_file )
     @locker.synchronize do
       @log.close if @opened
-      @log = open( log_file, "a+")
-      @log.sync = true
-      @opened = true
+      @opened = false
+      if not log_file.nil?
+        @log = open( log_file, "a+")
+        @log.sync = true
+        @opened = true
+      end
     end
   end
 

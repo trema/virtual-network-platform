@@ -30,7 +30,9 @@ require 'sinatra/base'
 require 'errors'
 require 'configure'
 require 'log'
+require 'ovs'
 require 'reflector'
+require 'vxlan'
 require 'webrick_wrapper'
 
 class ReflectorAgent < Sinatra::Base
@@ -38,6 +40,8 @@ class ReflectorAgent < Sinatra::Base
   set :server, [ 'webrick_wrapper' ]
 
   logger = Log.instance
+  OVS::Log.logger = logger
+  Vxlan::Log.logger = logger
   use Rack::CommonLogger, logger
 
   def json_parse request, requires = []
@@ -224,6 +228,9 @@ class ReflectorAgent < Sinatra::Base
   end
   option.on( '--port=arg', "Listen port number (default '#{ config[ 'listen_port' ] }')" ) do | arg |
     config[ 'listen_port' ] = arg
+  end
+  option.on( '--ovs-vsctl=arg', "Path for ovs-vsctl (default: '#{ OVS::Configure.instance[ 'vsctl' ] }')" ) do | arg |
+    OVS::Configure.instance[ 'vsctl' ] = arg
   end
   option.on( '-v', '--verbose', "Verbose mode" ) do | arg |
     Log.instance.level = Log::DEBUG

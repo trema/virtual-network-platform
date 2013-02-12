@@ -27,6 +27,7 @@ end
 
 require 'agent'
 require 'configure'
+require 'db'
 require 'log'
 require 'network'
 require 'reflector'
@@ -35,7 +36,7 @@ require 'switch'
 logger = Log.instance
 logger.level = Log::INFO
 
-ActiveRecord::Base.logger = logger
+DB::Log.logger = logger
 
 def config_file
   File.dirname( __FILE__ ) + '/configure.yml'
@@ -278,7 +279,7 @@ command 'show-mac' do | args |
   help_and_exit "Too many arguments" unless args.size == 0
   parameters[ :require_updated_at ] = true
   if not parameters[ :address ].nil?
-    display_mac_address Network.show_local_mac_address( parameters )
+    display_mac_address Network.show_mac_address( parameters )
     indent = "  "
     mac_addresses = Network.show_remote_mac_addresses( parameters )
     puts "[Remotes]"

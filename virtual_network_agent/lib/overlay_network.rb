@@ -19,7 +19,9 @@ begin
 require 'rubygems'
 rescue LoadError
 end
+require 'json'
 require 'restclient'
+
 require 'configure'
 require 'convert'
 require 'log'
@@ -31,38 +33,18 @@ class OverlayNetwork
     @registered = false
 
     def startup
-      body = JSON.pretty_generate( {  :control_uri => config.uri, :tunnel_endpoint => config[ 'tunnel_endpoint' ] } )
-      logger.debug "register #{ register_url }"
-      logger.debug "#{ body }"
-      begin
-        response = RestClient.post register_url, body, :content_type => :json, :accept => :json, :timeout => 10, :open_timeout => 10, :user_agent => "virtual-network-agent"
-      rescue => e
-        raise e.exception "#{ e.message } (register url = '#{ register_url }')"
-      end
-      logger.debug "response #{ response.code }"
-      logger.debug "#{ response.body }"
-      raise "Invalid responce code (#{ response.code })" unless response.code == 202
-      @registered = true
-      logger.debug "registered"
+      register
+      reset_request
     end
 
     def shutdown
-      unless @registered
-        logger.debug "not registered"
-        return
-      end
-      logger.debug "register #{ unregister_url }"
-      begin
-        response = RestClient.delete unregister_url, :accept => :json, :timeout => 10, :open_timeout => 10, :user_agent => "virtual-network-agent"
-      rescue => e
-        raise e.exception "#{ e.message } (unregister url = '#{ register_url }')"
-      end
-      logger.debug "response #{ response.code }"
-      logger.debug "#{ response.body }"
-      raise "Invalid responce code (#{ response.code })" unless response.code == 202
+      unregister
     end
 
     def list parameters = {}
+
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: list of overlay networks"
+
       ovs_ports = OVS::Port.list
       instances = {}
       Vxlan::Instance.list.each_pair do | vni, value |
@@ -80,6 +62,8 @@ class OverlayNetwork
 
       vni = convert_vni parameters[ :vni ]
       broadcast_address = convert_broadcast_address parameters[ :broadcast ]
+
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: create a new overlay network (vni = #{ vni }, broadcast_address = #{ broadcast_address })"
 
       port_name = Vxlan::Instance.name( vni )
 
@@ -102,6 +86,8 @@ class OverlayNetwork
 
       vni = convert_vni parameters[ :vni ]
 
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: destroy the overlay network (vni = #{ vni })"
+
       port_name = Vxlan::Instance.name( vni )
 
       unless OVS::Port.exists?( port_name )
@@ -117,7 +103,70 @@ class OverlayNetwork
       end
     end
 
+    def reset parameters = {}
+      reset_request
+    end
+
     private
+
+    def register
+
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: register"
+
+      if @registered
+        logger.debug "already registered"
+        return
+      end
+      body = JSON.pretty_generate( { :control_uri => config.uri, :tunnel_endpoint => config[ 'tunnel_endpoint' ] } )
+      logger.debug "register #{ register_url }"
+      logger.debug "#{ body }"
+      begin
+        response = RestClient.post register_url, body, :content_type => :json, :accept => :json, :timeout => 10, :open_timeout => 10, :user_agent => "virtual-network-agent"
+      rescue => e
+        raise e.exception "#{ e.message } (register url = '#{ register_url }')"
+      end
+      logger.debug "response #{ response.code }"
+      logger.debug "#{ response.body }"
+      raise "Invalid responce code (#{ response.code })" unless response.code == 202
+      @registered = true
+      logger.debug "registered"
+    end
+
+    def reset_request
+
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: reset request"
+
+      body = JSON.pretty_generate( { :action => 'reset' } )
+      logger.debug "action #{ action_url }"
+      logger.debug "#{ body }"
+      begin
+        response = RestClient.put action_url, body, :content_type => :json, :accept => :json, :timeout => 10, :open_timeout => 10, :user_agent => "virtual-network-agent"
+      rescue => e
+        raise e.exception "#{ e.message } (action url = '#{ action_url }')"
+      end
+      logger.debug "response #{ response.code }"
+      logger.debug "#{ response.body }"
+      raise "Invalid responce code (#{ response.code })" unless response.code == 202
+    end
+
+    def unregister
+
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: unregister"
+
+      unless @registered
+        logger.debug "not registered"
+        return
+      end
+      logger.debug "register #{ unregister_url }"
+      begin
+        response = RestClient.delete unregister_url, :accept => :json, :timeout => 10, :open_timeout => 10, :user_agent => "virtual-network-agent"
+      rescue => e
+        raise e.exception "#{ e.message } (unregister url = '#{ register_url }')"
+      end
+      logger.debug "response #{ response.code }"
+      logger.debug "#{ response.body }"
+      raise "Invalid responce code (#{ response.code })" unless response.code == 202
+    end
 
     def logger
       Log.instance
@@ -132,6 +181,7 @@ class OverlayNetwork
       config.controller_uri + "agents/" + datapath_id.to_s
     end
     alias :unregister_url :register_url
+    alias :action_url :register_url
 
   end
 

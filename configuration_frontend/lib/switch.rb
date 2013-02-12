@@ -17,10 +17,14 @@
 
 require 'errors'
 require 'db'
+require 'log'
 
 class Switch
   class << self
     def list parameters = {}
+
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: list of switches"
+
       switch_ports = Hash.new do | hash, key |
         hash[ key ] = []
       end

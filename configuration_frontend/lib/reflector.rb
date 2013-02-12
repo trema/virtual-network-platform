@@ -17,10 +17,14 @@
 
 require 'errors'
 require 'db'
+require 'log'
 
 class Reflector
   class << self
     def list parameters = {}
+
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: list of reflectors"
+
       tunnel_endpoints = Hash.new do | hash, key |
         hash[ key ] = []
       end

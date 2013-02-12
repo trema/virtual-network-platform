@@ -31,6 +31,8 @@ require 'errors'
 require 'configure'
 require 'log'
 require 'overlay_network'
+require 'ovs'
+require 'vxlan'
 require 'webrick_wrapper'
 
 class TunnelEndpointAgent < Sinatra::Base
@@ -38,6 +40,8 @@ class TunnelEndpointAgent < Sinatra::Base
   set :server, [ 'webrick_wrapper' ]
 
   logger = Log.instance
+  OVS::Log.logger = logger
+  Vxlan::Log.logger = logger
   use Rack::CommonLogger, logger
 
   def json_parse request, requires = []
@@ -199,14 +203,17 @@ class TunnelEndpointAgent < Sinatra::Base
   option.on( '--port=arg', "Listen port number (default '#{ config[ 'listen_port' ] }')" ) do | arg |
     config[ 'listen_port' ] = arg
   end
+  option.on( '--ovs-vsctl=arg', "Path for ovs-vsctl (default: '#{ OVS::Configure.instance[ 'vsctl' ] }')" ) do | arg |
+    OVS::Configure.instance[ 'vsctl' ] = arg
+  end
   option.on( '-v', '--verbose', "Verbose mode" ) do | arg |
-    Log.instance.level = Log::DEBUG
+    logger.level = Log::DEBUG
   end
   option.on( '-d', '--debug', "Debug mode (Identical to --no-pid-file --no-log-file --no-daemon --verbose)" ) do | arg |
     config[ 'pid_file' ] = nil
     config[ 'log_file' ] = nil
     config[ 'daemon' ] = false
-    Log.instance.level = Log::DEBUG
+    logger.level = Log::DEBUG
   end
   option.on( '--help', "Show this message" ) do | arg |
     puts option.help

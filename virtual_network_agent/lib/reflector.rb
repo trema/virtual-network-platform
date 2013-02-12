@@ -30,7 +30,55 @@ require 'vxlan'
 class Reflector
   class << self
     def startup
-      logger.debug "get configure #{ url }"
+      get_configure
+    end
+
+    def shutdown
+      # nop
+    end
+
+    def list_endpoints parameters
+      raise BadReuestError.new "Vni must be specified." if parameters[ :vni ].nil?
+
+      vni = convert_vni parameters[ :vni ]
+
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: list of tunnel endpoints (vni = #{ vni })"
+
+      tunnel_endpoint.list vni
+    end
+
+    def add_endpoint parameters
+      raise BadReuestError.new "Vni must be specified." if parameters[ :vni ].nil?
+      raise BadReuestError.new "IP address must be specified." if parameters[ :ip ].nil?
+      raise BadReuestError.new "Port number must be specified." if parameters[ :port ].nil?
+
+      vni = convert_vni parameters[ :vni ]
+      address = convert_address parameters[ :ip ]
+      port = convert_port parameters[ :port ]
+
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: add a new tunnel endpoint (vni = #{ vni }, address = #{ address }, port = #{ port })"
+
+      tunnel_endpoint.add vni, address, port
+    end
+
+    def delete_endpoint parameters
+      raise BadReuestError.new "Vni must be specified." if parameters[ :vni ].nil?
+      raise BadReuestError.new "IP address must be specified." if parameters[ :ip ].nil?
+
+      vni = convert_vni parameters[ :vni ]
+      address = convert_address parameters[ :ip ]
+
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: delete the tunnel endpoint (vni = #{ vni }, address = #{ address })"
+
+      tunnel_endpoint.delete vni, address
+    end
+
+    private
+
+    def get_configure
+
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: get configure #{ url }"
+
       response = RestClient.get url, :content_type => :json, :accept => :json, :timeout => 10, :open_timeout => 10, :user_agent => "reflector_agent"
       logger.debug "response #{ response.code }"
       logger.debug "#{ response.body }"
@@ -55,40 +103,6 @@ class Reflector
           tunnel_endpoint.add vni, address, port
         end
       end
-    end
-
-    def shutdown
-      # nop
-    end
-
-    def list_endpoints parameters
-      raise BadReuestError.new "Vni must be specified." if parameters[ :vni ].nil?
-
-      vni = convert_vni parameters[ :vni ]
-
-      tunnel_endpoint.list vni
-    end
-
-    def add_endpoint parameters
-      raise BadReuestError.new "Vni must be specified." if parameters[ :vni ].nil?
-      raise BadReuestError.new "IP address must be specified." if parameters[ :ip ].nil?
-      raise BadReuestError.new "Port number must be specified." if parameters[ :port ].nil?
-
-      vni = convert_vni parameters[ :vni ]
-      address = convert_address parameters[ :ip ]
-      port = convert_port parameters[ :port ]
-
-      tunnel_endpoint.add vni, address, port
-    end
-
-    def delete_endpoint parameters
-      raise BadReuestError.new "Vni must be specified." if parameters[ :vni ].nil?
-      raise BadReuestError.new "IP address must be specified." if parameters[ :ip ].nil?
-
-      vni = convert_vni parameters[ :vni ]
-      address = convert_address parameters[ :ip ]
-
-      tunnel_endpoint.delete vni, address
     end
 
     def logger

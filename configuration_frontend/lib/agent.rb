@@ -30,6 +30,8 @@ class Agent
       uri = convert_uri parameters[ :control_uri ]
       tep = convert_tep parameters[ :tunnel_endpoint ]
 
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: register a new agent (datapath_id = #{ datapath_id }, uri = #{ uri }, tep = #{ tep })"
+
       DB::Agent.transaction do
         begin
           agent = DB::Agent.find( datapath_id.to_i )
@@ -62,6 +64,8 @@ class Agent
       datapath_id = convert_datapath_id parameters[ :datapath_id ]
       raise BadReuestError.new "action (#{ parameters[ :action ] }) is illegal request." unless /^reset$/i =~ parameters[ :action ]
 
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: action='reset' (datapath_id = #{ datapath_id })"
+
       # reset
       DB::Slice.transaction do
         slices = DB::Port.find( :all,
@@ -87,9 +91,63 @@ class Agent
       end
     end
 
+    def unregister parameters
+      raise BadReuestError.new "Datapath id must be specified." if parameters[ :datapath_id ].nil?
+
+      datapath_id = convert_datapath_id parameters[ :datapath_id ]
+
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: unregister the agent (datapath_id = #{ datapath_id })"
+
+      # exists?
+      DB::Agent.find( datapath_id.to_i, :readonly => true )
+      DB::TunnelEndpoint.find( datapath_id.to_i, :readonly => true )
+
+      DB::Agent.transaction do
+        DB::Agent.delete( datapath_id.to_i )
+        DB::TunnelEndpoint.delete( datapath_id.to_i )
+      end
+    end
+
+    def list parameters = {}
+
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: list of agents"
+
+      tunnel_endpoints = {}
+      DB::TunnelEndpoint.find( :all, :readonly => true ).each do | each |
+        tunnel_endpoints[ each.datapath_id.to_s ] = each.tep.to_s
+      end
+      DB::Agent.find( :all, :readonly => true ).collect do | each |
+        { :datapath_id => each.datapath_id.to_s, :control_uri => each.uri.to_s, :tunnel_endpoint => tunnel_endpoints[ each.datapath_id.to_s ] }
+      end
+    end
+
+    def show parameters
+      raise BadReuestError.new "Datapath id must be specified." if parameters[ :datapath_id ].nil?
+
+      datapath_id = convert_datapath_id parameters[ :datapath_id ]
+
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: show details of switch (datapath_id = #{ datapath_id })"
+
+      begin
+        agent = DB::Agent.find( datapath_id.to_i, :readonly => true )
+      rescue ActiveRecord::RecordNotFound
+        raise NotFoundError.new "Not found the specified agent (datapath id #{ datapath_id } is not exists)."
+      end
+
+      begin
+        tunnel_endpoint = DB::TunnelEndpoint.find( datapath_id.to_i, :readonly => true )
+      rescue ActiveRecord::RecordNotFound
+        raise NotFoundError.new "Not found the specified tunnel-endpoint (datapath id #{ datapath_id } is not exists)."
+      end
+
+      { :datapath_id => datapath_id.to_s, :control_uri => agent.uri.to_s, :tunnel_endpoint => tunnel_endpoint.tep.to_s }
+    end
+
+    private
+
     def reset_slices slices, &a_proc
       slices.each do | slice |
-        logger.debug "#{__FILE__}:#{__LINE__}: slice: slice-id=#{ slice.id } state=#{ slice.state.to_s }"
+        logger.debug "#{ __FILE__ }:#{ __LINE__ }: reset slice: slice_id=#{ slice.id } state=#{ slice.state.to_s }"
         raise BusyHereError unless slice.state.can_reset?
         DB::Slice.update_all(
           [ "state = ?", DB::SLICE_STATE_PREPARING_TO_UPDATE ],
@@ -108,53 +166,6 @@ class Agent
           [ "id = ? AND state = ?", slice.id, DB::SLICE_STATE_PREPARING_TO_DESTROY ] )
       end
     end
-
-    def unregister parameters
-      raise BadReuestError.new "Datapath id must be specified." if parameters[ :datapath_id ].nil?
-
-      datapath_id = convert_datapath_id parameters[ :datapath_id ]
-
-      # exists?
-      DB::Agent.find( datapath_id.to_i, :readonly => true )
-      DB::TunnelEndpoint.find( datapath_id.to_i, :readonly => true )
-
-      DB::Agent.transaction do
-        DB::Agent.delete( datapath_id.to_i )
-        DB::TunnelEndpoint.delete( datapath_id.to_i )
-      end
-    end
-
-    def list parameters = {}
-      tunnel_endpoints = {}
-      DB::TunnelEndpoint.find( :all, :readonly => true ).each do | each |
-        tunnel_endpoints[ each.datapath_id.to_s ] = each.tep.to_s
-      end
-      DB::Agent.find( :all, :readonly => true ).collect do | each |
-        { :datapath_id => each.datapath_id.to_s, :control_uri => each.uri.to_s, :tunnel_endpoint => tunnel_endpoints[ each.datapath_id.to_s ] }
-      end
-    end
-
-    def show parameters
-      raise BadReuestError.new "Datapath id must be specified." if parameters[ :datapath_id ].nil?
-
-      datapath_id = convert_datapath_id parameters[ :datapath_id ]
-
-      begin
-        agent = DB::Agent.find( datapath_id.to_i, :readonly => true )
-      rescue ActiveRecord::RecordNotFound
-        raise NotFoundError.new "Not found the specified agent (datapath id #{ datapath_id } is not exists)."
-      end
-
-      begin
-        tunnel_endpoint = DB::TunnelEndpoint.find( datapath_id.to_i, :readonly => true )
-      rescue ActiveRecord::RecordNotFound
-        raise NotFoundError.new "Not found the specified tunnel-endpoint (datapath id #{ datapath_id } is not exists)."
-      end
-
-      { :datapath_id => datapath_id.to_s, :control_uri => agent.uri.to_s, :tunnel_endpoint => tunnel_endpoint.tep.to_s }
-    end
-
-    private
 
     def logger
       Log.instance

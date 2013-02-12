@@ -29,6 +29,7 @@ require 'sinatra/base'
 
 require 'agent'
 require 'configure'
+require 'db'
 require 'log'
 require 'network'
 require 'reflector'
@@ -39,7 +40,7 @@ class ConfigurationFrontend < Sinatra::Base
   set :server, [ 'webrick_wrapper' ]
 
   logger = Log.instance
-  ActiveRecord::Base.logger = logger
+  DB::Log.logger = logger
   use Rack::CommonLogger, logger
 
   def json_parse request, requires = []
@@ -242,7 +243,7 @@ class ConfigurationFrontend < Sinatra::Base
     parameters = { :net_id => net_id, :id => port_id, :address => mac_address }
     content_type :json, :charset => 'utf-8'
     status 202
-    body json_generate Network.show_local_mac_address( parameters )
+    body json_generate Network.show_mac_address( parameters )
   end
 
   post '/networks/:net_id/ports/:port_id/mac_addresses/:mac_address/?' do | net_id, port_id, mac_address |
@@ -411,13 +412,13 @@ class ConfigurationFrontend < Sinatra::Base
     config[ 'daemon' ] = arg
   end
   option.on( '-v', '--verbose', "Verbose mode" ) do | arg |
-    Log.instance.level = Log::DEBUG
+    logger.level = Log::DEBUG
   end
   option.on( '-d', '--debug', "Debug mode (Identical to --no-pid-file --no-log-file --no-daemon --verbose)" ) do | arg |
     config[ 'pid_file' ] = nil
     config[ 'log_file' ] = nil
     config[ 'daemon' ] = false
-    Log.instance.level = Log::DEBUG
+    logger.level = Log::DEBUG
   end
   option.on( '--help', "Show this message" ) do | arg |
     puts option.help

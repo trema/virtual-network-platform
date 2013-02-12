@@ -28,10 +28,13 @@ end
 require 'configure'
 require 'log'
 require 'overlay_network'
+require 'ovs'
 require 'vxlan'
 
 logger = Log.instance
 logger.level = Log::INFO
+OVS::Log.logger = logger
+Vxlan::Log.logger = logger
 
 def config_file
   File.dirname( __FILE__ ) + '/tunnel_endpoint_configure.yml'
@@ -42,6 +45,9 @@ Configure.instance.load_file( config_file )
 option = OptionParser.new
 option.on( '-c arg', '--config-file=arg' ) do | arg |
   Configure.instance.load_file arg
+end
+option.on( '--ovs-vsctl=arg' ) do | arg |
+  OVS::Configure.instance[ 'vsctl' ] = arg
 end
 option.on( '-v', '--verbose' ) do | arg |
   logger.level = Log::DEBUG
@@ -65,6 +71,7 @@ Usage: slice [options] command [arguments...]
 
 options
     -c, --config-file=arg - Configuration file (default: '#{ config_file }')
+    --ovs-vsctl=arg       - Path for ovs-vsctl (default: '#{ OVS::Configure.instance[ 'vsctl' ] }')
     --help                - Show this message
     -v, --verbose         - Verbose mode
 
@@ -106,6 +113,12 @@ command 'list' do | args |
     puts "Aging Time: #{ value[ :aging_time ] }" if value.has_key? :aging_time
     puts "State: #{ value[ :state ] }" if value.has_key? :state
   end
+end
+
+command 'reset' do | args |
+  parameters = {}
+  help_and_exit "Too many arguments" unless args.size == 0
+  OverlayNetwork.reset parameters
 end
 
 if ENV[ 'TEST_OF_CREATE' ] == 'true'

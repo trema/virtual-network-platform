@@ -17,6 +17,7 @@
 
 require 'open3'
 require 'vxlan/configure'
+require 'vxlan/log'
 
 module Vxlan
 
@@ -95,8 +96,10 @@ module Vxlan
           if %r,^/, !~ full_path
             full_path = File.dirname( __FILE__ ) + '/../../' + full_path
           end
+          command_options = "#{ full_path } #{ command } #{ options.join ' ' }"
+          logger.debug "reflectorctl: '#{ command_options }'"
           result = ""
-          Open3.popen3( "#{ full_path } #{ command } #{ options.join ' ' }" ) do | stdin, stdout, stderr |
+          Open3.popen3( command_options ) do | stdin, stdout, stderr |
             stdin.close
             error = stderr.read
             result << stdout.read
@@ -105,6 +108,10 @@ module Vxlan
             raise "#{ error } #{ full_path }" unless error.length == 0
           end
           result
+        end
+
+        def logger
+          Log.instance
         end
 
       end
