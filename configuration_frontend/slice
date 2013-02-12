@@ -199,9 +199,16 @@ command 'destroy' do | args |
 end
 
 command 'reset' do | args |
+  options = {}
+  option = OptionParser.new
+  option.on( '-f', '--force' ) do | arg |
+    options[ 'force' ] = arg
+  end
+  option.order! args
   parameters = {}
   parameters[ :id ] = args.shift or help_and_exit "Too few arguments"
   help_and_exit "Too many arguments" unless args.size == 0
+  parameters[ :force ] = true
   Network.reset( parameters )
   puts "A slice is resetted successfully."
 end

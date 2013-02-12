@@ -135,7 +135,9 @@ class Network
       logger.debug "#{ __FILE__ }:#{ __LINE__ }: show details of networks (slice_id = #{ slice_id })"
 
       slice = find_slice( slice_id )
-      raise BusyHereError unless slice.state.can_reset?
+      if parameters[ :force ].nil? or parameters[ :force ] == false
+        raise BusyHereError unless slice.state.can_reset?
+      end
 
       reset_slice slice_id do
         reset_all_ports slice_id do

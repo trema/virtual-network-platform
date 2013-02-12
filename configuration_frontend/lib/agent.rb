@@ -71,21 +71,23 @@ class Agent
         slices = DB::Port.find( :all,
                                 :readonly => true,
                                 :select => 'DISTINCT slice_id',
-                                :conditions => [ "datapath_id = ?", datapath_id.to_i ] )
+                                :conditions => [ "datapath_id = ?", datapath_id.to_i ] ).collect do | each |
+          each.slice_id
+        end
         reset_slices slices do
-          slices.each do | slice |
+          slices.each do | slice_id |
             DB::Port.update_all(
               [ "state = ?", DB::PORT_STATE_READY_TO_UPDATE ],
-              [ "slice_id = ? AND ( state = ? OR state = ? )", slice.id, DB::PORT_STATE_CONFIRMED, DB::PORT_STATE_UPDATE_FAILED ] )
+              [ "slice_id = ? AND ( state = ? OR state = ? )", slice_id, DB::PORT_STATE_CONFIRMED, DB::PORT_STATE_UPDATE_FAILED ] )
             DB::Port.update_all(
               [ "state = ?", DB::PORT_STATE_READY_TO_DESTROY ],
-              [ "slice_id = ? AND state = ?", slice.id, DB::PORT_STATE_DESTROY_FAILED ] )
+              [ "slice_id = ? AND state = ?", slice_id, DB::PORT_STATE_DESTROY_FAILED ] )
             DB::MacAddress.update_all(
               [ "state = ?", DB::MAC_STATE_READY_TO_INSTALL ],
-              [ "slice_id = ? AND ( state = ? OR state = ? )", slice.id, DB::MAC_STATE_INSTALLED, DB::MAC_STATE_INSTALL_FAILED ] )
+              [ "slice_id = ? AND ( state = ? OR state = ? )", slice_id, DB::MAC_STATE_INSTALLED, DB::MAC_STATE_INSTALL_FAILED ] )
             DB::MacAddress.update_all(
               [ "state = ?", DB::MAC_STATE_READY_TO_DELETE ],
-              [ "slice_id = ? AND state = ?", slice.id, DB::MAC_STATE_DELETE_FAILED ] )
+              [ "slice_id = ? AND state = ?", slice_id, DB::MAC_STATE_DELETE_FAILED ] )
           end
         end
       end
@@ -146,24 +148,25 @@ class Agent
     private
 
     def reset_slices slices, &a_proc
-      slices.each do | slice |
-        logger.debug "#{ __FILE__ }:#{ __LINE__ }: reset slice: slice_id=#{ slice.id } state=#{ slice.state.to_s }"
+      slices.each do | slice_id |
+        slice = DB::Slice.find( slice_id, :readonly => true )
+        logger.debug "#{ __FILE__ }:#{ __LINE__ }: reset slice: slice_id=#{ slice_id } state=#{ slice.state.to_s }"
         raise BusyHereError unless slice.state.can_reset?
         DB::Slice.update_all(
           [ "state = ?", DB::SLICE_STATE_PREPARING_TO_UPDATE ],
-          [ "id = ? AND ( state = ? OR state = ? )", slice.id, DB::SLICE_STATE_CONFIRMED, DB::SLICE_STATE_UPDATE_FAILED ] )
+          [ "id = ? AND ( state = ? OR state = ? )", slice_id, DB::SLICE_STATE_CONFIRMED, DB::SLICE_STATE_UPDATE_FAILED ] )
         DB::Slice.update_all(
           [ "state = ?", DB::SLICE_STATE_PREPARING_TO_DESTROY ],
-          [ "id = ? AND state = ?", slice.id, DB::SLICE_STATE_DESTROY_FAILED ] )
+          [ "id = ? AND state = ?", slice_id, DB::SLICE_STATE_DESTROY_FAILED ] )
       end
       a_proc.call
-      slices.each do | slice |
+      slices.each do | slice_id |
         DB::Slice.update_all(
           [ "state = ?", DB::SLICE_STATE_READY_TO_UPDATE ],
-          [ "id = ? AND state = ?", slice.id, DB::SLICE_STATE_PREPARING_TO_UPDATE ] )
+          [ "id = ? AND state = ?", slice_id, DB::SLICE_STATE_PREPARING_TO_UPDATE ] )
         DB::Slice.update_all(
           [ "state = ?", DB::SLICE_STATE_READY_TO_DESTROY ],
-          [ "id = ? AND state = ?", slice.id, DB::SLICE_STATE_PREPARING_TO_DESTROY ] )
+          [ "id = ? AND state = ?", slice_id, DB::SLICE_STATE_PREPARING_TO_DESTROY ] )
       end
     end
 
