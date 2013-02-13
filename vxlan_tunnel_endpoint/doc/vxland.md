@@ -7,7 +7,7 @@ vxland(1) -- VXLAN Tunnel End Point
 
 ## DESCRIPTION
 
-The `vland` program is a Virtual eXtensible Local Area Network
+The `vxland` program is a Virtual eXtensible Local Area Network
 (VXLAN) Tunnel End Point (VTEP) implementation on Linux userspace.
 
 A network interface for sending/receiving VXLAN packets must be

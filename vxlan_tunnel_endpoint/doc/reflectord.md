@@ -7,7 +7,7 @@ reflectord(1) -- VXLAN Packet Reflector
 
 ## DESCRIPTION
 
-The `reflectord` program works with vland(1) and allows you to deploy
+The `reflectord` program works with vxland(1) and allows you to deploy
 VXLAN-based virtual networks without multicast capable underlay
 network.
 
