@@ -321,6 +321,10 @@ Please see files under doc/api for extended examples.
     -d '{ "address" : "00:00:00:00:00:01" }' \
     http://192.168.16.254/networks/128/ports/1
 
+# Copyright
+
+Copyright (C) 2012-2013 NEC Corporation
+
 # License & Terms
 
 All software packages distributed here are licensed under the GNU
