@@ -14,6 +14,7 @@ digraph slice_state_transition {
     width = 3
     height = 3
   ];
+  START -> READY_TO_UPDATE [ label = "User requested to create a new slice" ];
   CONFIRMED -> PREPARING_TO_UPDATE [ label = "User started to update port/mac definitions /\nUser requested to reset a slice" ];
   PREPARING_TO_UPDATE -> READY_TO_UPDATE [ label = "User completed to update port/mac definitions" ];
   PREPARING_TO_UPDATE -> UPDATE_FAILED [ label = "User failed to complete to update port/mac definitions" ];
