@@ -203,6 +203,7 @@ class Network
                                                                 datapath_id.to_i, port_no, vid ] )
       end
       if not port_name.empty?
+	raise UnprocessableEntityError.new if /^vxlan\d+$/ =~ port_name
         raise DuplicatedPort.new port_name if DB::Port.exists?( [ "datapath_id = ? AND port_name = ? AND vid = ?",
                                                                   datapath_id.to_i, port_name, vid ] )
       end
