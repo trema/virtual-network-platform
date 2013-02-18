@@ -188,53 +188,6 @@ Set the directory that the Configuration Frontend executable exists.
     $ sudo service virtual_network_manager start
     $ sudo service configuration_frontend start
 
-### Virtual Network Agent
-
-1. Install Sinatra
-
-        $ sudo apt-get install ruby-json ruby-sinatra ruby-rest-client
-
-2. Setup init script
-
-        $ sudo cp virtual_network_agent/init/virtual_network_agent \
-        /etc/init.d
-        $ sudo update-rc.d virtual_network_agent defaults 30 10
-
-3. Setup configuration file
-
-        $ sudo cp virtual_network_agent/config/virtual_network_agent \
-        /etc/default
-Edit the configuration files as follows:
-
-Set the directory that the Virtual Network Agent executable exists.
-
-- /etc/default/virtual\_network\_agent
-
-
-        VIRTUAL_NETWORK_AGENT_DIR="/somewhere/virtual_network_agent"
-
-
-Set the Configuration Frontend URL, Virtual Network Agent URL and
-Tunnel endpoint address.
-
-- /somewhere/virtual\_network\_agent/tunnel\_endpoint\_configure.yml
-
-* Set the Configuration Frontend URL for registration.
-
-        controller_uri: http://10.0.0.1:8081/
-
-* Set the Virtual Network Agent URL for incoming connections.
-
-        uri: http://10.0.0.2:8082/
-
-* Set the VXLAN tunnel endpoint address.
-
-        tunnel_endpoint: 10.0.0.2
-
-4. Start Virtual Network Agent
-
-        $ sudo service virtual_network_agent start
-
 ### OpenFlow Switch (Open vSwitch)
 
 1. Install Open vSwitch
@@ -287,6 +240,53 @@ that the executable (vxland) exists.
 4. Start VXLAN Tunnel End-Point
 
         $ sudo service vxland start
+
+### Virtual Network Agent
+
+1. Install Sinatra
+
+        $ sudo apt-get install ruby-json ruby-sinatra ruby-rest-client
+
+2. Setup init script
+
+        $ sudo cp virtual_network_agent/init/virtual_network_agent \
+        /etc/init.d
+        $ sudo update-rc.d virtual_network_agent defaults 30 10
+
+3. Setup configuration file
+
+        $ sudo cp virtual_network_agent/config/virtual_network_agent \
+        /etc/default
+Edit the configuration files as follows:
+
+Set the directory that the Virtual Network Agent executable exists.
+
+- /etc/default/virtual\_network\_agent
+
+
+        VIRTUAL_NETWORK_AGENT_DIR="/somewhere/virtual_network_agent"
+
+
+Set the Configuration Frontend URL, Virtual Network Agent URL and
+Tunnel endpoint address.
+
+- /somewhere/virtual\_network\_agent/tunnel\_endpoint\_configure.yml
+
+* Set the Configuration Frontend URL for registration.
+
+        controller_uri: http://10.0.0.1:8081/
+
+* Set the Virtual Network Agent URL for incoming connections.
+
+        uri: http://10.0.0.2:8082/
+
+* Set the VXLAN tunnel endpoint address.
+
+        tunnel_endpoint: 10.0.0.2
+
+4. Start Virtual Network Agent
+
+        $ sudo service virtual_network_agent start
 
 ## How to manage virtual networks?
 

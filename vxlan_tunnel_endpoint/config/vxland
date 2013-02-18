@@ -1,2 +1,2 @@
-VXLAND_DIR="/somewhere"
+VXLAND_DIR="/somewhere/vxlan_tunnel_endpoint/src"
 VXLAND_OPTS="-s -d -i eth0"

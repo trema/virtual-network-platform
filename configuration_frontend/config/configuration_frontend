@@ -1,2 +1,2 @@
 # Set the directory that the Configuration Frontend executable exists.
-CONFIGURATION_FRONTEND_DIR="/somewhere"
+CONFIGURATION_FRONTEND_DIR="/somewhere/configuration_frontend"

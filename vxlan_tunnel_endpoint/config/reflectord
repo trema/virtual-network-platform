@@ -1,2 +1,2 @@
-REFLECTORD_DIR="/somewhere"
+REFLECTORD_DIR="/somewhere/vxlan_tunnel_endpoint/src"
 REFLECTORD_OPTS="-i eth0 -s -d"
