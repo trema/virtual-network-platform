@@ -47,6 +47,7 @@
 static char hostname[ HOST_NAME_MAX + 1 ];
 static MYSQL *db = NULL;
 static bool initialized = false;
+static hash_table *switches_to_disconnect = NULL;
 
 
 typedef struct {
@@ -60,6 +61,73 @@ typedef struct {
   ongoing_transactions *transactions;
   char matches_string[ 256 ];
 } flow_entry_to_be_installed;
+
+
+static void
+disconnect_switch_actually( void *user_data ) {
+  assert( user_data != NULL );
+
+  uint64_t *datapath_id = user_data;
+
+  assert( switches_to_disconnect != NULL );
+  void *deleted = delete_hash_entry( switches_to_disconnect, datapath_id );
+  if ( deleted != NULL ) {
+    info( "Disconnecting switch ( datapath_id = %#" PRIx64 " ).", *datapath_id );
+    disconnect_switch( *datapath_id );
+    xfree( deleted );
+  }
+}
+
+
+static bool
+switch_to_be_disconnected( uint64_t datapath_id ) {
+  assert( switches_to_disconnect != NULL );
+
+  uint64_t *entry = lookup_hash_entry( switches_to_disconnect, &datapath_id );
+  if ( entry == NULL ) {
+    return false;
+  }
+
+  return true;
+}
+
+
+static void
+schedule_disconnect_switch( uint64_t datapath_id ) {
+  assert( switches_to_disconnect != NULL );
+
+  if ( switch_to_be_disconnected( datapath_id ) ) {
+    return;
+  }
+
+  uint64_t *entry = xmalloc( sizeof( uint64_t ) );
+  *entry = datapath_id;
+
+  insert_hash_entry( switches_to_disconnect, entry, entry );
+
+  const time_t delay_sec = ( time_t ) ( rand() % 30 );
+  struct itimerspec timer = { { 0, 0 }, { delay_sec, 0 } };
+  add_timer_event_callback( &timer, disconnect_switch_actually, entry );
+
+  info( "Switch %#" PRIx64 " is scheduled to be disconnected in %d second%s.",
+        datapath_id, ( int ) delay_sec, delay_sec <= 1 ? "" : "s" );
+}
+
+
+static void
+unschedule_disconnect_switch( uint64_t datapath_id ) {
+  assert( switches_to_disconnect != NULL );
+
+  uint64_t *entry = delete_hash_entry( switches_to_disconnect, &datapath_id );
+  if ( entry == NULL ) {
+    return;
+  }
+
+  delete_timer_event( disconnect_switch_actually, entry );
+  xfree( entry );
+
+  info( "Switch %#" PRIx64 " is unscheduled to be disconnected.", datapath_id );
+}
 
 
 static void
@@ -80,6 +148,7 @@ default_flow_entry_installed( uint64_t datapath_id, const buffer *message, void 
     bool ret = send_openflow_message( datapath_id, request );
     if ( !ret ) {
       error( "Failed to send a features request to switch %#" PRIx64 ".", datapath_id );
+      schedule_disconnect_switch( datapath_id );
     }
     free_buffer( request );
     xfree( entry->transactions );
@@ -105,10 +174,12 @@ default_flow_entry_not_installed( uint64_t datapath_id, const buffer *message, v
   entry->transactions->failed = true;
 
   xfree( entry );
+
+  schedule_disconnect_switch( datapath_id );
 }
 
 
-static void
+static bool
 install_default_flow_entry( uint64_t datapath_id, uint8_t table_id, uint16_t priority, const ovs_matches *matches,
                             ongoing_transactions *transactions ) {
   assert( matches != NULL );
@@ -134,8 +205,11 @@ install_default_flow_entry( uint64_t datapath_id, uint8_t table_id, uint16_t pri
   if ( !ret ) {
     error( "Failed to install a default flow entry ( datapath_id = %#" PRIx64 ", table_id = %#x, "
            "priority = %u, matches = [%s] ).", datapath_id, entry->table_id, entry->priority, entry->matches_string );
+    schedule_disconnect_switch( datapath_id );
   }
   free_buffer( flow_mod );
+
+  return ret;
 }
 
 
@@ -152,26 +226,38 @@ ovs_flow_mod_table_id_succeeded( uint64_t datapath_id, const buffer *message, vo
   transactions->failed = false;
 
   ovs_matches *match = create_ovs_matches();
-  install_default_flow_entry( datapath_id, 0, 0, match, transactions );
+  bool ret = install_default_flow_entry( datapath_id, 0, 0, match, transactions );
   delete_ovs_matches( match );
+  if ( !ret ) {
+    return;
+  }
  
   match = create_ovs_matches();
   uint8_t addr[ OFP_ETH_ALEN] = { 0, 0, 0, 0, 0, 0 };
   uint8_t mask[ OFP_ETH_ALEN ] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
   append_ovs_match_eth_dst( match, addr, mask );
-  install_default_flow_entry( datapath_id, 0, UINT16_MAX, match, transactions );
+  ret = install_default_flow_entry( datapath_id, 0, UINT16_MAX, match, transactions );
   delete_ovs_matches( match );
+  if ( !ret ) {
+    return;
+  }
 
   match = create_ovs_matches();
   append_ovs_match_eth_src( match, addr );
-  install_default_flow_entry( datapath_id, 0, UINT16_MAX, match, transactions );
+  ret = install_default_flow_entry( datapath_id, 0, UINT16_MAX, match, transactions );
   delete_ovs_matches( match );
+  if ( !ret ) {
+    return;
+  }
 
   match = create_ovs_matches();
   memset( addr, 0xff, sizeof( addr ) );
   append_ovs_match_eth_src( match, addr );
-  install_default_flow_entry( datapath_id, 0, UINT16_MAX, match, transactions );
+  ret = install_default_flow_entry( datapath_id, 0, UINT16_MAX, match, transactions );
   delete_ovs_matches( match );
+  if ( !ret ) {
+    return;
+  }
 
   // default flow entries for table #2
   match = create_ovs_matches();
@@ -186,6 +272,8 @@ ovs_flow_mod_table_id_failed( uint64_t datapath_id, const buffer *message, void 
   UNUSED( user_data );
 
   error( "Failed to allow flow modification with table id ( datapath_id = %#" PRIx64 " ).", datapath_id );
+
+  schedule_disconnect_switch( datapath_id );
 }
 
 
@@ -202,6 +290,7 @@ ovs_set_flow_format_succeeded( uint64_t datapath_id, const buffer *message, void
                                   ovs_flow_mod_table_id_failed, NULL );
   if ( !ret ) {
     error( "Failed to allow flow modification with table id ( datapath_id = %#" PRIx64 " ).", datapath_id );
+    schedule_disconnect_switch( datapath_id );
   }
 
   free_buffer( flow_mod_table_id );
@@ -214,6 +303,8 @@ ovs_set_flow_format_failed( uint64_t datapath_id, const buffer *message, void *u
   UNUSED( user_data );
 
   error( "Failed to set flow format ( datapath_id = %#" PRIx64 " ).", datapath_id );
+
+  schedule_disconnect_switch( datapath_id );
 }
 
 
@@ -223,12 +314,17 @@ handle_switch_ready( uint64_t datapath_id, void *user_data ) {
 
   info( "Switch %#" PRIx64 " connected.", datapath_id );
 
+  if ( switch_to_be_disconnected( datapath_id ) ) {
+    return;
+  }
+
   buffer *message = create_ovs_set_flow_format( get_transaction_id(), OVSFF_OVSM );
   bool ret = execute_transaction( datapath_id, message,
                                   ovs_set_flow_format_succeeded, NULL,
                                   ovs_set_flow_format_failed, NULL );
   if ( !ret ) {
     error( "Failed to set flow format ( datapath_id = %#" PRIx64 " ).", datapath_id );
+    schedule_disconnect_switch( datapath_id );
   }
 
   free_buffer( message );
@@ -240,6 +336,8 @@ handle_switch_disconnected( uint64_t datapath_id, void *user_data ) {
   UNUSED( user_data );
 
   info( "Switch %#" PRIx64 " disconnected.", datapath_id );
+
+  unschedule_disconnect_switch( datapath_id );
 
   bool ret = delete_switch( datapath_id );
   if ( !ret ) {
@@ -568,6 +666,18 @@ finalize_vnet_manager() {
 
   memset( hostname, '\0', sizeof( hostname ) );
 
+  assert( switches_to_disconnect != NULL );
+
+  hash_entry *e = NULL;
+  hash_iterator iter;
+  init_hash_iterator( switches_to_disconnect, &iter );
+  while ( ( e = iterate_hash_next( &iter ) ) != NULL ) {
+    delete_timer_event( disconnect_switch_actually, e->value );
+    xfree( e->value );
+  }
+  delete_hash( switches_to_disconnect );
+  switches_to_disconnect = NULL;
+
   initialized = false;
 
   debug( "Finalization completed." );
@@ -634,6 +744,9 @@ init_vnet_manager( int *argc, char **argv[] ) {
     char *error_string = strerror_r( errno, buf, sizeof( buf ) - 1 );
     die( "Failed to get hostname ( retval = %d, errno = %s [%d] ).", retval, error_string, errno );
   }
+
+  assert( switches_to_disconnect == NULL );
+  switches_to_disconnect = create_hash( compare_datapath_id, hash_datapath_id );
 
   db_config config;
   memset( &config, 0, sizeof( db_config ) );
