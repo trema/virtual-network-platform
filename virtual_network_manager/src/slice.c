@@ -2467,7 +2467,7 @@ check_mac_entries_of_active_port( ongoing_port_update *port_update, port_in_slic
   list_element *mac_addresses_to_install = NULL;
   bool ret = get_mac_addresses_to_install( slice_id, port->port_id, &mac_addresses_to_install, &n_addresses );
   if ( ret ) {
-    info( "%d MAC adresses need to be installed to switch %#" PRIx64 " ( slice_id = %#x, port_id = %#x ).",
+    info( "%d MAC addresses need to be installed to switch %#" PRIx64 " ( slice_id = %#x, port_id = %#x ).",
           n_addresses, port->datapath_id, slice_id, port->port_id );
     if ( n_addresses > 0 && mac_addresses_to_install != NULL ) {
       add_transactions_to_install_mac_flow_entries( port_update->datapath_id, slice_id, port,
@@ -2482,7 +2482,7 @@ check_mac_entries_of_active_port( ongoing_port_update *port_update, port_in_slic
   list_element *mac_addresses_to_delete = NULL;
   ret = get_mac_addresses_to_delete( slice_id, port->port_id, &mac_addresses_to_delete, &n_addresses );
   if ( ret ) {
-    info( "%d MAC adresses need to be deleted from switch %#" PRIx64 " ( slice_id = %#x, port_id = %#x ).",
+    info( "%d MAC addresses need to be deleted from switch %#" PRIx64 " ( slice_id = %#x, port_id = %#x ).",
           n_addresses, port->datapath_id, slice_id, port->port_id );
     if ( n_addresses > 0 && mac_addresses_to_delete != NULL ) {
       add_transactions_to_delete_mac_flow_entries( port_update->datapath_id, slice_id, port,
@@ -2516,7 +2516,7 @@ check_mac_entries_of_inactive_port( ongoing_port_update *port_update, port_in_sl
   list_element *mac_addresses_to_delete = NULL;
   bool ret = get_mac_addresses_to_delete( slice_id, port->port_id, &mac_addresses_to_delete, &n_addresses );
   if ( ret ) {
-    info( "%d MAC adresses need to be deleted from switch %#" PRIx64 " ( slice_id = %#x, port_id = %#x ).",
+    info( "%d MAC addresses need to be deleted from switch %#" PRIx64 " ( slice_id = %#x, port_id = %#x ).",
           n_addresses, port->datapath_id, slice_id, port->port_id );
     if ( n_addresses > 0 && mac_addresses_to_delete != NULL ) {
       add_transactions_to_delete_mac_flow_entries( port_update->datapath_id, slice_id, port,
