@@ -161,7 +161,7 @@ the MySQL "root" user. We assume here that the password is set to
 
 1. Install Sinatra and ActiveRecord
 
-        $ sudo apt-get install ruby-json ruby-sinatra ruby-activerecord \
+        $ sudo apt-get install ruby ruby-json ruby-sinatra ruby-activerecord \
         ruby-mysql
 
 2. Setup init script
@@ -220,6 +220,7 @@ hexadecimal without "0x" prefix (e.g. 0000000000000001).
 
 1. Build VXLAN Tunnel End-Point
 
+        $ sudo apt-get install gcc make
         $ cd vxlan_tunnel_endpoint/src
         $ make
         $ cd ../..
@@ -245,7 +246,7 @@ that the executable (vxland) exists.
 
 1. Install Sinatra
 
-        $ sudo apt-get install ruby-json ruby-sinatra ruby-rest-client
+        $ sudo apt-get install ruby ruby-json ruby-sinatra ruby-rest-client
 
 2. Setup init script
 
