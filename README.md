@@ -119,7 +119,7 @@ build Trema before building Virtual Network Manager.
         $ sudo cp virtual_network_manager/config/virtual_network_manager \
         /etc/default
         $ sudo chown root.root /etc/default/virtual_network_manager
-        $ sudo chmod 600 /etc/default/virtual_network_manager$
+        $ sudo chmod 600 /etc/default/virtual_network_manager
         $ sudo cp virtual_network_manager/config/trema /etc/default
 
 Set the directory that the Virtual Network Manager executable exists.
