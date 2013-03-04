@@ -427,6 +427,66 @@ handle_port_status( uint64_t datapath_id, uint32_t transaction_id, uint8_t reaso
 
 
 static void
+handle_packet_in( uint64_t datapath_id, uint32_t transaction_id, uint32_t buffer_id, uint16_t total_len,
+                  uint16_t in_port, uint8_t reason, const buffer *data, void *user_data ) {
+  const uint16_t hard_timeout = 60;
+
+  error( "Unexpected Packet-In received from switch %#" PRIx64 ". Discarding all packets for %u seconds. "
+         "( transaction_id = %#x, buffer_id = %#x, total_len = %u, in_port = %u, reason = %#x, "
+         "data = %p, user_data = %p ).",
+         datapath_id, hard_timeout, transaction_id, buffer_id, total_len, in_port, reason, data, user_data );
+
+  struct ofp_match match;
+  memset( &match, 0, sizeof( struct ofp_match ) );
+  match.wildcards = OFPFW_ALL;
+  buffer *message = create_flow_mod( get_transaction_id(), match, get_cookie(), OFPFC_MODIFY_STRICT,
+                                     0, hard_timeout, UINT16_MAX, UINT32_MAX, OFPP_NONE, 0, NULL );
+  bool ret = send_openflow_message( datapath_id, message );
+  if ( !ret ) {
+    error( "Failed to send a flow modification (modify strict) message." );
+  }
+  free_buffer( message );
+}
+
+
+static void
+handle_flow_removed( uint64_t datapath_id, uint32_t transaction_id, struct ofp_match match,
+                     uint64_t cookie, uint16_t priority, uint8_t reason, uint32_t duration_sec,
+                     uint32_t duration_nsec, uint16_t idle_timeout, uint64_t packet_count,
+                     uint64_t byte_count, void *user_data ) {
+  char match_str[ 256 ];
+  match_to_string( &match, match_str, sizeof( match_str ) );
+
+  error( "Unexpected flow removed message received ( datapath_id = %#" PRIx64 ", transaction_id = %#x, "
+         "match = [%s], cookie = %#" PRIx64 ", priority = %u, reason = %#x, duration = %u.%09u, "
+         "idle_timeout = %u, packet_count = %" PRIu64 ", byte_count = %" PRIu64 ", user_data = %p ).",
+         datapath_id, transaction_id, match_str, cookie, priority, reason, duration_sec, duration_nsec,
+         idle_timeout, packet_count, byte_count, user_data );
+
+  schedule_disconnect_switch( datapath_id );
+}
+
+
+static void
+handle_ovs_flow_removed( uint64_t datapath_id, uint32_t transaction_id,
+                         uint64_t cookie, uint16_t priority, uint8_t reason, uint32_t duration_sec,
+                         uint32_t duration_nsec, uint16_t idle_timeout, uint64_t packet_count,
+                         uint64_t byte_count, const ovs_matches *matches, void *user_data ) {
+  char matches_str[ 256 ];
+  ovs_matches_to_string( matches, matches_str, sizeof( matches_str ) );
+
+  error( "Unexpected Open vSwitch extended flow removed message received ( datapath_id = %#" PRIx64 ", "
+         "transaction_id = %#x, cookie = %#" PRIx64 ", priority = %u, reason = %#x, "
+         "duration = %u.%09u, idle_timeout = %u, packet_count = %" PRIu64
+         ", byte_count = %" PRIu64 ", matches = [%s], user_data = %p ).",
+         datapath_id, transaction_id, cookie, priority, reason, duration_sec, duration_nsec,
+         idle_timeout, packet_count, byte_count, matches_str, user_data );
+
+  schedule_disconnect_switch( datapath_id );
+}
+
+
+static void
 handle_list_switches_reply( const list_element *switches, void *user_data ) {
   debug( "Handling a list switches reply ( switches = %p, user_data = %p ).", switches, user_data );
 
@@ -784,6 +844,9 @@ init_vnet_manager( int *argc, char **argv[] ) {
   set_switch_disconnected_handler( handle_switch_disconnected, NULL );
   set_features_reply_handler( handle_features_reply, NULL );
   set_port_status_handler( handle_port_status, NULL );
+  set_packet_in_handler( handle_packet_in, NULL );
+  set_flow_removed_handler( handle_flow_removed, NULL );
+  set_ovs_flow_removed_handler( handle_ovs_flow_removed, NULL );
   set_external_callback( do_start );
 
   initialized = true;
