@@ -59,6 +59,11 @@ class ConfigurationFrontend < Sinatra::Base
     parameters
   end
 
+  def location url, id
+    url << '/' if %r,/$, !~ url
+    "#{ url }#{ id }"
+  end
+
   def json_generate response
     JSON.pretty_generate( response ) << "\n"
   end
@@ -88,7 +93,7 @@ class ConfigurationFrontend < Sinatra::Base
   # Debug
 
   before do
-    logger.debug "url='#{ request.path_info }'"
+    logger.debug "url='#{ request.url }'"
     request.body.rewind
     logger.debug "body='#{ request.body.read }'"
   end
@@ -113,7 +118,9 @@ class ConfigurationFrontend < Sinatra::Base
     parameters = json_parse( request, requires )
     content_type :json, :charset => 'utf-8'
     status 202
-    body json_generate Network.create( parameters )
+    data = Network.create( parameters )
+    response.headers[ 'Location' ] = location( request.url, data[ :id ] )
+    body json_generate data
   end
 
   put '/networks/?' do
@@ -173,7 +180,9 @@ class ConfigurationFrontend < Sinatra::Base
     parameters[ :net_id ] = net_id
     content_type :json, :charset => 'utf-8'
     status 202
-    body no_message_body Network.create_port( parameters )
+    data = Network.create_port( parameters )
+    response.headers[ 'Location' ] = location( request.url, data[ :id ] )
+    body no_message_body data
   end
 
   put '/networks/:net_id/ports/?' do | net_id |
@@ -227,7 +236,9 @@ class ConfigurationFrontend < Sinatra::Base
     parameters.merge!( { :net_id => net_id, :id => port_id } )
     content_type :json, :charset => 'utf-8'
     status 202
-    body no_message_body Network.create_mac_address( parameters )
+    data = Network.create_mac_address( parameters )
+    response.headers[ 'Location' ] = location( request.url, data[ :address ] )
+    body no_message_body data
   end
 
   put '/networks/:net_id/ports/?' do | net_id |

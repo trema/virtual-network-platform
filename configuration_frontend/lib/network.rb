@@ -208,7 +208,7 @@ class Network
                                                                 datapath_id.to_i, port_no, vid ] )
       end
       if not port_name.empty?
-	raise UnprocessableEntityError.new if /^vxlan\d+$/ =~ port_name
+        raise UnprocessableEntityError.new if /^vxlan\d+$/ =~ port_name
         raise DuplicatedPort.new port_name if DB::Port.exists?( [ "datapath_id = ? AND port_name = ? AND vid = ?",
                                                                   datapath_id.to_i, port_name, vid ] )
       end
@@ -226,8 +226,10 @@ class Network
         port.description = description
         port.state = DB::PORT_STATE_READY_TO_UPDATE
         port.save!
+        port_id = port.id
         add_overlay_ports slice_id
       end
+      { :id => port_id }
     end
 
     def show_ports parameters
@@ -365,6 +367,7 @@ class Network
         end
         add_mac_address_to_remotes slice_id, datapath_id, mac
       end
+      { :address => mac.to_s }
     end
 
     def show_mac_addresses parameters

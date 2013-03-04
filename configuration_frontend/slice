@@ -162,8 +162,8 @@ command 'create' do | args |
   parameters[ :id ] = args.shift
   parameters[ :description ] = args.shift
   help_and_exit "Too many arguments" unless args.size == 0
-  Network.create( parameters )
-  puts "A slice is created successfully."
+  data = Network.create( parameters )
+  puts "A slice is created successfully (id = #{ data[ :id ]})."
 end
 
 command 'modify' do | args |
@@ -263,8 +263,8 @@ command 'create-port' do | args |
   parameters[ :vid ] = args.shift
   parameters[ :description ] = args.shift
   help_and_exit "Too many arguments" unless args.size == 0
-  Network.create_port( parameters )
-  puts "A port is added successfully."
+  data = Network.create_port( parameters )
+  puts "A port is added successfully (id = #{ data[ :id ] })."
 end
 
 command 'delete-port' do | args |
@@ -308,8 +308,8 @@ command 'add-mac' do | args |
   parameters[ :id ] = args.shift or help_and_exit "Too few arguments"
   parameters[ :address ] = args.shift or help_and_exit "Too few arguments"
   help_and_exit "Too many arguments" unless args.size == 0
-  Network.create_mac_address( parameters )
-  puts "A MAC address is added successfully."
+  data = Network.create_mac_address( parameters )
+  puts "A MAC address is added successfully (address = #{ data[ :address ] })."
 end
 
 command 'delete-mac' do | args |
