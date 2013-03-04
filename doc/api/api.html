@@ -170,22 +170,22 @@ than 32-bit.
 
 <!-- POST /networks -->
 <tr>
-  <td rowspan="5">POST</td>
+  <td rowspan="4">POST</td>
   <td>id</td>
   <td>A unique identifier of the network.
       The value must be an unsigned integer value smaller than 16777216.
       If omitted, the value is automatically assigned.</td>
-  <td rowspan="5">application/json</td>
-  <td rowspan="5"><a href="create_network.json">create_network.json</a></td>
-  <td rowspan="5">Create a new network associated.</td>
+  <td rowspan="4">application/json</td>
+  <td rowspan="4"><a href="create_network.json">create_network.json</a></td>
+  <td rowspan="4">Create a new network associated.</td>
   <td>202 Accepted</td>
   <td>application/json</td>
   <td><a href="create_network_response.json">create_network_response.json</a></td>
 </tr>
 
 <tr>
-  <td rowspan="4">description</td>
-  <td rowspan="4">Description (text string) of the network.
+  <td rowspan="3">description</td>
+  <td rowspan="3">Description (text string) of the network.
                   If omitted, an empty string is saved.</td>
   <td>400 Bad request</td>
   <td>-</td>
@@ -196,12 +196,6 @@ than 32-bit.
   <td>422 Specified parameters are unacceptable</td>
   <td>-</td>
   <td>-</td>
-</tr>
-
-<tr>
-  <td>486 Another update is in progress</td>
-  <td >-</td>
-  <td >-</td>
 </tr>
 
 <tr>
@@ -234,6 +228,7 @@ than 32-bit.
   <th>Key</th>
   <th>Description</th>
 </tr>
+
 <!-- GET /networks/<net_id> -->
 <tr>
   <td rowspan="3">GET</td>
@@ -352,6 +347,7 @@ than 32-bit.
   <th>Key</th>
   <th>Description</th>
 </tr>
+
 <!-- GET /networks/<net_id>/ports -->
 <tr>
   <td rowspan="3">GET</td>

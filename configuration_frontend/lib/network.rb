@@ -72,10 +72,15 @@ class Network
 
       logger.debug "#{ __FILE__ }:#{ __LINE__ }: update the network (slice_id = #{ slice_id }, description = '#{ description }')"
 
-      slice = find_slice( slice_id, :readonly => false )
+      slice = find_slice( slice_id )
       raise NetworkManagementError.new if slice.state.failed?
-      slice.description = description
-      slice.save!
+      raise BusyHereError.new  unless slice.state.can_update?
+
+      DB::Slice.update_all(
+        [ "description = ?", description ],
+        [ "id = ? AND ( state = ? OR state = ? )",
+          slice_id,
+          DB::SLICE_STATE_CONFIRMED, DB::SLICE_STATE_READY_TO_UPDATE ] )
     end
 
     def destroy parameters
