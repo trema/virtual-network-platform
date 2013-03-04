@@ -176,7 +176,7 @@ hton_ovs_match_eth_addr( ovs_match_header *dst, const ovs_match_header *src ) {
 
   uint8_t length = get_ovs_match_length( *src );
   hton_ovs_match_header( dst, src );
-  bcopy( ( const char * ) src + sizeof( ovs_match_header ), ( char * ) dst + sizeof( ovs_match_header ), length );
+  memmove( ( char * ) dst + sizeof( ovs_match_header ), ( const char * ) src + sizeof( ovs_match_header ), length );
 }
 
 
@@ -249,7 +249,7 @@ hton_ovs_match_ipv6_addr( ovs_match_header *dst, const ovs_match_header *src ) {
 
   uint8_t length = get_ovs_match_length( *src );
   hton_ovs_match_header( dst, src );
-  bcopy( ( const char * ) src + sizeof( ovs_match_header ), ( char * ) dst + sizeof( ovs_match_header ), length );
+  memmove( ( char * ) dst + sizeof( ovs_match_header ), ( const char * ) src + sizeof( ovs_match_header ), length );
 }
 
 
@@ -665,7 +665,7 @@ ntoh_ovs_match_eth_addr( ovs_match_header *dst, const ovs_match_header *src ) {
           *dst == OVSM_OVS_ND_SLL || *dst == OVSM_OVS_ND_TLL );
   uint8_t length = get_ovs_match_length( *dst );
 
-  bcopy( ( const char * ) src + sizeof( ovs_match_header ), ( char * ) dst + sizeof( ovs_match_header ), length );
+  memmove( ( char * ) dst + sizeof( ovs_match_header ), ( const char * ) src + sizeof( ovs_match_header ), length );
 }
 
 
@@ -742,7 +742,7 @@ ntoh_ovs_match_ipv6_addr( ovs_match_header *dst, const ovs_match_header *src ) {
           *dst == OVSM_OVS_ND_TARGET );
   uint8_t length = get_ovs_match_length( *dst );
 
-  bcopy( ( const char * ) src + sizeof( ovs_match_header ), ( char * ) dst + sizeof( ovs_match_header ), length );
+  memmove( ( char * ) dst + sizeof( ovs_match_header ), ( const char * ) src + sizeof( ovs_match_header ), length );
 }
 
 
