@@ -382,13 +382,14 @@ class Network
       find_slice( slice_id )
       find_port( slice_id, port_id )
 
+      responses = []
       DB::MacAddress.find( :all,
                           :readonly => true,
                           :select => 'mac, type as port_type, state, updated_at',
                           :conditions => [ "slice_id = ? AND port_id = ?", slice_id, port_id ] ).collect do | each |
         response = {}
         if parameters[ :require_state ].nil?
-          next unless each.state == DB::MAC_TYPE_LOCAL
+          next unless each.type == DB::MAC_TYPE_LOCAL
         else
           response[ :type ] = each.type.to_s
         end
@@ -396,7 +397,9 @@ class Network
         response[ :state ] = each.state.to_s
         response[ :updated_at ] = each.updated_at.to_s( :db ) unless parameters[ :require_updated_at ].nil?
         response
+	responses << response
       end
+      responses
     end
 
     def show_mac_address parameters
