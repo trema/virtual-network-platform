@@ -106,7 +106,7 @@ class ConfigurationFrontend < Sinatra::Base
   # Network
 
   get '/networks/?' do
-    logger.debug "#{__FILE__}:#{__LINE__}: List summary of networks associated."
+    logger.debug "#{__FILE__}:#{__LINE__}: List existing networks."
     content_type :json, :charset => 'utf-8'
     status 200
     body json_generate Network.list
@@ -156,7 +156,7 @@ class ConfigurationFrontend < Sinatra::Base
   end
 
   delete '/networks/:net_id/?' do | net_id |
-    logger.debug "#{__FILE__}:#{__LINE__}: Remove the network identified by net_id."
+    logger.debug "#{__FILE__}:#{__LINE__}: Delete the network identified by net_id."
     parameters = { :id => net_id }
     content_type :json, :charset => 'utf-8'
     status 202
@@ -166,7 +166,7 @@ class ConfigurationFrontend < Sinatra::Base
   # Port
 
   get '/networks/:net_id/ports/?' do | net_id |
-    logger.debug "#{__FILE__}:#{__LINE__}: List all the ports currently defined."
+    logger.debug "#{__FILE__}:#{__LINE__}: List all switch ports associated with the network identified by net_id."
     parameters = { :net_id => net_id }
     content_type :json, :charset => 'utf-8'
     status 200
@@ -174,7 +174,7 @@ class ConfigurationFrontend < Sinatra::Base
   end
 
   post '/networks/:net_id/ports/?' do | net_id |
-    logger.debug "#{__FILE__}:#{__LINE__}: Create a logical port on the network specified in the request URI."
+    logger.debug "#{__FILE__}:#{__LINE__}: Attach a switch port to the network identified by net_id."
     requires = [ :datapath_id, :vid ]
     parameters = json_parse( request, requires )
     parameters[ :net_id ] = net_id
@@ -196,7 +196,7 @@ class ConfigurationFrontend < Sinatra::Base
   #
 
   get '/networks/:net_id/ports/:port_id/?' do | net_id, port_id |
-    logger.debug "#{__FILE__}:#{__LINE__}: Retrieve detail of the port port_id configured for the network net_id."
+    logger.debug "#{__FILE__}:#{__LINE__}: Show details of the switch port identified by port_id and net_id."
     parameters = { :net_id => net_id, :id => port_id }
     content_type :json, :charset => 'utf-8'
     status 200
@@ -212,7 +212,7 @@ class ConfigurationFrontend < Sinatra::Base
   end
 
   delete '/networks/:net_id/ports/:port_id/?' do | net_id, port_id |
-    logger.debug "#{__FILE__}:#{__LINE__}: Remove a port from the network."
+    logger.debug "#{__FILE__}:#{__LINE__}: Detach the switch port identified by port_id from the network identified by net_id."
     parameters = { :net_id => net_id, :id => port_id }
     content_type :json, :charset => 'utf-8'
     status 202
@@ -222,7 +222,7 @@ class ConfigurationFrontend < Sinatra::Base
   # MAC address
 
   get '/networks/:net_id/ports/:port_id/mac_addresses/?' do | net_id, port_id |
-    logger.debug "#{__FILE__}:#{__LINE__}: List all the mac addresses currently defined."
+    logger.debug "#{__FILE__}:#{__LINE__}: List all the mac addresses associated with the switch port."
     parameters = { :net_id => net_id, :id => port_id }
     content_type :json, :charset => 'utf-8'
     status 202
@@ -230,7 +230,7 @@ class ConfigurationFrontend < Sinatra::Base
   end
 
   post '/networks/:net_id/ports/:port_id/mac_addresses/?' do | net_id, port_id |
-    logger.debug "#{__FILE__}:#{__LINE__}: Create a mac address on the logical port in the request URI."
+    logger.debug "#{__FILE__}:#{__LINE__}: Associate a MAC address to the switch port identified by port_id and net_id."
     requires = [ :address ]
     parameters = json_parse( request, requires )
     parameters.merge!( { :net_id => net_id, :id => port_id } )
@@ -250,7 +250,7 @@ class ConfigurationFrontend < Sinatra::Base
   end
 
   get '/networks/:net_id/ports/:port_id/mac_addresses/:mac_address/?' do | net_id, port_id, mac_address |
-    logger.debug "#{__FILE__}:#{__LINE__}: Retrieve detail of the mac address mac_address configured for the port port_id."
+    logger.debug "#{__FILE__}:#{__LINE__}: Check existence of the MAC address."
     parameters = { :net_id => net_id, :id => port_id, :address => mac_address }
     content_type :json, :charset => 'utf-8'
     status 202
@@ -266,7 +266,7 @@ class ConfigurationFrontend < Sinatra::Base
   end
 
   delete '/networks/:net_id/ports/:port_id/mac_addresses/:mac_address/?' do | net_id, port_id, mac_address |
-    logger.debug "#{__FILE__}:#{__LINE__}: Remove a mac address from the port."
+    logger.debug "#{__FILE__}:#{__LINE__}: Detach the MAC address from the switch port."
     parameters = { :net_id => net_id, :id => port_id, :address => mac_address }
     status 202
     body no_message_body Network.delete_mac_address( parameters )
