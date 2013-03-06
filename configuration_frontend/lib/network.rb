@@ -109,14 +109,31 @@ class Network
     end
 
     def list parameters = {}
+      datapath_id = convert_datapath_id parameters[ :datapath_id ]
 
-      logger.debug "#{ __FILE__ }:#{ __LINE__ }: list of networks"
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: list of networks (datapath_id = #{ datapath_id })"
 
-      DB::Slice.find( :all, :readonly => true ).collect do | each |
-        response = { :id => each.id, :description => each.description, :state => each.state.to_s }
-        response[ :updated_at ] = each.updated_at.to_s( :db ) unless parameters[ :require_updated_at ].nil?
-        response
+      if datapath_id.nil?
+        id_by_dpid = nil
+      else
+        id_by_dpid = DB::Port.find( :all,
+                                    :readonly => true,
+                                    :select => 'DISTINCT slice_id',
+                                    :conditions => [ "datapath_id = ? AND type = ?",
+                                                     datapath_id.to_i, DB::PORT_TYPE_CUSTOMER ] ).collect do | each |
+          each.slice_id
+        end
       end
+
+      responses = []
+      DB::Slice.find( :all, :readonly => true ).each do | each |
+        if id_by_dpid.nil? or id_by_dpid.include?( each.id )
+          response = { :id => each.id, :description => each.description, :state => each.state.to_s }
+          response[ :updated_at ] = each.updated_at.to_s( :db ) unless parameters[ :require_updated_at ].nil?
+          responses << response
+        end
+      end
+      responses
     end
 
     def show parameters
@@ -235,17 +252,21 @@ class Network
     def show_ports parameters
       raise BadReuestError.new "Slice id must be specified." if parameters[ :net_id ].nil?
       slice_id = convert_slice_id parameters[ :net_id ]
+      datapath_id = convert_datapath_id parameters[ :datapath_id ]
 
-      logger.debug "#{ __FILE__ }:#{ __LINE__ }: list of ports (slice_id = #{ slice_id })"
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: list of ports (slice_id = #{ slice_id }, datapath_id = #{ datapath_id })"
 
       find_slice( slice_id )
 
+      conditions = [ "slice_id = ? AND type = ?", slice_id, DB::PORT_TYPE_CUSTOMER ]
+      if not datapath_id.nil?
+        conditions[ 0 ] << " AND datapath_id = ?"
+        conditions << datapath_id.to_i
+      end
       DB::Port.find( :all,
                      :readonly => true,
                      :select => 'id, datapath_id, port_no, port_name, vid, type as port_type, description, state, updated_at',
-                     :conditions => [
-                       "slice_id = ? AND type = ?",
-                       slice_id, DB::PORT_TYPE_CUSTOMER ] ).collect do | each |
+                     :conditions => conditions ).collect do | each |
         response = {
           :id => each.id,
           :datapath_id => each.datapath_id.to_s,
@@ -386,7 +407,7 @@ class Network
       DB::MacAddress.find( :all,
                           :readonly => true,
                           :select => 'mac, type as port_type, state, updated_at',
-                          :conditions => [ "slice_id = ? AND port_id = ?", slice_id, port_id ] ).collect do | each |
+                          :conditions => [ "slice_id = ? AND port_id = ?", slice_id, port_id ] ).each do | each |
         response = {}
         if parameters[ :require_state ].nil?
           next unless each.type == DB::MAC_TYPE_LOCAL
@@ -397,7 +418,7 @@ class Network
         response[ :state ] = each.state.to_s
         response[ :updated_at ] = each.updated_at.to_s( :db ) unless parameters[ :require_updated_at ].nil?
         response
-	responses << response
+        responses << response
       end
       responses
     end
@@ -478,6 +499,14 @@ class Network
           destroy_mac_address slice_id, port_id, mac, DB::MAC_TYPE_LOCAL
         end
         delete_mac_address_from_remotes slice_id, datapath_id, mac
+      end
+    end
+
+    def list_dpids parameters = {}
+      DB::Port.find( :all,
+                     :readonly => true,
+                     :select => 'DISTINCT datapath_id' ).collect do | each |
+        each.datapath_id
       end
     end
 

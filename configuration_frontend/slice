@@ -100,21 +100,22 @@ options
     -v, --verbose         - Verbose mode
 
 commands
-    list                         - List summary of networks
-    create [id [description]]    - Create a new network
-    modify id [description]      - Update details of network
-    show id                      - Show details of network
-    destroy id                   - Remove the network
-    reset id                     - Reset the network
-    show-port net_id [id]        - Retrieve detail of the port
-    create-port [-i id] net_id datapath_id (number|name) [vid [description]]
-                                 - Create a port on the network
-    delete-port net_id id        - Remove a port from the network
-    show-mac net_id id [address] - Retrieve detail of the mac address
-    add-mac net_id id address    - Create a mac address on the port
-    delete-mac net_id id address - Remove a mac address from the port
-    show-switch                  - Retrieve detail of the switch
-    show-switch-ports            - Retrieve detail of the switch ports
+    list [--datapath-id=datapath_id] - List summary of networks
+    create [id [description]]        - Create a new network
+    modify id [description]          - Update details of network
+    show id                          - Show details of network
+    destroy id                       - Remove the network
+    reset id                         - Reset the network
+    show-port [--datapath-id=datapath_id] net_id [id]
+                                     - Retrieve detail of the port
+    create-port [--id=id] net_id datapath_id (number|name) [vid [description]]
+                                     - Create a port on the network
+    delete-port net_id id            - Remove a port from the network
+    show-mac net_id id [address]     - Retrieve detail of the mac address
+    add-mac net_id id address        - Create a mac address on the port
+    delete-mac net_id id address     - Remove a mac address from the port
+    show-switch [datapath_id]        - Retrieve detail of the switch
+    show-switch-ports                - Retrieve detail of the switch ports
 EOS
 end
 
@@ -145,9 +146,16 @@ end
 # Network
 
 command 'list' do | args |
+  options = {}
+  option = OptionParser.new
+  option.on( '--datapath-id=arg' ) do | arg |
+    options[ 'datapath_id' ] = arg
+  end
+  option.order! args
   parameters = {}
   help_and_exit "Too many arguments" unless args.size == 0
   parameters[ :require_updated_at ] = true
+  parameters[ :datapath_id ] = options[ 'datapath_id' ] if not options[ 'datapath_id' ].nil?
   response = Network.list parameters
   raise "No slice found" unless response.size != 0
   response.sort! { | a, b | a[ :id ] <=> b[ :id ] }
@@ -208,7 +216,7 @@ command 'reset' do | args |
   parameters = {}
   parameters[ :id ] = args.shift or help_and_exit "Too few arguments"
   help_and_exit "Too many arguments" unless args.size == 0
-  parameters[ :force ] = true
+  parameters[ :force ] = options[ 'force' ]
   Network.reset( parameters )
   puts "A slice is resetted successfully."
 end
@@ -225,6 +233,12 @@ end
 # Port
 
 command 'show-port' do | args |
+  options = {}
+  option = OptionParser.new
+  option.on( '--datapath-id=arg' ) do | arg |
+    options[ 'datapath_id' ] = arg
+  end
+  option.order! args
   parameters = {}
   parameters[ :net_id ] = args.shift or help_and_exit "Too few arguments"
   parameters[ :id ] = args.shift
@@ -232,7 +246,7 @@ command 'show-port' do | args |
   parameters[ :require_updated_at ] = true
   net_id = parameters[ :net_id ]
   if parameters[ :id ].nil?
-    show_ports net_id
+    show_ports net_id, "", options[ 'datapath_id' ]
   else
     response = Network.show_port( parameters )
     port_id = response[ :id ]
@@ -240,6 +254,15 @@ command 'show-port' do | args |
     puts "[Mac addresses]"
     indent = "  "
     show_mac_addresses net_id, port_id, indent
+  end
+end
+
+command 'list-dpids' do | args |
+  help_and_exit "Too many arguments" unless args.size == 0
+  dpids = Network.list_dpids
+  puts "[Datapath ID]"
+  dpids.each do | datapath_id |
+    puts "#{ datapath_id }"
   end
 end
 
@@ -421,8 +444,8 @@ end
 
 #
 
-def show_ports net_id, indent = ""
-  ports = Network.show_ports( { :net_id => net_id, :require_updated_at => true } )
+def show_ports net_id, indent = "", datapath_id = nil
+  ports = Network.show_ports( { :net_id => net_id, :datapath_id => datapath_id, :require_updated_at => true } )
   if ports.empty?
     puts "#{ indent }No ports found."
   else
