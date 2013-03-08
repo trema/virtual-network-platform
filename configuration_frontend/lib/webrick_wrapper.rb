@@ -66,4 +66,7 @@ class WEBrickWrapper < Rack::Handler::WEBrick
 
 end
 
+WEBrick::HTTPStatus::StatusMessage[ 422 ] = 'Unprocessable Entity'
+WEBrick::HTTPStatus::StatusMessage[ 486 ] = 'Busy Here'
+
 Rack::Handler.register 'webrick_wrapper', 'WEBrickWrapper'
