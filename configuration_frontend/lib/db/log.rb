@@ -21,6 +21,8 @@ rescue LoadError
 end
 require 'active_record'
 
+ActiveRecord::Base.colorize_logging = false
+
 module DB
 
   class Log

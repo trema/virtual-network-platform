@@ -76,6 +76,7 @@ class ConfigurationFrontend < Sinatra::Base
 
   before do
     DB.connect
+    logger.debug "DB connected"
   end
 
   # Error
