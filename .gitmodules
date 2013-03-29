@@ -1,3 +1,4 @@
 [submodule "trema"]
 	path = trema
 	url = git://github.com/trema/trema.git
+	ignore = dirty
