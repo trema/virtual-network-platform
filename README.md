@@ -1,8 +1,8 @@
 # What's this?
 
-This is a software suite which allows you to construct and manage
-VXLAN-based virtual networks with a single centralized management
-point. The centralized management point provides a REST-based
+This is the Virtual Network Platform 1.0 which allows you to construct
+and manage VXLAN-based virtual networks with a single centralized
+management point. The centralized management point provides a REST-based
 interface for managing the virtual networks.
 
 # How does it work?
