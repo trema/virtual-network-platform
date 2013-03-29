@@ -75,6 +75,13 @@ are required. The following operating system is only supported.
 Operating systems other than above are totally not tested and may not
 work expectedly.
 
+## Getting the source code
+
+Getting a copy of the git repository.
+
+        $ sudo apt-get install git
+        $ git clone --recurse-submodules git://github.com/trema/virtual-network-platform.git
+
 ## Setup
 
 We assume that the software suite is installed in the following
@@ -146,7 +153,7 @@ the MySQL "root" user. We assume here that the password is set to
 2. Add privileges to "root"
 
         $ mysql -u root --password=root123
-        mysql> grant all privileges on *.* to root@localhost identified 
+        mysql> grant all privileges on *.* to root@localhost identified
         by 'root123' with grant option;
         mysql> flush privileges;
         mysql> quit
@@ -184,9 +191,9 @@ Set the directory that the Configuration Frontend executable exists.
 
 #### Start all required services
 
-    $ sudo service trema start
-    $ sudo service virtual_network_manager start
-    $ sudo service configuration_frontend start
+        $ sudo service trema start
+        $ sudo service virtual_network_manager start
+        $ sudo service configuration_frontend start
 
 ### OpenFlow Switch (Open vSwitch)
 
@@ -199,7 +206,7 @@ Set the directory that the Configuration Frontend executable exists.
         $ sudo ovs-vsctl add-br br0
         $ sudo ovs-vsctl add-port br0 eth1
         $ sudo ovs-vsctl add-port br0 eth2
- 
+
 3. Set datapath identifier and OpenFlow controller
 
         $ sudo ovs-vsctl set Bridge br0 \
@@ -296,31 +303,31 @@ Please see files under doc/api for extended examples.
 
 ### Create a virtual network
 
-    $ curl -v \
-    -H "Accept: application/json" \
-    -H "Content-type: application/json" \
-    -X POST \
-    -d '{ "id": 128, "description": "Virtual network #128" }' \
-    http://192.168.16.254/networks
+        $ curl -v \
+        -H "Accept: application/json" \
+        -H "Content-type: application/json" \
+        -X POST \
+        -d '{ "id": 128, "description": "Virtual network #128" }' \
+        http://192.168.16.254/networks
 
 ### Associate a switch port with a virtual network
 
-    $ curl -v \
-    -H "Accept: application/json" \
-    -H "Content-type: application/json" \
-    -X POST \
-    -d '{ "id": 1, "datapath_id": "1", "name": "eth1",
-    "vid": 65535, "description": "eth1 on switch #1" }' \
-    http://192.168.16.254/networks/128
+        $ curl -v \
+        -H "Accept: application/json" \
+        -H "Content-type: application/json" \
+        -X POST \
+        -d '{ "id": 1, "datapath_id": "1", "name": "eth1",
+        "vid": 65535, "description": "eth1 on switch #1" }' \
+        http://192.168.16.254/networks/128
 
 ### Associate a MAC address with a switch port
 
-    $ curl -v \
-    -H "Accept: application/json" \
-    -H "Content-type: application/json" \
-    -X POST \
-    -d '{ "address" : "00:00:00:00:00:01" }' \
-    http://192.168.16.254/networks/128/ports/1
+        $ curl -v \
+        -H "Accept: application/json" \
+        -H "Content-type: application/json" \
+        -X POST \
+        -d '{ "address" : "00:00:00:00:00:01" }' \
+        http://192.168.16.254/networks/128/ports/1
 
 # Copyright
 
