@@ -64,6 +64,14 @@ module DB
       @state == SLICE_STATE_DESTROY_FAILED
     end
 
+    def updating?
+      @state == SLICE_STATE_UPDATING
+    end
+
+    def destroying?
+      @state == SLICE_STATE_DESTROYING
+    end
+
     def can_update?
       @state == SLICE_STATE_CONFIRMED or
       @state == SLICE_STATE_READY_TO_UPDATE

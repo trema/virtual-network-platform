@@ -154,7 +154,7 @@ class Network
 
       slice_id = convert_slice_id parameters[ :id ]
 
-      logger.debug "#{ __FILE__ }:#{ __LINE__ }: show details of networks (slice_id = #{ slice_id })"
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: reset the network (slice_id = #{ slice_id })"
 
       slice = find_slice( slice_id )
       if parameters[ :force ].nil? or parameters[ :force ] == false
@@ -165,6 +165,31 @@ class Network
         reset_all_ports slice_id do
           reset_all_mac_addresses slice_id
         end
+      end
+    end
+
+    def failed parameters
+      raise BadReuestError.new "Slice id must be specified." if parameters[ :id ].nil?
+
+      slice_id = convert_slice_id parameters[ :id ]
+
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: set to become failed state (slice_id = #{ slice_id })"
+
+      slice = find_slice( slice_id )
+      if slice.state.updating?
+        DB::Slice.update_all(
+          [ "state = ?", DB::SLICE_STATE_UPDATE_FAILED ],
+          [ "id = ? AND state = ?",
+            slice_id,
+            DB::SLICE_STATE_UPDATING ] )
+      elsif slice.state.destroying?
+        DB::Slice.update_all(
+          [ "state = ?", DB::SLICE_STATE_DESTROY_FAILED ],
+          [ "id = ? AND state = ?",
+            slice_id,
+            DB::SLICE_STATE_DESTROYING ] )
+      else
+        raise NetworkManagementError.new
       end
     end
 

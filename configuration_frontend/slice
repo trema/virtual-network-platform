@@ -106,6 +106,7 @@ commands
     show id                          - Show details of network
     destroy id                       - Remove the network
     reset id                         - Reset the network
+    failed id                        - Set to become failed state
     show-port [--datapath-id=datapath_id] net_id [id]
                                      - Retrieve detail of the port
     create-port [--id=id] net_id datapath_id (number|name) [vid [description]]
@@ -219,6 +220,14 @@ command 'reset' do | args |
   parameters[ :force ] = options[ 'force' ]
   Network.reset( parameters )
   puts "A slice is resetted successfully."
+end
+
+command 'failed' do | args |
+  parameters = {}
+  parameters[ :id ] = args.shift or help_and_exit "Too few arguments"
+  help_and_exit "Too many arguments" unless args.size == 0
+  Network.failed( parameters )
+  puts "State of the slice is updated successfully."
 end
 
 # update-transaction-end: debug only
