@@ -1,0 +1,6 @@
+Sample code for talking to Virtual Network Platform using Ruby's ActiveResource.
+
+Installing required packages (Ubuntu 12.04)
+
+        $ sudo apt-get install ruby rubygems
+        $ sudo gem install activeresource

@@ -1,0 +1,13 @@
+#!/usr/bin/env ruby
+#
+# Copyright (C) 2013 NEC Corporation
+#
+
+require 'resource'
+
+network = Network.find( 123 )
+  print <<EOS
+[network id: #{ network.id }]
+description: #{ network.description }
+state:       #{ network.state }
+EOS

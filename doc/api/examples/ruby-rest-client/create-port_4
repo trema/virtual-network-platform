@@ -1,0 +1,15 @@
+#!/usr/bin/env ruby
+#
+# Copyright (C) 2013 NEC Corporation
+#
+
+require 'client'
+
+create_port( {
+  :net_id => 456,
+  :id => 4,
+  :datapath_id => "2",
+  :name => "veth1-0",
+  :vid => 65535,
+  :description => "port veth1-0 on host2"
+} )

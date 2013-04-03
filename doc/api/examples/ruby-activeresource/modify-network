@@ -1,0 +1,10 @@
+#!/usr/bin/env ruby
+#
+# Copyright (C) 2013 NEC Corporation
+#
+
+require 'resource'
+
+network = Network.find( 123 )
+network.description = "new description"
+network.save!

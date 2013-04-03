@@ -1,0 +1,18 @@
+#!/usr/bin/env ruby
+#
+# Copyright (C) 2013 NEC Corporation
+#
+
+require 'resource'
+
+port = Port.new( { :net_id => 123 } )
+port.id = 3
+port.datapath_id = "2"
+port.name = "veth0-0"
+port.vid = 65535
+port.description = "port veth0-0 on host2"
+port.save!( { :retry_on_busy => true } )
+
+mac = MacAddress.new( { :net_id => 123, :port_id => 3 } )
+mac.address = "00:00:00:00:00:02"
+mac.save!( { :retry_on_busy => true } )

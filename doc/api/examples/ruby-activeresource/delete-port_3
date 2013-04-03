@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+#
+# Copyright (C) 2013 NEC Corporation
+#
+
+require 'resource'
+
+Port.delete( 3, { :net_id => 123, :retry_on_busy => true } )

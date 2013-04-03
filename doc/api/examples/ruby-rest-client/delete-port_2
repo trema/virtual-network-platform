@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+#
+# Copyright (C) 2013 NEC Corporation
+#
+
+require 'client'
+
+delete_port :net_id => 456, :id => 2

@@ -1,0 +1,31 @@
+#!/usr/bin/env ruby
+#
+# Copyright (C) 2013 NEC Corporation
+#
+
+require 'resource'
+
+Network.find( :all ).each do | network |
+  print <<EOS
+[network id: #{ network.id }]
+description: #{ network.description }
+state:       #{ network.state }
+EOS
+  Port.find( :all, :params => { :net_id => network.id } ).each do | port |
+    print <<EOS
+  [port id: #{ port.id }]
+  description: #{ port.description }
+  datapath id: #{ port.datapath_id }
+  port number: #{ port.number }
+  port name:   #{ port.name }
+  vlan id:     #{ port.vid }
+  state:       #{ port.state }
+EOS
+    MacAddress.find( :all, :params => { :net_id => network.id, :port_id => port.id } ).each do | mac |
+      print <<EOS
+    [mac address: #{ mac.address }]
+    state: #{ mac.state }
+EOS
+    end
+  end
+end

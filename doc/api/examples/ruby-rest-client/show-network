@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+#
+# Copyright (C) 2013 NEC Corporation
+#
+
+require 'client'
+
+show_network :id => 456

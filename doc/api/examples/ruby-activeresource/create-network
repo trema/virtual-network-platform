@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+#
+# Copyright (C) 2013 NEC Corporation
+#
+
+require 'resource'
+
+network = Network.new
+network.id = 123
+network.description = "network-123"
+network.save!

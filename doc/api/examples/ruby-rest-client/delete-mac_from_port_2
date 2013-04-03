@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+#
+# Copyright (C) 2013 NEC Corporation
+#
+
+require 'client'
+
+delete_mac :net_id => 456, :port_id => 2, :address => "00:00:00:00:01:01"

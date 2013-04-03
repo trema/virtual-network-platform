@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+#
+# Copyright (C) 2013 NEC Corporation
+#
+
+require 'client'
+
+list_macs :net_id => 456, :port_id => 4

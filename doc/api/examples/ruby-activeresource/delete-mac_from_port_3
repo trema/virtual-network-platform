@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+#
+# Copyright (C) 2013 NEC Corporation
+#
+
+require 'resource'
+
+MacAddress.delete( "00:00:00:00:00:02", { :net_id => 123, :port_id => 3 } )

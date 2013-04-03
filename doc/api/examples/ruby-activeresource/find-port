@@ -1,0 +1,17 @@
+#!/usr/bin/env ruby
+#
+# Copyright (C) 2013 NEC Corporation
+#
+
+require 'resource'
+
+port = Port.find( :first, :params => { :net_id => 123 }, :from => { :datapath_id => "1", :name => "veth0-0", :vid => 65535 } )
+print <<EOS
+[port id: #{ port.id }]
+description: #{ port.description }
+datapath id: #{ port.datapath_id }
+port number: #{ port.number }
+port name:   #{ port.name }
+vlan id:     #{ port.vid }
+state:       #{ port.state }
+EOS
