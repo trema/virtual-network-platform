@@ -24,6 +24,7 @@ require 'rest_client'
 require 'json'
 
 require 'configure'
+require 'convert'
 require 'log'
 require 'vxlan'
 

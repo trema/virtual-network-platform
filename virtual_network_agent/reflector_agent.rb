@@ -114,29 +114,21 @@ class ReflectorAgent < Sinatra::Base
   #
 
   get '/reflector/:vni/?' do | vni |
-    if settings.reflector_mode
-      logger.debug "#{ __FILE__ }:#{ __LINE__ }: List summary of tunnel endpoint associated."
-      parameters = { :vni => vni }
-      content_type :json, :charset => 'utf-8'
-      status 202
-      body no_message_body Reflector.list_endpoints( parameters )
-    else
-      status 405
-    end
+    logger.debug "#{ __FILE__ }:#{ __LINE__ }: List summary of tunnel endpoint associated."
+    parameters = { :vni => vni }
+    content_type :json, :charset => 'utf-8'
+    status 202
+    body no_message_body Reflector.list_endpoints( parameters )
   end
 
   post '/reflector/:vni/?' do | vni |
-    if settings.reflector_mode
-      logger.debug "#{ __FILE__ }:#{ __LINE__ }: Create a tunnel endpoint on the vni in the request URI."
-      requires = [ :ip, :port ]
-      parameters = json_parse( request, requires )
-      parameters[ :vni ] = vni
-      content_type :json, :charset => 'utf-8'
-      status 202
-      body no_message_body Reflector.add_endpoint( parameters )
-    else
-      status 405
-    end
+    logger.debug "#{ __FILE__ }:#{ __LINE__ }: Create a tunnel endpoint on the vni in the request URI."
+    requires = [ :ip, :port ]
+    parameters = json_parse( request, requires )
+    parameters[ :vni ] = vni
+    content_type :json, :charset => 'utf-8'
+    status 202
+    body no_message_body Reflector.add_endpoint( parameters )
   end
 
   put '/reflector/:vni/?' do | vni |
@@ -162,15 +154,11 @@ class ReflectorAgent < Sinatra::Base
   end
 
   delete '/reflector/:vni/:tunnel_endpoint/?' do | vni, tunnel_endpoint |
-    if settings.reflector_mode
-      logger.debug "#{ __FILE__ }:#{ __LINE__ }: Remove a tunnel endpoint from the vni."
-      parameters = { :vni => vni, :ip => tunnel_endpoint }
-      content_type :json, :charset => 'utf-8'
-      status 202
-      body no_message_body Reflector.delete_endpoint( parameters )
-    else
-      status 405
-    end
+    logger.debug "#{ __FILE__ }:#{ __LINE__ }: Remove a tunnel endpoint from the vni."
+    parameters = { :vni => vni, :ip => tunnel_endpoint }
+    content_type :json, :charset => 'utf-8'
+    status 202
+    body no_message_body Reflector.delete_endpoint( parameters )
   end
 
   #
