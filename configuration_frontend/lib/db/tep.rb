@@ -23,10 +23,10 @@ module DB
     def initialize tep
       raise StandardError.new "Invalid tunnel end point (#{ tep })" unless /^((?:(?:[[:digit:]]{1,3})\.){3}[[:digit:]]{1,3})(:([[:digit:]]+))?$/ =~ tep
       @ip_address = IP.new( $1 )
-      if $2.nil?
+      if $3.nil?
         @port = nil
       else
-        @port = $2.to_i
+        @port = $3.to_i
         raise "Invalid port (#{ tep })" unless ( @port >= 0 and @port <= 0xffff )
       end
     end
