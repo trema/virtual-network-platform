@@ -173,7 +173,7 @@ class Network
 
       slice_id = convert_slice_id parameters[ :id ]
 
-      logger.debug "#{ __FILE__ }:#{ __LINE__ }: set to become failed state (slice_id = #{ slice_id })"
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: set to 'failed' status to the network (slice_id = #{ slice_id })"
 
       slice = find_slice( slice_id )
       if slice.state.updating?

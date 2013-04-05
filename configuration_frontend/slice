@@ -106,7 +106,7 @@ commands
     show id                          - Show details of network
     destroy id                       - Remove the network
     reset id                         - Reset the network
-    failed id                        - Set to become failed state
+    failed id                        - Set to 'failed' status to the network
     show-port [--datapath-id=datapath_id] net_id [id]
                                      - Retrieve detail of the port
     create-port [--id=id] net_id datapath_id (number|name) [vid [description]]
@@ -351,6 +351,7 @@ command 'delete-mac' do | args |
   parameters[ :address ] = args.shift or help_and_exit "Too few arguments"
   help_and_exit "Too many arguments" unless args.size == 0
   Network.delete_mac_address( parameters )
+  puts "A MAC address is deleted successfully."
 end
 
 # Agent
