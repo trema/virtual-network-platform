@@ -32,7 +32,7 @@ class Reflector
         "SELECT DISTINCT P.slice_id, T.local_address, T.local_port" +
         " FROM ports P, tunnel_endpoints T" +
         " WHERE P.datapath_id = T.datapath_id" ).each do | each |
-        tunnel_endpoint = { :ip => each[ 'local_address' ], :port => each[ 'local_port' ] }
+        tunnel_endpoint = { :ip => each[ 'local_address' ], :port => each[ 'local_port' ].to_i }
         tunnel_endpoints[ each[ 'slice_id' ].to_i ].push tunnel_endpoint
       end
       tunnel_endpoints
