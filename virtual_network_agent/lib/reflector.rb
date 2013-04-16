@@ -45,7 +45,9 @@ class Reflector
 
       logger.debug "#{ __FILE__ }:#{ __LINE__ }: list of tunnel endpoints (vni = #{ vni })"
 
-      tunnel_endpoint.list vni
+      tunnel_endpoints = tunnel_endpoint.list vni
+      raise NoOverlayNetworkFound.new( vni ) if tunnel_endpoints.nil?
+      tunnel_endpoints
     end
 
     def add_endpoint parameters
@@ -59,6 +61,7 @@ class Reflector
 
       logger.debug "#{ __FILE__ }:#{ __LINE__ }: add a new tunnel endpoint (vni = #{ vni }, address = #{ address }, port = #{ port })"
 
+      raise DuplicatedOverlayNetwork.new( vni ) if tunnel_endpoint.exists?( vni, address )
       tunnel_endpoint.add vni, address, port
     end
 
@@ -71,6 +74,7 @@ class Reflector
 
       logger.debug "#{ __FILE__ }:#{ __LINE__ }: delete the tunnel endpoint (vni = #{ vni }, address = #{ address })"
 
+      raise NoOverlayNetworkFound.new( vni ) unless tunnel_endpoint.exists?( vni, address )
       tunnel_endpoint.delete vni, address
     end
 
@@ -101,6 +105,9 @@ class Reflector
           end
           logger.debug "vni = #{ vni } address = #{ address } port = #{ port }"
 
+          if tunnel_endpoint.exists?( vni, address )
+            tunnel_endpoint.delete vni, address
+	  end
           tunnel_endpoint.add vni, address, port
         end
       end

@@ -33,6 +33,7 @@ module Vxlan
         end
         vni
       end
+
     end
 
     class TunnelEndpoint
@@ -46,7 +47,14 @@ module Vxlan
         end
 
         def list vni
-          Ctl.list_tunnel_endpoints vni
+          tunnel_endpoints = Ctl.list_tunnel_endpoints
+          tunnel_endpoints.has_key?( vni ) and tunnel_endpoints[ vni ] or nil
+        end
+
+        def exists? vni, address
+          tunnel_endpoints = list vni
+          return false if tunnel_endpoints.nil?
+	  not tunnel_endpoints.select{ | each | each[ :ip ] == address.to_s }.empty?
         end
 
       end
@@ -69,7 +77,9 @@ module Vxlan
         end
 
         def list_tunnel_endpoints vni = nil
-          list = {}
+          tunnel_endpoints = Hash.new do | hash, key |
+            hash[ key ] = []
+          end
           line_no = 0
           options = []
           if not vni.nil?
@@ -80,9 +90,10 @@ module Vxlan
             row = $1 if /^\s*(\S+(?:\s+\S+)*)\s*$/ =~ row
             vni, address, port, packet_count, octet_count = row.split( /\s*\|\s*/, 5 )
             port = 0 if port == '-'
-            list [ vni.hex ] = { :address => address, :port => port.to_i, :packet_count => packet_count.to_i, :octet_count => octet_count.to_i }
+            tunnel_endpoint = { :ip => address, :port => port.to_i, :packet_count => packet_count.to_i, :octet_count => octet_count.to_i }
+            tunnel_endpoints[ vni.hex ].push tunnel_endpoint
           end
-          list
+          tunnel_endpoints
         end
 
         private

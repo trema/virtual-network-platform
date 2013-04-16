@@ -118,7 +118,7 @@ class ReflectorAgent < Sinatra::Base
     parameters = { :vni => vni }
     content_type :json, :charset => 'utf-8'
     status 202
-    body no_message_body Reflector.list_endpoints( parameters )
+    body json_generate Reflector.list_endpoints( parameters )
   end
 
   post '/reflector/:vni/?' do | vni |
