@@ -49,15 +49,16 @@ class UnprocessableEntityError < NetworkAgentError
 
 end
 
-class NoOverlayNetworkFound < NotFoundError
-  def initialize( vni, message = "No overlay network found (vni #{ vni } is not exists)." )
+class DuplicatedOverlayNetwork < NetworkAgentError
+  def initialize( vni, message = "Specified TEP has already been added (duplicated vni #{ vni })." )
     super( message )
+    @code = 440
   end
 
 end
 
-class DuplicatedOverlayNetwork < UnprocessableEntityError
-  def initialize( vni, message = "Failed to create a overlay network (duplicated vni #{ vni })." )
+class NoOverlayNetworkFound < NotFoundError
+  def initialize( vni, message = "No overlay network found (vni #{ vni } is not exists)." )
     super( message )
   end
 
