@@ -15,11 +15,6 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 
-begin
-require 'rubygems'
-rescue LoadError
-end
-
 module Vxlan
 
   class Log

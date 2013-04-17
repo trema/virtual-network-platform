@@ -35,6 +35,14 @@ require 'reflector'
 require 'vxlan'
 require 'webrick_wrapper'
 
+def puts( msg )
+  if STDOUT.closed?
+    Log.instance.info( msg )
+  else
+    super
+  end
+end
+
 class ReflectorAgent < Sinatra::Base
 
   set :server, [ 'webrick_wrapper' ]

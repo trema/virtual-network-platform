@@ -54,7 +54,7 @@ module Vxlan
         def exists? vni, address
           tunnel_endpoints = list vni
           return false if tunnel_endpoints.nil?
-	  not tunnel_endpoints.select{ | each | each[ :ip ] == address.to_s }.empty?
+          not tunnel_endpoints.select{ | each | each[ :ip ] == address.to_s }.empty?
         end
 
       end

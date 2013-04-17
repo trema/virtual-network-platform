@@ -15,47 +15,38 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 
+require 'logger'
 require 'singleton'
-begin
-require 'rubygems'
-rescue LoadError
-end
-require 'webrick'
 
-class Log < WEBrick::Log
+class Log < Logger
   include Singleton
+
+  def initialize
+    super( STDOUT )
+    @level = INFO
+    @formatter = Formatter.new
+    @formatter.datetime_format = "%Y-%m-%d %H:%M:%S"
+  end
 
   def write message
     self << message
   end
 
-  def initialize log_file = nil, level = nil
-    @locker = Mutex::new
-    super
-  end
-
-  def log level, data
-    @locker.synchronize do
-      super
-    end
-  end
-
   def log_file= ( log_file )
-    @locker.synchronize do
-      @log.close if @opened
-      @opened = false
-      if not log_file.nil?
-        @log = open( log_file, "a+")
-        @log.sync = true
-        @opened = true
-      end
+    @logdev.close
+    if log_file.nil?
+      log_file = STDOUT
     end
+    @logdev = LogDevice.new( log_file, :shift_age => 0, :shift_size => 1048576 ) # TODO: read from the configuration settings
   end
 
-  def close
-    @locker.synchronize do
-      super
+  private
+
+  class Formatter < Logger::Formatter
+    def call( severity, time, progname, msg )
+      "[%s.%06d] %-5s %s\n" % [ time.strftime('%Y-%m-%d %H:%M:%S'), time.usec.to_s, severity, msg2str(msg) ]
     end
+
   end
 
 end

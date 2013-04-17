@@ -35,6 +35,14 @@ require 'ovs'
 require 'vxlan'
 require 'webrick_wrapper'
 
+def puts( msg )
+  if STDOUT.closed?
+    Log.instance.info( msg )
+  else
+    super
+  end
+end
+
 class TunnelEndpointAgent < Sinatra::Base
 
   set :server, [ 'webrick_wrapper' ]
