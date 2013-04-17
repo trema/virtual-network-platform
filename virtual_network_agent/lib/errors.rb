@@ -52,6 +52,7 @@ end
 class DuplicatedOverlayNetwork < NetworkAgentError
   def initialize( vni, message = "Specified TEP has already been added (duplicated vni #{ vni })." )
     super( message )
+    # 440: This status code is refered to the "440 AlreadAttached" of quantum api-error-code.
     @code = 440
   end
 
