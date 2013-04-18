@@ -46,6 +46,10 @@ module Vxlan
           list.has_key? vni
         end
 
+        def mtu vni, mtu
+          IpLink.mtu vni, mtu
+        end
+
       end
 
     end
@@ -94,6 +98,11 @@ module Vxlan
         def down vni
           port_name = name vni
           ip_link 'set', [ port_name, 'down' ]
+        end
+
+        def mtu vni, mtu
+          port_name = name vni
+          ip_link 'set', [ port_name, 'mtu', mtu ]
         end
 
         private

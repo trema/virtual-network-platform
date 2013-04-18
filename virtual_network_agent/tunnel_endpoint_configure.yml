@@ -27,8 +27,10 @@ ovs:
   bridge: br0
 vxlan:
   adapter: vxlan_tunnel_endpoint
+  mtu: 1500
   vxlan_tunnel_endpoint:
     vxlanctl: ../vxlan_tunnel_endpoint/src/vxlanctl
+    ip: ip
   linux_kernel:
     ip: ip
     device: eth0

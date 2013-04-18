@@ -45,6 +45,11 @@ module Vxlan
           list.has_key? vni
         end
 
+        def mtu vni, mtu
+          device = name vni
+          IpLink.mtu device, mtu
+        end
+
       end
 
     end
@@ -107,6 +112,33 @@ module Vxlan
 
         def logger
           Log.instance
+        end
+
+      end
+
+    end
+
+    class IpLink
+      class << self
+        def mtu device, mtu
+          ip_link 'set', [ device, 'mtu', mtu ]
+        end
+
+        private
+
+        def config
+          Vxlan::Configure.instance[ 'vxlan_tunnel_endpoint' ]
+        end
+
+        def ip_link command, options = []
+          result = ""
+          Open3.popen3( "#{ config[ 'ip' ] } link #{ command } #{ options.join ' ' }" ) do | stdin, stdout, stderr |
+            stdin.close
+            error = stderr.read
+            result << stdout.read
+            raise "#{ error } #{ config[ 'ip' ] }" unless error.length == 0
+          end
+          result
         end
 
       end
