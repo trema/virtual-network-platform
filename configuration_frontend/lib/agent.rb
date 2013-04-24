@@ -18,6 +18,7 @@
 require 'errors'
 require 'db'
 require 'convert'
+require 'log'
 
 class Agent
   class << self

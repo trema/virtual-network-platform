@@ -30,6 +30,7 @@ require 'sinatra/base'
 require 'agent'
 require 'configure'
 require 'db'
+require 'internal'
 require 'log'
 require 'network'
 require 'reflector'
@@ -351,7 +352,7 @@ class ConfigurationFrontend < Sinatra::Base
     status 405
   end
 
-  # Reflector
+  #
 
   get '/reflector/config/?' do
     logger.debug "#{__FILE__}:#{__LINE__}: List of tunnel-endpoints associated."
@@ -369,6 +370,168 @@ class ConfigurationFrontend < Sinatra::Base
   end
 
   delete '/reflector/config/?' do
+    status 405
+  end
+
+  # Internals
+
+  get '/internals/?' do
+    status 405
+  end
+
+  post '/internals/?' do
+    status 405
+  end
+
+  put '/internals/?' do
+    status 405
+  end
+
+  delete '/internals/?' do
+    status 405
+  end
+
+  # Internal Switch
+
+  get '/internals/switches/?' do
+    content_type :json, :charset => 'utf-8'
+    status 200
+    body json_generate Internal::Switch.list
+  end
+
+  post '/internals/switches/?' do
+    status 405
+  end
+
+  put '/internals/switches/?' do
+    status 405
+  end
+
+  delete '/internals/switches/?' do
+    status 405
+  end
+
+  #
+
+  get '/internals/switches/:id/?' do | id |
+    parameters = { :id => id }
+    content_type :json, :charset => 'utf-8'
+    status 200
+    body json_generate Internal::Switch.show( parameters )
+  end
+
+  post '/internals/switches/:id/?' do | id |
+    status 405
+  end
+
+  put '/internals/switches/:id/?' do | id |
+    status 405
+  end
+
+  delete '/internals/switches/:id/?' do | id |
+    status 405
+  end
+
+  # Internal SwitchPort
+
+  get '/internals/switches/:id/ports/?' do | id |
+    parameters = { :id => id }
+    content_type :json, :charset => 'utf-8'
+    status 200
+    body json_generate Internal::SwitchPort.list( parameters )
+  end
+
+  post '/internals/switches/:id/ports/?' do | id |
+    status 405
+  end
+
+  put '/internals/switches/:id/ports/?' do | id |
+    status 405
+  end
+
+  delete '/internals/switches/:id/ports/?' do | id |
+    status 405
+  end
+
+  # Internal Virtual network agent
+
+  get '/internals/virtual_network_agents/?' do
+    content_type :json, :charset => 'utf-8'
+    status 200
+    body json_generate Internal::VirtualNetworkAgent.list
+  end
+
+  post '/internals/virtual_network_agents/?' do
+    status 405
+  end
+
+  put '/internals/virtual_network_agents/?' do
+    status 405
+  end
+
+  delete '/internals/virtual_network_agents/?' do
+    status 405
+  end
+
+  #
+
+  get '/internals/virtual_network_agents/:id/?' do | id |
+    parameters = { :id => id }
+    content_type :json, :charset => 'utf-8'
+    status 200
+    body json_generate Internal::VirtualNetworkAgent.show( parameters )
+  end
+
+  post '/internals/virtual_network_agents/:id/?' do | id |
+    status 405
+  end
+
+  put '/internals/virtual_network_agents/:id/?' do | id |
+    status 405
+  end
+
+  delete '/internals/virtual_network_agents/:id/?' do | id |
+    status 405
+  end
+
+  # Internal Vxlan tunnel end-point
+
+  get '/internals/vxlan_tunnel_endpoints/?' do
+    content_type :json, :charset => 'utf-8'
+    status 200
+    body json_generate Internal::VxlanTunnelEndpoint.list
+  end
+
+  post '/internals/vxlan_tunnel_endpoints/?' do
+    status 405
+  end
+
+  put '/internals/vxlan_tunnel_endpoints/?' do
+    status 405
+  end
+
+  delete '/internals/vxlan_tunnel_endpoints/?' do
+    status 405
+  end
+
+  #
+
+  get '/internals/vxlan_tunnel_endpoints/:id/?' do | id |
+    parameters = { :id => id }
+    content_type :json, :charset => 'utf-8'
+    status 200
+    body json_generate Internal::VxlanTunnelEndpoint.show( parameters )
+  end
+
+  post '/internals/vxlan_tunnel_endpoints/:id/?' do | id |
+    status 405
+  end
+
+  put '/internals/vxlan_tunnel_endpoints/:id/?' do | id |
+    status 405
+  end
+
+  delete '/internals/vxlan_tunnel_endpoints/:id/?' do | id |
     status 405
   end
 

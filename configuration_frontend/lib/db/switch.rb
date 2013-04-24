@@ -15,17 +15,22 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 
-require 'db/agent'
+require 'db/base'
 require 'db/datapath-id'
-require 'db/log'
-require 'db/mac-address'
-require 'db/mac'
-require 'db/overlay-network'
-require 'db/port'
-require 'db/reflector'
-require 'db/slice'
-require 'db/tunnel_endpoint'
-require 'db/switch-port'
-require 'db/switch'
-require 'db/tep'
-require 'db/uri'
+
+module DB
+
+  class Switch < Base
+    set_primary_key "datapath_id"
+
+    def datapath_id
+      DatapathId.new read_attribute( :datapath_id )
+    end
+
+    def datapath_id= ( value )
+      write_attribute( :datapath_id, value.to_i )
+    end
+
+  end
+
+end
