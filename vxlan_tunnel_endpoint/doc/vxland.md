@@ -22,7 +22,7 @@ The following options are not mandatory options.
 
   * `-p`, `--port`=UDP_PORT:
     Specify a local UDP port for receiving VXLAN packets in decimal.
-    If omitted, 60000 is chosen by default.
+    If omitted, 8472 is chosen by default.
 
   * `-a`, `--flooding_address`=IPV4_ADDR:
     Specify a default destination IPv4 address for sending packets

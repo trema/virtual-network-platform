@@ -22,4 +22,4 @@ create table tunnel_endpoints (
        primary key (datapath_id)
 ) engine = innodb;
 
-insert into reflectors (id,group_id,broadcast_address,broadcast_port,uri) values (1,1,'239.0.0.1',60000,'');
+insert into reflectors (id,group_id,broadcast_address,broadcast_port,uri) values (1,1,'239.0.0.1',8472,'');
