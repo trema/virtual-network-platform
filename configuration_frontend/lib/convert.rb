@@ -92,7 +92,7 @@ def convert_port_no value
     raise BadReuestError.new "Port number (#{ value }) is illegal format."
   end
   return i if i == OFPP_LOCAL
-  return i if i >= 0 and i <= OFPP_MAX
+  return i if i >= 1 and i <= OFPP_MAX
   raise BadReuestError.new "Port number (#{ value }) is illegal range."
 end
 
