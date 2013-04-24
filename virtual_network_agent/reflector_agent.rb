@@ -36,7 +36,7 @@ require 'vxlan'
 require 'webrick_wrapper'
 
 def puts( msg )
-  if STDOUT.closed?
+  if Configure.instance[ :run_background ]
     Log.instance.info( msg )
   else
     super
@@ -256,6 +256,7 @@ class ReflectorAgent < Sinatra::Base
   set :port, config[ 'listen_port' ]
   set :bind, config[ 'listen_address' ]
   config[ :startup_callback ] = Reflector
+  config[ :run_background ] = config[ 'daemon' ]
 
   logger.info "#{ self.name }"
 

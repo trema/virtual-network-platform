@@ -26,6 +26,7 @@ class Log < Logger
     @level = INFO
     @formatter = Formatter.new
     @formatter.datetime_format = "%Y-%m-%d %H:%M:%S"
+    @log_file = nil
   end
 
   def write message
@@ -33,7 +34,8 @@ class Log < Logger
   end
 
   def log_file= ( log_file )
-    @logdev.close
+    @logdev.close unless @log_file.nil?
+    @log_file = log_file
     if log_file.nil?
       log_file = STDOUT
     end
