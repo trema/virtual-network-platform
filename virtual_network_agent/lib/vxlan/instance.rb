@@ -26,10 +26,10 @@ module Vxlan
     class << self
       def add vni, address = nil
         adapter.add vni, address
-	mtu = Configure.instance[ 'mtu' ]
-	if not mtu.nil? and mtu > 0
-	  adapter.mtu vni, mtu
-	end
+        mtu = Configure.instance[ 'mtu' ]
+        if not mtu.nil? and mtu > 0
+          adapter.mtu vni, mtu
+        end
       end
 
       def delete vni
