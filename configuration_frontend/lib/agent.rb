@@ -111,41 +111,6 @@ class Agent
       end
     end
 
-    def list parameters = {}
-
-      logger.debug "#{ __FILE__ }:#{ __LINE__ }: list of agents"
-
-      tunnel_endpoints = {}
-      DB::TunnelEndpoint.find( :all, :readonly => true ).each do | each |
-        tunnel_endpoints[ each.datapath_id.to_s ] = each.tep.to_s
-      end
-      DB::Agent.find( :all, :readonly => true ).collect do | each |
-        { :datapath_id => each.datapath_id.to_s, :control_uri => each.uri.to_s, :tunnel_endpoint => tunnel_endpoints[ each.datapath_id.to_s ] }
-      end
-    end
-
-    def show parameters
-      raise BadReuestError.new "Datapath id must be specified." if parameters[ :datapath_id ].nil?
-
-      datapath_id = convert_datapath_id parameters[ :datapath_id ]
-
-      logger.debug "#{ __FILE__ }:#{ __LINE__ }: show details of switch (datapath_id = #{ datapath_id })"
-
-      begin
-        agent = DB::Agent.find( datapath_id.to_i, :readonly => true )
-      rescue ActiveRecord::RecordNotFound
-        raise NotFoundError.new "Not found the specified agent (datapath id #{ datapath_id } is not exists)."
-      end
-
-      begin
-        tunnel_endpoint = DB::TunnelEndpoint.find( datapath_id.to_i, :readonly => true )
-      rescue ActiveRecord::RecordNotFound
-        raise NotFoundError.new "Not found the specified tunnel-endpoint (datapath id #{ datapath_id } is not exists)."
-      end
-
-      { :datapath_id => datapath_id.to_s, :control_uri => agent.uri.to_s, :tunnel_endpoint => tunnel_endpoint.tep.to_s }
-    end
-
     private
 
     def reset_slices slices, &a_proc

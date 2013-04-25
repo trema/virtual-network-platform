@@ -25,13 +25,10 @@ require 'rubygems'
 rescue LoadError
 end
 
-require 'agent'
 require 'configure'
 require 'db'
 require 'log'
 require 'network'
-require 'reflector'
-require 'switch'
 
 logger = Log.instance
 logger.level = Log::INFO
@@ -115,8 +112,6 @@ commands
     show-mac net_id id [address]     - Retrieve detail of the mac address
     add-mac net_id id address        - Create a mac address on the port
     delete-mac net_id id address     - Remove a mac address from the port
-    show-switch [datapath_id]        - Retrieve detail of the switch
-    show-switch-ports                - Retrieve detail of the switch ports
 EOS
 end
 
@@ -354,104 +349,6 @@ command 'delete-mac' do | args |
   puts "A MAC address is deleted successfully."
 end
 
-# Agent
-
-command 'show-switch' do | args |
-  parameters = {}
-  parameters[ :datapath_id ] = args.shift
-  help_and_exit "Too many arguments" unless args.size == 0
-  if parameters[ :datapath_id ].nil?
-    response = Agent.list( parameters )
-    if response.empty?
-      puts "No switches found."
-    else
-      response.each do | each |
-        display_agent each
-      end
-    end
-  else
-    response = Agent.show( parameters )
-    if response.empty?
-      puts "No switches found."
-    else
-      display_agent response
-    end
-  end
-end
-
-
-if ENV[ 'TEST_OF_REGISTRATION' ] == 'true'
-  command 'register-switch' do | args |
-    parameters = {}
-    parameters[ :datapath_id ] = args.shift or help_and_exit "Too few arguments"
-    parameters[ :control_uri ] = args.shift or help_and_exit "Too few arguments"
-    parameters[ :tunnel_endpoint ] = args.shift or help_and_exit "Too few arguments"
-    help_and_exit "Too many arguments" unless args.size == 0
-    Agent.register( parameters )
-    puts "A switch is registered successfully."
-  end
-end
-
-if ENV[ 'TEST_OF_UNRESET_SWITCH' ] == 'true'
-  command 'unregister-switch' do | args |
-    parameters = {}
-    parameters[ :datapath_id ] = args.shift or help_and_exit "Too few arguments"
-    help_and_exit "Too many arguments" unless args.size == 0
-    Agent.unregister( parameters )
-    puts "A switch is unregistered successfully."
-  end
-end
-
-if ENV[ 'TEST_OF_RESET_SWITCH' ] == 'true'
-  command 'reset-switch' do | args |
-    parameters = {}
-    parameters[ :datapath_id ] = args.shift or help_and_exit "Too few arguments"
-    parameters[ :action ] = 'reset'
-    help_and_exit "Too many arguments" unless args.size == 0
-    Agent.action( parameters )
-    puts "A switch is reset successfully."
-  end
-end
-
-# Reflector
-
-if ENV[ 'TEST_OF_REFLECTOR' ] == 'true'
-  command 'list-tep' do | args |
-    help_and_exit "Too many arguments" unless args.size == 0
-    response = Reflector.list
-    if response.empty?
-      puts "No tunnel-endpoints found."
-    else
-      response.each_pair do | slice_id, teps |
-        puts "[Slice Id: #{ slice_id }]"
-        puts "%-20s%s" % [ "IP address", "Port" ]
-        teps.each do | tep |
-          puts "%-20s%s" % [ tep[ :ip ], tep[ :port ] ]
-        end
-      end
-    end
-  end
-end
-
-# Switch
-
-command 'show-switch-ports' do | args |
-  parameters = {}
-  help_and_exit "Too many arguments" unless args.size == 0
-  response = Switch.list( parameters )
-  if response.empty?
-    puts "No switches found."
-  else
-    response.each_pair do | datapath_id, ports |
-      puts "[Datapath ID: #{ datapath_id }]"
-      puts "%-7s %s" % [ "Port no", "Name" ]
-      ports.each do | port |
-        puts "%7u %s" % [ port[ :port_no ], port[ :name ] ]
-      end
-    end
-  end
-end
-
 #
 
 def show_ports net_id, indent = "", datapath_id = nil
@@ -496,12 +393,6 @@ def display_mac_address response, indent = ""
   puts "#{ indent }Type: #{ response[ :type ] }" unless response[ :type ].nil?
   puts "#{ indent }State: #{ response[ :state ] }"
   puts "#{ indent }Updated At: #{ response[ :updated_at ] }"
-end
-
-def display_agent response
-  puts "[Datapath ID: #{ response[ :datapath_id ] }]"
-  puts "Uri: #{ response[ :control_uri ] }"
-  puts "Tunnel endpoint: #{ response[ :tunnel_endpoint ] }"
 end
 
 option.order! ARGV
