@@ -27,6 +27,7 @@ end
 
 require 'configure'
 require 'db'
+require 'internal'
 require 'log'
 require 'network'
 
@@ -103,7 +104,6 @@ commands
     show id                          - Show details of network
     destroy id                       - Remove the network
     reset id                         - Reset the network
-    failed id                        - Set to 'failed' status to the network
     show-port [--datapath-id=datapath_id] net_id [id]
                                      - Retrieve detail of the port
     create-port [--id=id] net_id datapath_id (number|name) [vid [description]]
@@ -217,6 +217,7 @@ command 'reset' do | args |
   puts "A slice is resetted successfully."
 end
 
+# failed: debug only
 command 'failed' do | args |
   parameters = {}
   parameters[ :id ] = args.shift or help_and_exit "Too few arguments"
@@ -258,15 +259,6 @@ command 'show-port' do | args |
     puts "[Mac addresses]"
     indent = "  "
     show_mac_addresses net_id, port_id, indent
-  end
-end
-
-command 'list-dpids' do | args |
-  help_and_exit "Too many arguments" unless args.size == 0
-  dpids = Network.list_dpids
-  puts "[Datapath ID]"
-  dpids.each do | datapath_id |
-    puts "#{ datapath_id }"
   end
 end
 
@@ -393,6 +385,66 @@ def display_mac_address response, indent = ""
   puts "#{ indent }Type: #{ response[ :type ] }" unless response[ :type ].nil?
   puts "#{ indent }State: #{ response[ :state ] }"
   puts "#{ indent }Updated At: #{ response[ :updated_at ] }"
+end
+
+# internal-x: debug only
+
+command 'internel-switch-list' do | args |
+  help_and_exit "Too many arguments" unless args.size == 0
+  desiplay_ids Internal::Switch.list
+end
+
+command 'internel-switch-show' do | args |
+  parameters = {}
+  parameters[ :id ] = args.shift or help_and_exit "Too few arguments"
+  help_and_exit "Too many arguments" unless args.size == 0
+  response = Internal::Switch.show( parameters )
+  puts "[ID: #{ response[ :id ] }]"
+  puts "Registered at: #{ response[ :registered_at ] }"
+  response = Internal::SwitchPort.list( parameters )
+  unless response.size == 0
+    puts "[Ports]"
+    response.each do | each |
+      puts "  [Port: #{ each[ :port_no ] } (#{ ( each[ :name ].blank? and "port-name-unknown" or each[ :name ] ) })]"
+      puts "  Registered at: #{ each[ :registered_at ] }"
+    end
+  end
+end
+
+command 'internel-agent-list' do | args |
+  help_and_exit "Too many arguments" unless args.size == 0
+  desiplay_ids Internal::VirtualNetworkAgent.list
+end
+
+command 'internel-agent-show' do | args |
+  parameters = {}
+  parameters[ :id ] = args.shift or help_and_exit "Too few arguments"
+  help_and_exit "Too many arguments" unless args.size == 0
+  response = Internal::VirtualNetworkAgent.show( parameters )
+  puts "[ID: #{ response[ :id ] }]"
+  puts "Uri: #{ response[ :uri ] }"
+end
+
+command 'internel-vtep-list' do | args |
+  help_and_exit "Too many arguments" unless args.size == 0
+  desiplay_ids Internal::VxlanTunnelEndpoint.list
+end
+
+command 'internel-vtep-show' do | args |
+  parameters = {}
+  parameters[ :id ] = args.shift or help_and_exit "Too few arguments"
+  help_and_exit "Too many arguments" unless args.size == 0
+  response = Internal::VxlanTunnelEndpoint.show( parameters )
+  puts "[ID: #{ response[ :id ] }]"
+  puts "Local address: #{ response[ :local_address ] }"
+  puts "Local port: #{ response[ :local_port ] }"
+end
+
+def desiplay_ids response
+  puts "ID"
+  response.each do | each |
+    puts "#{ each }"
+  end
 end
 
 option.order! ARGV

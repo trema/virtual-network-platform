@@ -527,14 +527,6 @@ class Network
       end
     end
 
-    def list_dpids parameters = {}
-      DB::Port.find( :all,
-                     :readonly => true,
-                     :select => 'DISTINCT datapath_id' ).collect do | each |
-        each.datapath_id
-      end
-    end
-
     private
 
     def update_transaction?
