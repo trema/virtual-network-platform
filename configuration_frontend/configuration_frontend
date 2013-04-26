@@ -594,6 +594,12 @@ class ConfigurationFrontend < Sinatra::Base
       config[ 'log_file' ] = nil
     end
   end
+  option.on( '--log-file-count=arg', "Log file count (default '#{ config[ 'log_file_count' ] }')" ) do | arg |
+    config[ 'log_file_count' ] = arg
+  end
+  option.on( '--log-file-size=arg', "Log file size (default '#{ config[ 'log_file_size' ] }')" ) do | arg |
+    config[ 'log_file_size' ] = arg
+  end
   option.on( '-b', '--[no-]daemon', "Daemonize (default '#{ config[ 'daemon' ] }')" ) do | arg |
     config[ 'daemon' ] = arg
   end
@@ -621,6 +627,8 @@ class ConfigurationFrontend < Sinatra::Base
     puts option.help
     exit 1
   end
+  logger.shift_age = config[ 'log_file_count' ].to_i unless config[ 'log_file_count' ].nil?
+  logger.shift_size = config[ 'log_file_size' ].to_i unless config[ 'log_file_size' ].nil?
   logger.log_file = config[ 'log_file' ] unless config[ 'log_file' ].nil?
   set :port, config[ 'listen_port' ]
   set :bind, config[ 'listen_address' ]

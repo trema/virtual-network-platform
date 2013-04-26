@@ -21,12 +21,16 @@ require 'singleton'
 class Log < Logger
   include Singleton
 
+  attr_accessor :shift_age, :shift_size
+
   def initialize
     super( STDOUT )
     @level = INFO
     @formatter = Formatter.new
     @formatter.datetime_format = "%Y-%m-%d %H:%M:%S"
     @log_file = nil
+    @shift_age = 0
+    @shift_size = 1048576
   end
 
   def write message
@@ -39,7 +43,7 @@ class Log < Logger
     if log_file.nil?
       log_file = STDOUT
     end
-    @logdev = LogDevice.new( log_file, :shift_age => 0, :shift_size => 1048576 ) # TODO: read from the configuration settings
+    @logdev = LogDevice.new( log_file, :shift_age => @shift_age, :shift_size => @shift_size )
   end
 
   private

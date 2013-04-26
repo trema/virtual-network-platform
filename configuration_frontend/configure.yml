@@ -19,6 +19,8 @@ listen_address: 0.0.0.0
 daemon: true
 pid_file: /var/run/configuration_frontend.pid
 log_file: /var/log/configuration_frontend.log
+log_file_count: 0
+log_file_size: 1048576
 db:
   adapter: mysql
   host: localhost
