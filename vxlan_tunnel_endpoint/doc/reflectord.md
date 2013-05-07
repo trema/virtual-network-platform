@@ -23,7 +23,7 @@ The following options are not mandatory arugments.
 
   * `-p`, `--port`=UDP_PORT:
     Specify a UDP port for receiving VXLAN packets in decimal.
-    If omitted, default port number (8472) is chosen.
+    If omitted, default port number (4789) is chosen.
 
   * `-s`, `--syslog`:
     Output log messages to syslog.
