@@ -5,6 +5,8 @@ and manage VXLAN-based virtual networks with a single centralized
 management point. The centralized management point provides a REST-based
 interface for managing the virtual networks.
 
+Don't Abbreviate Virtual Network Platform as VNP.
+
 # How does it work?
 
 VXLAN-based virtual networks are managed with the following system
@@ -80,7 +82,16 @@ work expectedly.
 Getting a copy of the git repository.
 
         $ sudo apt-get install git
-        $ git clone --recurse-submodules git://github.com/trema/virtual-network-platform.git
+        $ git clone --recurse-submodules \
+        git://github.com/trema/virtual-network-platform.git
+        $ cd virtual-network-platform
+
+        HTTP cloning:
+        $ git clone http://github.com/trema/virtual-network-platform.git
+        $ cd virtual-network-platform
+        $ git config submodule.trema.url http://github.com/trema/trema.git
+        $ git submodule init
+        $ git submodule update
 
 ## Setup
 
