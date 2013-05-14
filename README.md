@@ -5,7 +5,7 @@ and manage VXLAN-based virtual networks with a single centralized
 management point. The centralized management point provides a REST-based
 interface for managing the virtual networks.
 
-Don't Abbreviate Virtual Network Platform as VNP.
+Don't abbreviate Virtual Network Platform as VNP.
 
 # How does it work?
 
