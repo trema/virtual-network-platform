@@ -255,6 +255,19 @@ class Network
                                                                   datapath_id.to_i, port_name, vid ] )
       end
 
+      # debug
+      agent = DB::Agent.find( datapath_id.to_i )
+      logger.debug "agent #{ agent.nil? ? "not " : "" }found (datapath_id = #{ datapath_id })"
+      if port_no != DB::PORT_NO_UNDEFINED
+        # check of port_no
+        conditions = [ "datapath_id = ? AND port_no = ?", datapath_id.to_i, port_no ]
+      else
+        # check of port_name
+        conditions = [ "datapath_id = ? AND name = ?", datapath_id.to_i, port_name ]
+      end
+      port = DB::SwitchPort.find( :first, :readonly => true, :conditions => conditions )
+      logger.debug "switch port #{ port.nil? ? "not " : "" }found (datapath_id = #{ datapath_id }, port_no = #{ port_no }, port_name = '#{ port_name }')"
+
       # create port
       update_slice slice_id, update_transaction? do
         port = DB::Port.new
