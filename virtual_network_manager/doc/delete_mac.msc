@@ -36,22 +36,22 @@ msc {
   VNM => DB [ label = "Set MAC state to DELETING" ];
   DB => VNM [ label = "Succeeded" ];
 
-  VNM => SD [ label = "Flow Mod - Delete Strict (table=0,pri=255,match=[in_port=Phn,dl_dst=Mhn])" ];
-  SD => SW [ label = "Flow Mod - Delete Strict (table=0,pri=255,match=[in_port=Phn,dl_dst=Mhn])" ];
+  VNM => SD [ label = "Flow Mod - Delete Strict (table=0,pri=512,match=[in_port=Phn,dl_dst=Mhn])" ];
+  SD => SW [ label = "Flow Mod - Delete Strict (table=0,pri=512,match=[in_port=Phn,dl_dst=Mhn])" ];
   VNM => SD [ label = "Barrier Request" ];
   SD => SW [ label = "Barrier Request" ];
   SW => SD [ label = "Barrier Reply" ];
   SD => VNM [ label = "Barrier Reply" ];
 
-  VNM => SD [ label = "Flow Mod - Delete Strict (table=2,pri=255,match=[reg0=slice_id,dl_dst=Mhn],output=Phn)" ];
-  SD => SW [ label = "Flow Mod - Delete Strict (table=2,pri=255,match=[reg0=slice_id,dl_dst=Mhn],output=Phn)" ];
+  VNM => SD [ label = "Flow Mod - Delete Strict (table=2,pri=512,match=[reg0=slice_id,dl_dst=Mhn],output=Phn)" ];
+  SD => SW [ label = "Flow Mod - Delete Strict (table=2,pri=512,match=[reg0=slice_id,dl_dst=Mhn],output=Phn)" ];
   VNM => SD [ label = "Barrier Request" ];
   SD => SW [ label = "Barrier Request" ];
   SW => SD [ label = "Barrier Reply" ];
   SD => VNM [ label = "Barrier Reply" ];
 
-  VNM => SD [ label = "Flow Mod - Delete Strict (table=2,pri=255,match=[reg0=slice_id,dl_dst=Mhn],output=Pv)" ];
-  SD => RSW [ label = "Flow Mod - Delete Strict (table=2,pri=255,match=[reg0=slice_id,dl_dst=Mhn],output=Pv)" ];
+  VNM => SD [ label = "Flow Mod - Delete Strict (table=2,pri=512,match=[reg0=slice_id,dl_dst=Mhn],output=Pv)" ];
+  SD => RSW [ label = "Flow Mod - Delete Strict (table=2,pri=512,match=[reg0=slice_id,dl_dst=Mhn],output=Pv)" ];
   VNM => SD [ label = "Barrier Request" ];
   SD => RSW [ label = "Barrier Request" ];
   RSW => SD [ label = "Barrier Reply" ];
