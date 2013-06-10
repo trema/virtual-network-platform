@@ -1,3 +1,7 @@
+--
+-- Copyright (C) 2012-2013 NEC Corporation
+--
+
 use vnet;
 
 create table agents (
