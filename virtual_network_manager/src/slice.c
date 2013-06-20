@@ -2042,7 +2042,7 @@ add_transactions_to_install_port_flow_entries( uint64_t datapath_id, uint32_t sl
       debug( "  --> output port = %u ( name = %s, vid = %#x )", out_port->port_no, out_port->port_name, out_port->vid );
 
       if ( valid_vlan_id( out_port->vid ) ) {
-        if ( previous_vid != out_port->vid ) {
+        if ( !tagged || previous_vid != out_port->vid ) {
           append_action_set_vlan_vid( actions, out_port->vid );
           previous_vid = out_port->vid;
         }
