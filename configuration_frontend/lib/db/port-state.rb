@@ -56,7 +56,7 @@ module DB
     end
 
     def ==( other )
-      other.to_i == @state
+      @state == other.to_i
     end
 
     def failed?

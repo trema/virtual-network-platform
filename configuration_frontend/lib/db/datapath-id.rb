@@ -47,7 +47,15 @@ module DB
     end
 
     def ==( other )
-      other.to_i == @dpid
+      @dpid == other.to_i
+    end
+
+    def eql? other
+      @dpid.eql? other.to_i
+    end
+
+    def hash
+      @dpid.hash
     end
 
   end

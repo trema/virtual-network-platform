@@ -29,7 +29,7 @@ module DB
     end
 
     def ==( other )
-      other.to_s == @uri
+      @uri == other.to_s
     end
 
   end

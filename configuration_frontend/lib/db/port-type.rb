@@ -41,7 +41,7 @@ module DB
     end
 
     def ==( other )
-      other.to_i == @type
+      @type == other.to_i
     end
 
   end

@@ -56,7 +56,7 @@ module DB
     end
 
     def ==( other )
-      other.ip_address == @ip_address and other.port == @port
+      @ip_address == other.ip_address and @port == other.port
     end
 
   end

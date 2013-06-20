@@ -49,7 +49,15 @@ module DB
     end
 
     def ==( other )
-      other.to_i == @mac
+      @mac == other.to_i
+    end
+
+    def eql? other
+      @mac.eql? other.to_i
+    end
+
+    def hash
+      @mac.hash
     end
 
   end
