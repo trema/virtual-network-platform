@@ -1997,6 +1997,9 @@ add_transactions_to_install_port_flow_entries( uint64_t datapath_id, uint32_t sl
     if ( valid_vlan_id( port->vid ) ) {
       append_ovs_match_vlan_tci( match, ( 1 << 12 ) | port->vid, 0x1fff );
     }
+    else {
+      append_ovs_match_vlan_tci( match, 0, 0 );
+    }
     openflow_actions *actions = create_actions();
     append_ovs_action_reg_load( actions, 0, 32, OVSM_OVS_REG0, slice_id );
     // FIXME: hard-coded table id
@@ -2051,6 +2054,7 @@ add_transactions_to_install_port_flow_entries( uint64_t datapath_id, uint32_t sl
       else {
         if ( tagged ) {
           append_action_strip_vlan( actions );
+          previous_vid = OFP_VLAN_NONE;
         }
         tagged = false;
       }
@@ -2068,6 +2072,9 @@ add_transactions_to_install_port_flow_entries( uint64_t datapath_id, uint32_t sl
     append_ovs_match_in_port( match, port->port_no );
     if ( valid_vlan_id( port->vid ) ) {
       append_ovs_match_vlan_tci( match, ( 1 << 12 ) | port->vid, 0x1fff );
+    }
+    else {
+      append_ovs_match_vlan_tci( match, 0, 0 );
     }
 
     // FIXME: hard-coded table id and priority
@@ -2122,6 +2129,9 @@ add_transactions_to_delete_port_flow_entries( uint64_t datapath_id, uint32_t sli
     if ( valid_vlan_id( port->vid ) ) {
       append_ovs_match_vlan_tci( match, ( 1 << 12 ) | port->vid, 0x1fff );
     }
+    else {
+      append_ovs_match_vlan_tci( match, 0, 0 );
+    }
 
     // FIXME: hard-coded table id and priority
     const uint8_t table_id = 0;
@@ -2153,6 +2163,10 @@ add_transactions_to_delete_port_flow_entries( uint64_t datapath_id, uint32_t sli
     if ( valid_vlan_id( port->vid ) ) {
       append_ovs_match_vlan_tci( match, ( 1 << 12 ) | port->vid, 0x1fff );
     }
+    else {
+      append_ovs_match_vlan_tci( match, 0, 0 );
+    }
+
     // FIXME: hard-coded table id and priority
     const uint8_t table_id = 2;
     const uint16_t priority = 128;
@@ -2262,8 +2276,12 @@ add_transactions_to_install_mac_flow_entries( uint64_t datapath_id, uint32_t sli
       if ( valid_vlan_id( port->vid ) ) {
         append_ovs_match_vlan_tci( match, ( 1 << 12 ) | port->vid, 0x1fff );
       }
+      else {
+        append_ovs_match_vlan_tci( match, 0, 0 );
+      }
       append_ovs_match_eth_dst( match, addr, mask );
 
+      // FIXME: hard-coded table id and priority
       table_id = 0;
       priority = 512;
       flow_mod = create_ovs_flow_mod( get_transaction_id(), slice_id, OFPFC_MODIFY_STRICT,
@@ -2379,6 +2397,9 @@ add_transactions_to_delete_mac_flow_entries( uint64_t datapath_id, uint32_t slic
       append_ovs_match_in_port( match, port->port_no );
       if ( valid_vlan_id( port->vid ) ) {
         append_ovs_match_vlan_tci( match, ( 1 << 12 ) | port->vid, 0x1fff );
+      }
+      else {
+        append_ovs_match_vlan_tci( match, 0, 0 );
       }
       append_ovs_match_eth_dst( match, addr, mask );
 
