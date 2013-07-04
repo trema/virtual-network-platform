@@ -111,6 +111,7 @@ build Trema before building Virtual Network Manager.
 
         $ sudo apt-get install gcc make ruby rubygems ruby-dev libpcap-dev \
         libsqlite3-dev
+        $ sudo gem install --remote paper-house
         $ cd trema
         $ ./build.rb
         $ mkdir -p tmp/log tmp/sock tmp/pid
@@ -210,7 +211,12 @@ Set the directory that the Configuration Frontend executable exists.
 
 1. Install Open vSwitch
 
+        DKMS version:
         $ sudo apt-get install openvswitch-switch openvswitch-datapath-dkms
+
+        module-assistant version:
+        $ sudo apt-get install openvswitch-switch openvswitch-datapath-source
+        $ sudo module-assistant auto-install openvswitch-datapath
 
 3. Create switch instance and add switch ports
 
