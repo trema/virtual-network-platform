@@ -316,7 +316,7 @@ Tunnel endpoint address.
 ## How to manage virtual networks?
 
 Here are simple examples that show how to manage virtual networks.
-Please see files under doc/api for extended examples.
+Please see files under [doc/api](doc/api/api.html) for extended examples.
 
 ### Create a virtual network
 
