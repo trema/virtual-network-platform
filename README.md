@@ -141,15 +141,15 @@ build Trema before building Virtual Network Manager.
         $ sudo chmod 600 /etc/default/virtual_network_manager
         $ sudo cp virtual_network_manager/config/trema /etc/default
 
-Set the directory that the Virtual Network Manager executable exists.
+    Set the directory that the Virtual Network Manager executable exists.
 
-- /etc/default/virtual\_network\_manager
+    - /etc/default/virtual\_network\_manager
 
         VIRTUAL_NETWORK_MANAGER_DIR="/somewhere/virtual_network_manager/src"
 
-Also, set the directory that Trema exists.
+    Also, set the directory that Trema exists.
 
-- /etc/default/trema
+    - /etc/default/trema
 
         TREMA_HOME="/somewhere/trema"
 
@@ -158,9 +158,10 @@ Also, set the directory that Trema exists.
 1. Install MySQL server and client
 
         $ sudo apt-get install mysql-server mysql-client
-During the installation process, you may be asked to set password for
-the MySQL "root" user. We assume here that the password is set to
-"root123".
+
+    During the installation process, you may be asked to set password for
+    the MySQL "root" user. We assume here that the password is set to
+    "root123".
 
 2. Add privileges to "root"
 
@@ -193,11 +194,12 @@ the MySQL "root" user. We assume here that the password is set to
 
         $ sudo cp configuration_frontend/config/configuration_frontend \
         /etc/default
-Edit the configuration file as follows:
 
-Set the directory that the Configuration Frontend executable exists.
+    Edit the configuration file as follows:
 
-- /etc/default/configuration\_frontend
+    Set the directory that the Configuration Frontend executable exists.
+
+    - /etc/default/configuration\_frontend
 
         CONFIGURATION_FRONTEND_DIR="/somewhere/configuration_frontend"
 
@@ -230,11 +232,11 @@ Set the directory that the Configuration Frontend executable exists.
         other-config:datapath-id=[datapath id in hex]
         $ sudo ovs-vsctl set-controller br0 tcp:192.168.16.254
         $ sudo ovs-vsctl set-fail-mode br0 secure
-Datapath id must be a 64-bit unique identifier for specifying the
-switch instance. You need to assign a unique identifier for each
-switch instance. Note hat datapath id may be specified with 16 digits
-hexadecimal without "0x" prefix (e.g. 0000000000000001).
 
+    Datapath id must be a 64-bit unique identifier for specifying the
+    switch instance. You need to assign a unique identifier for each
+    switch instance. Note hat datapath id may be specified with 16 digits
+    hexadecimal without "0x" prefix (e.g. 0000000000000001).
 
 4. Restart Open vSwitch
 
@@ -257,8 +259,9 @@ hexadecimal without "0x" prefix (e.g. 0000000000000001).
 3. Setup configuration file
 
         $ sudo cp vxlan_tunnel_endpoint/config/vxland /etc/default
-Edit the configuration file (/etc/default/vxland). Set the directory
-that the executable (vxland) exists.
+
+    Edit the configuration file (/etc/default/vxland). Set the directory
+    that the executable (vxland) exists.
 
         VXLAND_DIR="/somewhere/vxlan_tunnel_endpoint/src"
 
@@ -282,32 +285,31 @@ that the executable (vxland) exists.
 
         $ sudo cp virtual_network_agent/config/virtual_network_agent \
         /etc/default
-Edit the configuration files as follows:
 
-Set the directory that the Virtual Network Agent executable exists.
+    Edit the configuration files as follows:
 
-- /etc/default/virtual\_network\_agent
+    Set the directory that the Virtual Network Agent executable exists.
 
+    - /etc/default/virtual\_network\_agent
 
         VIRTUAL_NETWORK_AGENT_DIR="/somewhere/virtual_network_agent"
 
+   Set the Configuration Frontend URL, Virtual Network Agent URL and
+   Tunnel endpoint address.
 
-Set the Configuration Frontend URL, Virtual Network Agent URL and
-Tunnel endpoint address.
+    - /somewhere/virtual\_network\_agent/tunnel\_endpoint\_configure.yml
 
-- /somewhere/virtual\_network\_agent/tunnel\_endpoint\_configure.yml
+       * Set the Configuration Frontend URL for registration.
 
-* Set the Configuration Frontend URL for registration.
+                controller_uri: http://10.0.0.1:8081/
 
-        controller_uri: http://10.0.0.1:8081/
+       * Set the Virtual Network Agent URL for incoming connections.
 
-* Set the Virtual Network Agent URL for incoming connections.
+                uri: http://10.0.0.2:8082/
 
-        uri: http://10.0.0.2:8082/
+       * Set the VXLAN tunnel endpoint address.
 
-* Set the VXLAN tunnel endpoint address.
-
-        tunnel_endpoint: 10.0.0.2
+                tunnel_endpoint: 10.0.0.2
 
 4. Start Virtual Network Agent
 
