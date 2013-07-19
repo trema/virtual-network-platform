@@ -575,10 +575,10 @@ class ConfigurationFrontend < Sinatra::Base
     db_config[ 'password' ] = arg
   end
   option.on( '--address=arg', "Listen address (default '#{ config[ 'listen_address' ] }')" ) do | arg |
-    config[ 'listen-address' ] = arg
+    config[ 'listen_address' ] = arg
   end
   option.on( '--port=arg', "Listen port number (default '#{ config[ 'listen_port' ] }')" ) do | arg |
-    config[ 'listen-port' ] = arg
+    config[ 'listen_port' ] = arg
   end
   option.on( '--[no-]pid-file=arg', "Pid file (default '#{ config[ 'pid_file' ] }')" ) do | arg |
     if arg
