@@ -57,8 +57,8 @@ class OverlayNetwork
     end
 
     def create parameters
-      raise BadReuestError.new "Vni must be specified." if parameters[ :vni ].nil?
-      raise BadReuestError.new "Broadcast address must be specified." if parameters[ :broadcast ].nil?
+      raise BadRequestError.new "Vni must be specified." if parameters[ :vni ].nil?
+      raise BadRequestError.new "Broadcast address must be specified." if parameters[ :broadcast ].nil?
 
       vni = convert_vni parameters[ :vni ]
       broadcast_address = convert_broadcast_address parameters[ :broadcast ]
@@ -82,7 +82,7 @@ class OverlayNetwork
     end
 
     def destroy parameters
-      raise BadReuestError.new "Vni must be specified." if parameters[ :vni ].nil?
+      raise BadRequestError.new "Vni must be specified." if parameters[ :vni ].nil?
 
       vni = convert_vni parameters[ :vni ]
 

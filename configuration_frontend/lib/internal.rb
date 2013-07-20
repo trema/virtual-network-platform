@@ -31,7 +31,7 @@ module Internal
       end
 
       def show parameters
-        raise BadReuestError.new "Datapath id must be specified." if parameters[ :id ].nil?
+        raise BadRequestError.new "Datapath id must be specified." if parameters[ :id ].nil?
 
         datapath_id = convert_datapath_id parameters[ :id ]
 
@@ -50,7 +50,7 @@ module Internal
   class SwitchPort
     class << self
       def list parameters
-	raise BadReuestError.new "Datapath id must be specified." if parameters[ :id ].nil?
+	raise BadRequestError.new "Datapath id must be specified." if parameters[ :id ].nil?
 
 	datapath_id = convert_datapath_id parameters[ :id ]
 
@@ -74,7 +74,7 @@ module Internal
       end
 
       def show parameters
-        raise BadReuestError.new "Datapath id must be specified." if parameters[ :id ].nil?
+        raise BadRequestError.new "Datapath id must be specified." if parameters[ :id ].nil?
 
         datapath_id = convert_datapath_id parameters[ :id ]
 
@@ -99,7 +99,7 @@ module Internal
       end
 
       def show parameters
-        raise BadReuestError.new "Datapath id must be specified." if parameters[ :id ].nil?
+        raise BadRequestError.new "Datapath id must be specified." if parameters[ :id ].nil?
 
         datapath_id = convert_datapath_id parameters[ :id ]
 

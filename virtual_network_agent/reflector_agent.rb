@@ -60,10 +60,10 @@ class ReflectorAgent < Sinatra::Base
       parameters = JSON.parse( body, :symbolize_names => true )
     rescue => e
       logger.debug "body = '#{ body }'"
-      raise BadReuestError.new e.message
+      raise BadRequestError.new e.message
     end
     requires.each do | each |
-      raise BadReuestError.new unless parameters.has_key? each
+      raise BadRequestError.new unless parameters.has_key? each
     end
     parameters
   end

@@ -25,7 +25,7 @@ class NetworkAgentError < StandardError
 
 end
 
-class BadReuestError < NetworkAgentError
+class BadRequestError < NetworkAgentError
   def initialize( message = "Bad Request." )
     super( message )
     @code = 400

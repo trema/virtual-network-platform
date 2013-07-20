@@ -64,8 +64,8 @@ class Network
     end
 
     def update parameters
-      raise BadReuestError.new "Slice id must be specified." if parameters[ :id ].nil?
-      raise BadReuestError.new "Description must be specified." if parameters[ :description ].nil?
+      raise BadRequestError.new "Slice id must be specified." if parameters[ :id ].nil?
+      raise BadRequestError.new "Description must be specified." if parameters[ :description ].nil?
 
       slice_id = convert_slice_id parameters[ :id ]
       description = convert_description parameters[ :description ]
@@ -84,7 +84,7 @@ class Network
     end
 
     def destroy parameters
-      raise BadReuestError.new "Slice id must be specified." if parameters[ :id ].nil?
+      raise BadRequestError.new "Slice id must be specified." if parameters[ :id ].nil?
 
       slice_id = convert_slice_id parameters[ :id ]
 
@@ -137,7 +137,7 @@ class Network
     end
 
     def show parameters
-      raise BadReuestError.new "Slice id must be specified." if parameters[ :id ].nil?
+      raise BadRequestError.new "Slice id must be specified." if parameters[ :id ].nil?
 
       slice_id = convert_slice_id parameters[ :id ]
 
@@ -150,7 +150,7 @@ class Network
     end
 
     def reset parameters
-      raise BadReuestError.new "Slice id must be specified." if parameters[ :id ].nil?
+      raise BadRequestError.new "Slice id must be specified." if parameters[ :id ].nil?
 
       slice_id = convert_slice_id parameters[ :id ]
 
@@ -169,7 +169,7 @@ class Network
     end
 
     def failed parameters
-      raise BadReuestError.new "Slice id must be specified." if parameters[ :id ].nil?
+      raise BadRequestError.new "Slice id must be specified." if parameters[ :id ].nil?
 
       slice_id = convert_slice_id parameters[ :id ]
 
@@ -194,7 +194,7 @@ class Network
     end
 
     def update_transaction_end parameters
-      raise BadReuestError.new "Slice id must be specified." if parameters[ :id ].nil?
+      raise BadRequestError.new "Slice id must be specified." if parameters[ :id ].nil?
 
       slice_id = convert_slice_id parameters[ :id ]
 
@@ -214,9 +214,9 @@ class Network
 
     def create_port parameters
       # require param.
-      raise BadReuestError.new "Slice id must be specified." if parameters[ :net_id ].nil?
-      raise BadReuestError.new "Datapath id must be specified." if parameters[ :datapath_id ].nil?
-      raise BadReuestError.new "Port number or name is required." if parameters[ :number ].nil? and parameters[ :name ].nil?
+      raise BadRequestError.new "Slice id must be specified." if parameters[ :net_id ].nil?
+      raise BadRequestError.new "Datapath id must be specified." if parameters[ :datapath_id ].nil?
+      raise BadRequestError.new "Port number or name is required." if parameters[ :number ].nil? and parameters[ :name ].nil?
       if not parameters[ :number ].nil? and not parameters[ :name ].nil?
         raise UnprocessableEntityError.new "Port number and name are exclusive and one of them must be provided."
       end
@@ -288,7 +288,7 @@ class Network
     end
 
     def show_ports parameters
-      raise BadReuestError.new "Slice id must be specified." if parameters[ :net_id ].nil?
+      raise BadRequestError.new "Slice id must be specified." if parameters[ :net_id ].nil?
       slice_id = convert_slice_id parameters[ :net_id ]
       datapath_id = convert_datapath_id parameters[ :datapath_id ]
 
@@ -321,8 +321,8 @@ class Network
     end
 
     def show_port parameters
-      raise BadReuestError.new "Slice id must be specified." if parameters[ :net_id ].nil?
-      raise BadReuestError.new "Port id must be specified." if parameters[ :id ].nil?
+      raise BadRequestError.new "Slice id must be specified." if parameters[ :net_id ].nil?
+      raise BadRequestError.new "Port id must be specified." if parameters[ :id ].nil?
       slice_id = convert_slice_id parameters[ :net_id ]
       port_id = convert_port_id parameters[ :id ]
 
@@ -353,8 +353,8 @@ class Network
 
     def delete_port parameters
       # require param.
-      raise BadReuestError.new "Slice id must be specified." if parameters[ :net_id ].nil?
-      raise BadReuestError.new "Port id must be specified." if parameters[ :id ].nil?
+      raise BadRequestError.new "Slice id must be specified." if parameters[ :net_id ].nil?
+      raise BadRequestError.new "Port id must be specified." if parameters[ :id ].nil?
 
       # validate and convert
       port_id = convert_port_id parameters[ :id ]
@@ -381,9 +381,9 @@ class Network
 
     def create_mac_address parameters
       # require param.
-      raise BadReuestError.new "Slice id must be specified." if parameters[ :net_id ].nil?
-      raise BadReuestError.new "Port id must be specified." if parameters[ :id ].nil?
-      raise BadReuestError.new "Mac address must be specified." if parameters[ :address ].nil?
+      raise BadRequestError.new "Slice id must be specified." if parameters[ :net_id ].nil?
+      raise BadRequestError.new "Port id must be specified." if parameters[ :id ].nil?
+      raise BadRequestError.new "Mac address must be specified." if parameters[ :address ].nil?
 
       # validate and convert
       slice_id = convert_slice_id parameters[ :net_id ]
@@ -430,8 +430,8 @@ class Network
     end
 
     def show_mac_addresses parameters
-      raise BadReuestError.new "Slice id must be specified." if parameters[ :net_id ].nil?
-      raise BadReuestError.new "Port id must be specified." if parameters[ :id ].nil?
+      raise BadRequestError.new "Slice id must be specified." if parameters[ :net_id ].nil?
+      raise BadRequestError.new "Port id must be specified." if parameters[ :id ].nil?
 
       slice_id = convert_slice_id parameters[ :net_id ]
       port_id = convert_port_id parameters[ :id ]
@@ -462,9 +462,9 @@ class Network
     end
 
     def show_mac_address parameters
-      raise BadReuestError.new "Slice id must be specified." if parameters[ :net_id ].nil?
-      raise BadReuestError.new "Port id must be specified." if parameters[ :id ].nil?
-      raise BadReuestError.new "Mac address must be specified." if parameters[ :address ].nil?
+      raise BadRequestError.new "Slice id must be specified." if parameters[ :net_id ].nil?
+      raise BadRequestError.new "Port id must be specified." if parameters[ :id ].nil?
+      raise BadRequestError.new "Mac address must be specified." if parameters[ :address ].nil?
 
       slice_id = convert_slice_id parameters[ :net_id ]
       port_id = convert_port_id parameters[ :id ]
@@ -479,8 +479,8 @@ class Network
     end
 
     def show_remote_mac_addresses parameters
-      raise BadReuestError.new "Slice id must be specified." if parameters[ :net_id ].nil?
-      raise BadReuestError.new "Mac address must be specified." if parameters[ :address ].nil?
+      raise BadRequestError.new "Slice id must be specified." if parameters[ :net_id ].nil?
+      raise BadRequestError.new "Mac address must be specified." if parameters[ :address ].nil?
 
       slice_id = convert_slice_id parameters[ :net_id ]
       mac = convert_mac parameters[ :address ]
@@ -509,9 +509,9 @@ class Network
     end
 
     def delete_mac_address parameters
-      raise BadReuestError.new "Slice id must be specified." if parameters[ :net_id ].nil?
-      raise BadReuestError.new "Port id must be specified." if parameters[ :id ].nil?
-      raise BadReuestError.new "Mac address must be specified." if parameters[ :address ].nil?
+      raise BadRequestError.new "Slice id must be specified." if parameters[ :net_id ].nil?
+      raise BadRequestError.new "Port id must be specified." if parameters[ :id ].nil?
+      raise BadRequestError.new "Mac address must be specified." if parameters[ :address ].nil?
 
       slice_id = convert_slice_id parameters[ :net_id ]
       port_id = convert_port_id parameters[ :id ]

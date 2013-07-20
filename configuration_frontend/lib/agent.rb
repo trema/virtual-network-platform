@@ -23,9 +23,9 @@ require 'log'
 class Agent
   class << self
     def register parameters
-      raise BadReuestError.new "Datapath id must be specified." if parameters[ :datapath_id ].nil?
-      raise BadReuestError.new "Agent uri must be specified." if parameters[ :control_uri ].nil?
-      raise BadReuestError.new "Tunnel end point must be specified." if parameters[ :tunnel_endpoint ].nil?
+      raise BadRequestError.new "Datapath id must be specified." if parameters[ :datapath_id ].nil?
+      raise BadRequestError.new "Agent uri must be specified." if parameters[ :control_uri ].nil?
+      raise BadRequestError.new "Tunnel end point must be specified." if parameters[ :tunnel_endpoint ].nil?
 
       datapath_id = convert_datapath_id parameters[ :datapath_id ]
       uri = convert_uri parameters[ :control_uri ]
@@ -59,11 +59,11 @@ class Agent
     end
 
     def action parameters
-      raise BadReuestError.new "Datapath id must be specified." if parameters[ :datapath_id ].nil?
-      raise BadReuestError.new "Action must be specified." if parameters[ :action ].nil?
+      raise BadRequestError.new "Datapath id must be specified." if parameters[ :datapath_id ].nil?
+      raise BadRequestError.new "Action must be specified." if parameters[ :action ].nil?
 
       datapath_id = convert_datapath_id parameters[ :datapath_id ]
-      raise BadReuestError.new "action (#{ parameters[ :action ] }) is illegal request." unless /^reset$/i =~ parameters[ :action ]
+      raise BadRequestError.new "action (#{ parameters[ :action ] }) is illegal request." unless /^reset$/i =~ parameters[ :action ]
 
       logger.debug "#{ __FILE__ }:#{ __LINE__ }: action='reset' (datapath_id = #{ datapath_id })"
 
@@ -95,7 +95,7 @@ class Agent
     end
 
     def unregister parameters
-      raise BadReuestError.new "Datapath id must be specified." if parameters[ :datapath_id ].nil?
+      raise BadRequestError.new "Datapath id must be specified." if parameters[ :datapath_id ].nil?
 
       datapath_id = convert_datapath_id parameters[ :datapath_id ]
 

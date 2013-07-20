@@ -25,7 +25,7 @@ class NetworkManagementError < StandardError
 
 end
 
-class BadReuestError < NetworkManagementError
+class BadRequestError < NetworkManagementError
   def initialize( message = "Bad Request." )
     super( message )
     @code = 400

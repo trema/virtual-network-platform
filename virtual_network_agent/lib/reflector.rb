@@ -39,7 +39,7 @@ class Reflector
     end
 
     def list_endpoints parameters
-      raise BadReuestError.new "Vni must be specified." if parameters[ :vni ].nil?
+      raise BadRequestError.new "Vni must be specified." if parameters[ :vni ].nil?
 
       vni = convert_vni parameters[ :vni ]
 
@@ -51,9 +51,9 @@ class Reflector
     end
 
     def add_endpoint parameters
-      raise BadReuestError.new "Vni must be specified." if parameters[ :vni ].nil?
-      raise BadReuestError.new "IP address must be specified." if parameters[ :ip ].nil?
-      raise BadReuestError.new "Port number must be specified." if parameters[ :port ].nil?
+      raise BadRequestError.new "Vni must be specified." if parameters[ :vni ].nil?
+      raise BadRequestError.new "IP address must be specified." if parameters[ :ip ].nil?
+      raise BadRequestError.new "Port number must be specified." if parameters[ :port ].nil?
 
       vni = convert_vni parameters[ :vni ]
       address = convert_address parameters[ :ip ]
@@ -66,8 +66,8 @@ class Reflector
     end
 
     def delete_endpoint parameters
-      raise BadReuestError.new "Vni must be specified." if parameters[ :vni ].nil?
-      raise BadReuestError.new "IP address must be specified." if parameters[ :ip ].nil?
+      raise BadRequestError.new "Vni must be specified." if parameters[ :vni ].nil?
+      raise BadRequestError.new "IP address must be specified." if parameters[ :ip ].nil?
 
       vni = convert_vni parameters[ :vni ]
       address = convert_address parameters[ :ip ]
@@ -95,8 +95,8 @@ class Reflector
       tunnel_endpoints.each_pair do | vni, teps |
         vni = convert_vni vni.to_s
         teps.each do | tep |
-          raise BadReuestError.new "IP address must be specified." if tep[ :ip ].nil?
-          raise BadReuestError.new "Port number must be specified." if tep[ :port ].nil?
+          raise BadRequestError.new "IP address must be specified." if tep[ :ip ].nil?
+          raise BadRequestError.new "Port number must be specified." if tep[ :port ].nil?
 
           address = convert_address tep[ :ip ]
           port = convert_port tep[ :port ]

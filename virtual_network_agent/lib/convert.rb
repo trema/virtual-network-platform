@@ -30,7 +30,7 @@ def convert_integer value
     when /^0[Xx][[:xdigit:]]+$/
       i = value.hex
     else
-      raise BadReuestError.new "Integer (#{ value }) is illegal format."
+      raise BadRequestError.new "Integer (#{ value }) is illegal format."
   end
   i
 end
@@ -42,11 +42,11 @@ def convert_vni value
 
   begin
     i = convert_integer value
-  rescue BadReuestError
-    raise BadReuestError.new "Vni (#{ value }) is illegal format."
+  rescue BadRequestError
+    raise BadRequestError.new "Vni (#{ value }) is illegal format."
   end
   if i < 0 or i > VNI_MAX
-    raise BadReuestError.new "Vni (#{ value }) is illegal range."
+    raise BadRequestError.new "Vni (#{ value }) is illegal range."
   end
   i
 end
@@ -65,12 +65,12 @@ def convert_address value
       a = []
       value.split(".").each do | each |
         i = each.to_i
-        raise BadReuestError.new "Broadcast address (#{ value }) is illegal format." unless i < 256
+        raise BadRequestError.new "Broadcast address (#{ value }) is illegal format." unless i < 256
         a.push( "%u" % i )
       end
       a.join( "." )
     else
-      raise BadReuestError.new "Broadcast address (#{ value }) is illegal format."
+      raise BadRequestError.new "Broadcast address (#{ value }) is illegal format."
   end
 end
 
@@ -81,11 +81,11 @@ def convert_port value
 
   begin
     i = convert_integer value
-  rescue BadReuestError
-    raise BadReuestError.new "Port number (#{ value }) is illegal format."
+  rescue BadRequestError
+    raise BadRequestError.new "Port number (#{ value }) is illegal format."
   end
   if i < 0 or i > 0xffff
-    raise BadReuestError.new "Port number (#{ value }) is illegal range."
+    raise BadRequestError.new "Port number (#{ value }) is illegal range."
   end
   i
 end

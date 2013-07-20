@@ -36,7 +36,7 @@ def convert_id value
     when /^0[Xx][[:xdigit:]]+$/
       i = value.hex
     else
-      raise BadReuestError.new "Id (#{ value }) is illegal format."
+      raise BadRequestError.new "Id (#{ value }) is illegal format."
   end
   i
 end
@@ -48,11 +48,11 @@ def convert_slice_id value
 
   begin
     i = convert_id value
-  rescue BadReuestError
-    raise BadReuestError.new "Slice id (#{ value }) is illegal format."
+  rescue BadRequestError
+    raise BadRequestError.new "Slice id (#{ value }) is illegal format."
   end
   if i < 0 or i > SLICE_ID_MAX
-    raise BadReuestError.new "Slice id (#{ value }) is illegal range."
+    raise BadRequestError.new "Slice id (#{ value }) is illegal range."
   end
   i
 end
@@ -60,7 +60,7 @@ end
 def convert_description value
   return "" if value.nil?
   return value if value.length < 2**16
-  raise BadReuestError.new "Description is too long."
+  raise BadRequestError.new "Description is too long."
 end
 
 def convert_port_id value
@@ -68,8 +68,8 @@ def convert_port_id value
 
   begin
     convert_id value
-  rescue BadReuestError
-    raise BadReuestError.new "Port id (#{ value }) is illegal format."
+  rescue BadRequestError
+    raise BadRequestError.new "Port id (#{ value }) is illegal format."
   end
 end
 
@@ -79,7 +79,7 @@ def convert_datapath_id value
   begin
     i = DB::DatapathId.new value
   rescue => e
-    raise BadReuestError.new e.message
+    raise BadRequestError.new e.message
   end
 end
 
@@ -88,23 +88,23 @@ def convert_port_no value
 
   begin
     i = convert_id value
-  rescue BadReuestError
-    raise BadReuestError.new "Port number (#{ value }) is illegal format."
+  rescue BadRequestError
+    raise BadRequestError.new "Port number (#{ value }) is illegal format."
   end
   return i if i == OFPP_LOCAL
   return i if i >= 1 and i <= OFPP_MAX
-  raise BadReuestError.new "Port number (#{ value }) is illegal range."
+  raise BadRequestError.new "Port number (#{ value }) is illegal range."
 end
 
 def convert_port_name value
   return "" if value.nil?
 
   unless /^\S/ =~ value
-    raise BadReuestError.new "Port name ('#{ value }') is illegal format."
+    raise BadRequestError.new "Port name ('#{ value }') is illegal format."
   end
 
   return value if value.length < OFP_MAX_PORT_NAME_LEN
-  raise BadReuestError.new "Port name is too long."
+  raise BadRequestError.new "Port name is too long."
 end
 
 def convert_vid value
@@ -112,12 +112,12 @@ def convert_vid value
 
   begin
     i = convert_id value
-  rescue BadReuestError
-    raise BadReuestError.new "VLAN id (#{ value }) is illegal format."
+  rescue BadRequestError
+    raise BadRequestError.new "VLAN id (#{ value }) is illegal format."
   end
   return i if i == DB::VLAN_ID_UNSPECIFIED
   return i if i >= 0 and i <= 0x0fff
-  raise BadReuestError.new "VLAN id (#{ value }) is illegal range."
+  raise BadRequestError.new "VLAN id (#{ value }) is illegal range."
 end
 
 def convert_mac value
@@ -126,7 +126,7 @@ def convert_mac value
   begin
     i = DB::Mac.new value
   rescue => e
-    raise BadReuestError.new e.message
+    raise BadRequestError.new e.message
   end
 end
 
@@ -136,7 +136,7 @@ def convert_uri value
   begin
     i = DB::Uri.new value
   rescue => e
-    raise BadReuestError.new e.message
+    raise BadRequestError.new e.message
   end
 end
 
@@ -146,6 +146,6 @@ def convert_tep value
   begin
     i = DB::Tep.new value
   rescue => e
-    raise BadReuestError.new e.message
+    raise BadRequestError.new e.message
   end
 end
