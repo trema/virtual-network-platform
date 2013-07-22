@@ -520,16 +520,17 @@ void usage() {
   printf(
     "Usage: %s [OPTION]...\n"
     "\n"
-    "  -b, --db_host=HOST_NAME     database host\n"
-    "  -p, --db_port=PORT          database port\n"
-    "  -u, --db_username=USERNAME  database username\n"
-    "  -c, --db_password=PASSWORD  database password\n"
-    "  -m, --db_name=NAME          database name\n"
-    "  -n, --name=SERVICE_NAME     service name\n"
-    "  -d, --daemonize             run in the background\n"
-    "  -l, --logging_level=LEVEL   set logging level\n"
-    "  -g, --syslog                output log messages to syslog\n"
-    "  -h, --help                  display this help and exit\n",
+    "  -b, --db_host=HOST_NAME         database host\n"
+    "  -p, --db_port=PORT              database port\n"
+    "  -u, --db_username=USERNAME      database username\n"
+    "  -c, --db_password=PASSWORD      database password\n"
+    "  -m, --db_name=NAME              database name\n"
+    "  -n, --name=SERVICE_NAME         service name\n"
+    "  -d, --daemonize                 run in the background\n"
+    "  -l, --logging_level=LEVEL       set logging level\n"
+    "  -g, --syslog                    output log messages to syslog\n"
+    "  -f, --logging_facility=FACILITY set syslog facility\n"
+    "  -h, --help                      display this help and exit\n",
     get_executable_name()
   );
 }
