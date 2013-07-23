@@ -327,7 +327,7 @@ Please see files under [doc/api](doc/api/api.html) for extended examples.
         -H "Content-type: application/json" \
         -X POST \
         -d '{ "id": 128, "description": "Virtual network #128" }' \
-        http://192.168.16.254/networks
+        http://127.0.0.1:8081/networks
 
 ### Associate a switch port with a virtual network
 
@@ -337,7 +337,7 @@ Please see files under [doc/api](doc/api/api.html) for extended examples.
         -X POST \
         -d '{ "id": 1, "datapath_id": "1", "name": "eth1",
         "vid": 65535, "description": "eth1 on switch #1" }' \
-        http://192.168.16.254/networks/128
+        http://127.0.0.1:8081/networks/128/ports
 
 ### Associate a MAC address with a switch port
 
@@ -346,7 +346,7 @@ Please see files under [doc/api](doc/api/api.html) for extended examples.
         -H "Content-type: application/json" \
         -X POST \
         -d '{ "address" : "00:00:00:00:00:01" }' \
-        http://192.168.16.254/networks/128/ports/1
+        http://127.0.0.1:8081/networks/128/ports/1/mac_addresses
 
 # Copyright
 
