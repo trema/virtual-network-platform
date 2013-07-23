@@ -301,15 +301,15 @@ build Trema before building Virtual Network Manager.
 
        * Set the Configuration Frontend URL for registration.
 
-                controller_uri: http://10.0.0.1:8081/
+                controller_uri: http://192.168.1.254:8081/
 
        * Set the Virtual Network Agent URL for incoming connections.
 
-                uri: http://10.0.0.2:8082/
+                uri: http://192.168.1.16:8082/
 
        * Set the VXLAN tunnel endpoint address.
 
-                tunnel_endpoint: 10.0.0.2
+                tunnel_endpoint: 192.168.1.16
 
 4. Start Virtual Network Agent
 
@@ -327,7 +327,7 @@ Please see files under [doc/api](doc/api/api.html) for extended examples.
         -H "Content-type: application/json" \
         -X POST \
         -d '{ "id": 128, "description": "Virtual network #128" }' \
-        http://127.0.0.1:8081/networks
+        http://192.168.1.254:8081/networks
 
 ### Associate a switch port with a virtual network
 
@@ -337,7 +337,7 @@ Please see files under [doc/api](doc/api/api.html) for extended examples.
         -X POST \
         -d '{ "id": 1, "datapath_id": "1", "name": "eth1",
         "vid": 65535, "description": "eth1 on switch #1" }' \
-        http://127.0.0.1:8081/networks/128/ports
+        http://192.168.1.254:8081/networks/128/ports
 
 ### Associate a MAC address with a switch port
 
@@ -346,7 +346,7 @@ Please see files under [doc/api](doc/api/api.html) for extended examples.
         -H "Content-type: application/json" \
         -X POST \
         -d '{ "address" : "00:00:00:00:00:01" }' \
-        http://127.0.0.1:8081/networks/128/ports/1/mac_addresses
+        http://192.168.1.254:8081/networks/128/ports/1/mac_addresses
 
 # Copyright
 
