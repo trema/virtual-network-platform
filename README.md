@@ -79,19 +79,20 @@ work expectedly.
 
 ## Getting the source code
 
-Getting a copy of the git repository.
+You can retrieve a copy of the source code as follows:
 
-        $ sudo apt-get install git
-        $ git clone --recurse-submodules \
-        git://github.com/trema/virtual-network-platform.git
-        $ cd virtual-network-platform
+    $ sudo apt-get install git
+    $ git clone --recurse-submodules \
+    git://github.com/trema/virtual-network-platform.git
+    $ cd virtual-network-platform
 
-        HTTP cloning:
-        $ git clone http://github.com/trema/virtual-network-platform.git
-        $ cd virtual-network-platform
-        $ git config submodule.trema.url http://github.com/trema/trema.git
-        $ git submodule init
-        $ git submodule update
+If you prefer to use HTTP, follow the instructions below:
+
+    $ git clone http://github.com/trema/virtual-network-platform.git
+    $ cd virtual-network-platform
+    $ git config submodule.trema.url http://github.com/trema/trema.git
+    $ git submodule init
+    $ git submodule update
 
 ## Setup
 
@@ -133,7 +134,7 @@ build Trema before building Virtual Network Manager.
         $ sudo cp virtual_network_manager/init/trema /etc/init.d
         $ sudo update-rc.d trema defaults
 
-4. Setup configuration files
+4. Copy configuration files
 
         $ sudo cp virtual_network_manager/config/virtual_network_manager \
         /etc/default
@@ -141,15 +142,17 @@ build Trema before building Virtual Network Manager.
         $ sudo chmod 600 /etc/default/virtual_network_manager
         $ sudo cp virtual_network_manager/config/trema /etc/default
 
-    Set the directory that the Virtual Network Manager executable exists.
+5. Set the directory that the Virtual Network Manager executable exists
 
-    - /etc/default/virtual\_network\_manager
+    Specify the directory that you have installed Virtual Network Manager
+    executable in /etc/default/virtual_network_manager like follows:
 
         VIRTUAL_NETWORK_MANAGER_DIR="/somewhere/virtual_network_manager/src"
 
-    Also, set the directory that Trema exists.
+6. Set the directory that Trema exists
 
-    - /etc/default/trema
+    Specify the directory that you have installed Trema executable in
+    /etc/default/trema like follows:
 
         TREMA_HOME="/somewhere/trema"
 
@@ -190,24 +193,23 @@ build Trema before building Virtual Network Manager.
         /etc/init.d
         $ sudo update-rc.d configuration_frontend defaults
 
-3. Setup configuration file
+3. Copy configuration file
 
         $ sudo cp configuration_frontend/config/configuration_frontend \
         /etc/default
 
-    Edit the configuration file as follows:
+4. Set the directory that the Configuration Frontend executable exists
 
-    Set the directory that the Configuration Frontend executable exists.
-
-    - /etc/default/configuration\_frontend
+    Specify the directory that you have installed Configuration Frontend
+    in /etc/default/configuration_frontend like follows:
 
         CONFIGURATION_FRONTEND_DIR="/somewhere/configuration_frontend"
 
 #### Start all required services
 
-        $ sudo service trema start
-        $ sudo service virtual_network_manager start
-        $ sudo service configuration_frontend start
+    $ sudo service trema start
+    $ sudo service virtual_network_manager start
+    $ sudo service configuration_frontend start
 
 ### OpenFlow Switch (Open vSwitch)
 
@@ -286,32 +288,21 @@ build Trema before building Virtual Network Manager.
         $ sudo cp virtual_network_agent/config/virtual_network_agent \
         /etc/default
 
-    Edit the configuration files as follows:
+4. Edit configuration files
 
-    Set the directory that the Virtual Network Agent executable exists.
-
-    - /etc/default/virtual\_network\_agent
+    Specify the directory that you have installed Virtual Network Agent
+    in /etc/default/virtual_network_agent like follows:
 
         VIRTUAL_NETWORK_AGENT_DIR="/somewhere/virtual_network_agent"
 
-   Set the Configuration Frontend URL, Virtual Network Agent URL and
-   Tunnel endpoint address.
+    Set the Configuration Frontend URL, Virtual Network Agent URL and
+    Tunnel endpoint address in virtual_network_agent/tunnel_endpoint_configure.yml.
 
-    - /somewhere/virtual\_network\_agent/tunnel\_endpoint\_configure.yml
+        controller_uri: http://192.168.1.254:8081/
+        uri: http://192.168.1.16:8082/
+        tunnel_endpoint: 192.168.1.16
 
-       * Set the Configuration Frontend URL for registration.
-
-                controller_uri: http://192.168.1.254:8081/
-
-       * Set the Virtual Network Agent URL for incoming connections.
-
-                uri: http://192.168.1.16:8082/
-
-       * Set the VXLAN tunnel endpoint address.
-
-                tunnel_endpoint: 192.168.1.16
-
-4. Start Virtual Network Agent
+5. Start Virtual Network Agent
 
         $ sudo service virtual_network_agent start
 
@@ -322,31 +313,31 @@ Please see files under [doc/api](doc/api/api.html) for extended examples.
 
 ### Create a virtual network
 
-        $ curl -v \
-        -H "Accept: application/json" \
-        -H "Content-type: application/json" \
-        -X POST \
-        -d '{ "id": 128, "description": "Virtual network #128" }' \
-        http://192.168.1.254:8081/networks
+    $ curl -v \
+    -H "Accept: application/json" \
+    -H "Content-type: application/json" \
+    -X POST \
+    -d '{ "id": 128, "description": "Virtual network #128" }' \
+    http://192.168.1.254:8081/networks
 
 ### Associate a switch port with a virtual network
 
-        $ curl -v \
-        -H "Accept: application/json" \
-        -H "Content-type: application/json" \
-        -X POST \
-        -d '{ "id": 1, "datapath_id": "1", "name": "eth1",
-        "vid": 65535, "description": "eth1 on switch #1" }' \
-        http://192.168.1.254:8081/networks/128/ports
+    $ curl -v \
+    -H "Accept: application/json" \
+    -H "Content-type: application/json" \
+    -X POST \
+    -d '{ "id": 1, "datapath_id": "1", "name": "eth1",
+    "vid": 65535, "description": "eth1 on switch #1" }' \
+    http://192.168.1.254:8081/networks/128/ports
 
 ### Associate a MAC address with a switch port
 
-        $ curl -v \
-        -H "Accept: application/json" \
-        -H "Content-type: application/json" \
-        -X POST \
-        -d '{ "address" : "00:00:00:00:00:01" }' \
-        http://192.168.1.254:8081/networks/128/ports/1/mac_addresses
+    $ curl -v \
+    -H "Accept: application/json" \
+    -H "Content-type: application/json" \
+    -X POST \
+    -d '{ "address" : "00:00:00:00:00:01" }' \
+    http://192.168.1.254:8081/networks/128/ports/1/mac_addresses
 
 # Copyright
 
