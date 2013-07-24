@@ -16,7 +16,7 @@
 #
 controller_uri: http://127.0.0.1:8081/
 uri: http://127.0.0.1:8082/
-tunnel_endpoint: 10.0.0.1
+tunnel_endpoint: 10.0.0.1:4789
 listen_port: 8082
 listen_address: 0.0.0.0
 daemon: true

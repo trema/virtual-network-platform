@@ -300,7 +300,7 @@ build Trema before building Virtual Network Manager.
 
         controller_uri: http://192.168.1.254:8081/
         uri: http://192.168.1.16:8082/
-        tunnel_endpoint: 192.168.1.16
+        tunnel_endpoint: 192.168.1.16:4789
 
 5. Start Virtual Network Agent
 
