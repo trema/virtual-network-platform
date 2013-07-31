@@ -383,29 +383,43 @@ distributor_main( void *args ) {
 
   create_tunnel_endpoints();
 
+  bool err = false;
   while ( running ) {
     wait_for_new_packets();
 
-    packet_buffer *packet = peek( received_packets );
-    if ( packet == NULL || ( packet != NULL && packet->length == 0 ) ) {
-      continue;
+    packet_buffer *packet = NULL;
+    while ( ( packet = peek( received_packets ) ) != NULL ) {
+      if ( packet->length == 0 ) {
+        continue;
+      }
+
+      bool ret = distribute_packet( dev, packet );
+      if ( !ret ) {
+        err = true;
+        break;
+      }
+
+      dequeue( received_packets );
+      enqueue( free_packet_buffers, packet );
     }
 
-    bool ret = distribute_packet( dev, packet );
-    if ( !ret ) {
+    if ( err ) {
       break;
     }
-
-    dequeue( received_packets );
-    enqueue( free_packet_buffers, packet );
   }
  
   running = false;
 
   delete_tunnel_endpoints();
 
-  info( "Distributer thread is terminated ( pid = %u, tid = %u ).",
-        getpid(), distributor_thread );
+  if ( !err ) {
+    info( "Distributer thread is terminated ( pid = %u, tid = %u ).",
+          getpid(), distributor_thread );
+  }
+  else {
+    critical( "Distributer thread is terminated due to an error ( pid = %u, tid = %u ).",
+              getpid(), distributor_thread );
+  }
 
   return NULL;
 }
