@@ -31,6 +31,46 @@
 #include "wrapper.h"
 
 
+#define SUB_TIMESPEC( _a, _b, _return )                       \
+  do {                                                        \
+    ( _return )->tv_sec = ( _a )->tv_sec - ( _b )->tv_sec;    \
+    ( _return )->tv_nsec = ( _a )->tv_nsec - ( _b )->tv_nsec; \
+    if ( ( _return )->tv_nsec < 0 ) {                         \
+      ( _return )->tv_sec--;                                  \
+      ( _return )->tv_nsec += 1000000000;                     \
+    }                                                         \
+  }                                                           \
+  while ( 0 )
+
+
+static bool
+now( struct timespec *ts ) {
+  assert( ts != NULL );
+
+  char buf[ 256 ];
+
+  int ret = clock_gettime( CLOCK_MONOTONIC, ts );
+  if ( ret < 0 ) {
+    const char *error_string = safe_strerror_r( errno, buf, sizeof( buf ) );
+    error( "Failed to add a forwarding database entry ( %s [%d] ).", error_string, errno );
+    return false;
+  }
+
+  return true;
+}
+
+
+static void
+append_to_garbage_list( struct fdb *fdb, struct fdb_entry *entry ) {
+  assert( fdb != NULL );
+  assert( fdb->garbage != NULL );
+  assert( entry != NULL );
+
+  now( &entry->deleted_at );
+  append_to_tail( fdb->garbage, entry );
+}
+
+
 void *
 fdb_decrease_ttl_thread( void *param ) {
   assert( param != NULL );
@@ -50,7 +90,7 @@ fdb_decrease_ttl_thread( void *param ) {
             prev->next = ptr->next;
             free( ptr->key );
             free( ptr );
-            free( entry );
+            append_to_garbage_list( fdb, entry );
             ptr = prev;
             fdb->fdb.count--;
           }
@@ -108,6 +148,7 @@ struct fdb *
 init_fdb( time_t aging_time ) {
   struct fdb *fdb = ( struct fdb * ) malloc( sizeof( struct fdb ) );
   init_hash( &fdb->fdb, 6 );
+  fdb->garbage = create_list();
   fdb->aging_time = aging_time;
   if ( aging_time > 0 ) {
     set_sleep_seconds( fdb );
@@ -142,23 +183,7 @@ destroy_fdb( struct fdb *fdb ) {
   }
 
   destroy_hash( &fdb->fdb );
-}
-
-
-static bool
-now( struct timespec *ts ) {
-  assert( ts != NULL );
-
-  char buf[ 256 ];
-
-  int ret = clock_gettime( CLOCK_MONOTONIC, ts );
-  if ( ret < 0 ) {
-    const char *error_string = safe_strerror_r( errno, buf, sizeof( buf ) );
-    error( "Failed to add a forwarding database entry ( %s [%d] ).", error_string, errno );
-    return false;
-  }
-
-  return true;
+  delete_list_totally( fdb->garbage );
 }
 
 
@@ -192,11 +217,10 @@ bool
 fdb_add_static_entry( struct fdb *fdb, struct ether_addr eth_addr, struct in_addr ip_addr, time_t aging_time ) {
   assert( fdb != NULL );
 
-  struct fdb_entry *entry = fdb_search_entry( fdb, eth_addr.ether_addr_octet );
-  if ( entry == NULL ) {
-    entry = malloc( sizeof( struct fdb_entry ) );
-    memset( entry, 0, sizeof( struct fdb_entry ) );
-  }
+  fdb_delete_entry( fdb, eth_addr );
+
+  struct fdb_entry *entry = malloc( sizeof( struct fdb_entry ) );
+  memset( entry, 0, sizeof( struct fdb_entry ) );
 
   entry->vtep_addr.sin_addr = ip_addr;
   if ( aging_time > 0 ) {
@@ -212,27 +236,24 @@ fdb_add_static_entry( struct fdb *fdb, struct ether_addr eth_addr, struct in_add
   entry->type = FDB_ENTRY_TYPE_STATIC;
 
   int ret = insert_hash( &fdb->fdb, entry, eth_addr.ether_addr_octet );
-  return ( ret == 1 ) ? true : false;
+  if ( ret != 1 ) {
+    free( entry );
+    return false;
+  }
+
+  return true;
 }
 
 
 bool
-fdb_delete_entry( struct fdb *fdb, struct ether_addr eth_addr, uint8_t type ) {
+fdb_delete_entry( struct fdb *fdb, struct ether_addr eth_addr ) {
   assert( fdb != NULL );
 
-  struct fdb_entry *entry = fdb_search_entry( fdb, eth_addr.ether_addr_octet );
-  if ( entry == NULL ) {
-    return false;
-  }
-
-  if ( ( entry->type & type ) == 0 ) {
-    return false;
-  }
-
-  void *deleted = delete_hash( &fdb->fdb, eth_addr.ether_addr_octet );
+  struct fdb_entry *deleted = delete_hash( &fdb->fdb, eth_addr.ether_addr_octet );
   if ( deleted != NULL ) {
-    free( deleted );
+    append_to_garbage_list( fdb, deleted );
   }
+
   return ( deleted != NULL ) ? true : false;
 }
 
@@ -251,7 +272,7 @@ fdb_delete_all_entries( struct fdb *fdb, uint8_t type ) {
         prev->next = ptr->next;
         free( ptr->key );
         free( ptr );
-        free( entry );
+        append_to_garbage_list( fdb, entry );
         ptr = prev;
         fdb->fdb.count--;
       }
@@ -297,8 +318,9 @@ set_aging_time( struct fdb *fdb, time_t aging_time ) {
           entry->ttl -= diff;
           if ( entry->ttl <= 0 ) {
             prev->next = ptr->next;
+            free( ptr->key );
             free( ptr );
-            free( entry );
+            append_to_garbage_list( fdb, entry );
             ptr = prev;
             fdb->fdb.count--;
           }
@@ -364,6 +386,35 @@ get_fdb_entries( struct fdb *fdb ) {
   return entries;
 }
 
+
+void
+fdb_collect_garbage( struct fdb *fdb ) {
+  assert( fdb != NULL );
+  assert( fdb->garbage != NULL );
+
+  if ( fdb->garbage->head == NULL ) {
+    return;
+  }
+
+  pthread_mutex_lock( &fdb->garbage->mutex );
+
+  struct timespec diff = { 0, 0 };
+  now( &diff );
+
+  for ( int i = 0; i < 256 && fdb->garbage->head != NULL; i++ ) {
+    struct fdb_entry *entry = fdb->garbage->head->data;
+    SUB_TIMESPEC( &diff, &entry->deleted_at, &diff );
+    if ( diff.tv_sec < 2 ) {
+      break;
+    }
+    list_element *delete_me = fdb->garbage->head;
+    fdb->garbage->head = delete_me->next;
+    free( delete_me->data );
+    free( delete_me );
+  }
+
+  pthread_mutex_unlock( &fdb->garbage->mutex );
+}
 
 
 /*

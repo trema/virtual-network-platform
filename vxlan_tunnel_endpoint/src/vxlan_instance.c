@@ -372,6 +372,8 @@ process_vxlan_instance( void *param ) {
   int tfd = -1;
   int fd_max = instance->tap_sock;
   while ( running ) {
+    fdb_collect_garbage( instance->fdb );
+
     fd_set fds;
     FD_ZERO( &fds );
     FD_SET( instance->tap_sock, &fds );

@@ -531,7 +531,7 @@ delete_fdb_entry( int fd, del_fdb_entry_request *request ) {
     if ( instance->fdb != NULL ) {
       uint8_t zero[ ETH_ALEN ] = { 0, 0, 0, 0, 0, 0 };
       if ( memcmp( request->eth_addr.ether_addr_octet, zero, ETH_ALEN ) != 0 ) {
-        ret = fdb_delete_entry( instance->fdb, request->eth_addr, FDB_ENTRY_TYPE_ALL );
+        ret = fdb_delete_entry( instance->fdb, request->eth_addr );
         if ( ret ) {
           debug( "A fdb entry is deleted ( vni = %#x ).", request->vni );
         }
