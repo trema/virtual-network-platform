@@ -232,7 +232,6 @@ fdb_delete_entry( struct fdb *fdb, struct ether_addr eth_addr, uint8_t type ) {
   void *deleted = delete_hash( &fdb->fdb, eth_addr.ether_addr_octet );
   if ( deleted != NULL ) {
     free( deleted );
-    fdb->fdb.count--;
   }
   return ( deleted != NULL ) ? true : false;
 }
