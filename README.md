@@ -1,9 +1,9 @@
 # What's this?
 
-This is the Virtual Network Platform 1.0 which allows you to construct
-and manage VXLAN-based virtual networks with a single centralized
-management point. The centralized management point provides a REST-based
-interface for managing the virtual networks.
+This is the [Virtual Network Platform 1.0](http://trema.github.io/virtual-network-platform/)
+which allows you to construct and manage VXLAN-based virtual networks
+with a single centralized management point. The centralized management
+point provides a REST-based interface for managing the virtual networks.
 
 Don't abbreviate Virtual Network Platform as VNP.
 
@@ -62,7 +62,7 @@ standard Linux kernel implementation available on Linux 3.7.
 
 OpenFlow Switch is unmodified Open vSwitch (version 1.4.X). It is not
 included in this software suite. For detailed information on Open
-vSwitch, please visit http://openvswitch.org/.
+vSwitch, please visit [http://openvswitch.org/](http://openvswitch.org/).
 
 # How to use?
 
@@ -232,7 +232,7 @@ build Trema before building Virtual Network Manager.
 
         $ sudo ovs-vsctl set Bridge br0 \
         other-config:datapath-id=[datapath id in hex]
-        $ sudo ovs-vsctl set-controller br0 tcp:192.168.16.254
+        $ sudo ovs-vsctl set-controller br0 tcp:192.168.1.254
         $ sudo ovs-vsctl set-fail-mode br0 secure
 
     Datapath id must be a 64-bit unique identifier for specifying the
@@ -348,4 +348,4 @@ Copyright (C) 2012-2013 NEC Corporation
 All software packages distributed here are licensed under the GNU
 General Public License version 2.0:
 
-http://www.gnu.org/licenses/gpl-2.0.html
+[http://www.gnu.org/licenses/gpl-2.0.html](http://www.gnu.org/licenses/gpl-2.0.html)
