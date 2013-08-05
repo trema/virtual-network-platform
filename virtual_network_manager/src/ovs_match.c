@@ -293,8 +293,8 @@ append_ovs_match_eth_dst( ovs_matches *matches,
                          uint8_t addr[ OFP_ETH_ALEN ], uint8_t mask[ OFP_ETH_ALEN ] ) {
   assert( matches != NULL );
 
-  uint8_t zero[ OFP_ETH_ALEN ] = { 0, 0, 0, 0, 0, 0 };
-  if ( memcmp( mask, zero, OFP_ETH_ALEN ) == 0 ) {
+  uint8_t all_one[ OFP_ETH_ALEN ] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+  if ( memcmp( mask, all_one, OFP_ETH_ALEN ) == 0 ) {
     return append_ovs_match_eth_addr( matches, OVSM_OF_ETH_DST, addr );
   }
 
@@ -314,7 +314,7 @@ bool
 append_ovs_match_vlan_tci( ovs_matches *matches, uint16_t value, uint16_t mask ) {
   assert( matches != NULL );
 
-  if ( mask == 0 ) {
+  if ( mask == UINT16_MAX ) {
     return append_ovs_match_16( matches, OVSM_OF_VLAN_TCI, value );
   }
 
@@ -342,7 +342,7 @@ bool
 append_ovs_match_ip_src( ovs_matches *matches, uint32_t addr, uint32_t mask ) {
   assert( matches != NULL );
 
-  if ( mask == 0 ) {
+  if ( mask == UINT32_MAX ) {
     return append_ovs_match_32( matches, OVSM_OF_IP_SRC, addr );
   }
 
@@ -354,7 +354,7 @@ bool
 append_ovs_match_ip_dst( ovs_matches *matches, uint32_t addr, uint32_t mask ) {
   assert( matches != NULL );
 
-  if ( mask == 0 ) {
+  if ( mask == UINT32_MAX ) {
     return append_ovs_match_32( matches, OVSM_OF_IP_DST, addr );
   }
 
@@ -385,7 +385,9 @@ bool
 append_ovs_match_ipv6_src( ovs_matches *matches, struct in6_addr addr, struct in6_addr mask ) {
   assert( matches != NULL );
 
-  if ( IN6_IS_ADDR_UNSPECIFIED( &mask ) ) {
+  struct in6_addr all_one;
+  memset( all_one.s6_addr, 0xff, sizeof( all_one.s6_addr ) );
+  if ( memcmp( mask.s6_addr, all_one.s6_addr, sizeof( mask.s6_addr ) ) == 0 ) {
     return append_ovs_match_ipv6_addr( matches, OVSM_OVS_IPV6_SRC, addr, mask );
   }
 
@@ -397,7 +399,9 @@ bool
 append_ovs_match_ipv6_dst( ovs_matches *matches, struct in6_addr addr, struct in6_addr mask ) {
   assert( matches != NULL );
 
-  if ( IN6_IS_ADDR_UNSPECIFIED( &mask ) ) {
+  struct in6_addr all_one;
+  memset( all_one.s6_addr, 0xff, sizeof( all_one.s6_addr ) );
+  if ( memcmp( mask.s6_addr, all_one.s6_addr, sizeof( mask.s6_addr ) ) == 0 ) {
     return append_ovs_match_ipv6_addr( matches, OVSM_OVS_IPV6_DST, addr, mask );
   }
 
@@ -450,7 +454,7 @@ bool
 append_ovs_match_ip_frag( ovs_matches *matches, uint8_t value, uint8_t mask ) {
   assert( matches != NULL );
 
-  if ( mask == 0 ) {
+  if ( mask == UINT8_MAX ) {
     return append_ovs_match_8( matches, OVSM_OVS_IP_FRAG, value );
   }
 
@@ -542,7 +546,7 @@ bool
 append_ovs_match_arp_spa( ovs_matches *matches, uint32_t addr, uint32_t mask ) {
   assert( matches != NULL );
 
-  if ( mask == 0 ) {
+  if ( mask == UINT32_MAX ) {
     return append_ovs_match_32( matches, OVSM_OF_ARP_SPA, addr );
   }
 
@@ -554,7 +558,7 @@ bool
 append_ovs_match_arp_tpa( ovs_matches *matches, uint32_t addr, uint32_t mask ) {
   assert( matches != NULL );
 
-  if ( mask == 0 ) {
+  if ( mask == UINT32_MAX ) {
     return append_ovs_match_32( matches, OVSM_OF_ARP_TPA, addr );
   }
 
@@ -582,7 +586,7 @@ bool
 append_ovs_match_reg( ovs_matches *matches, uint8_t index, uint32_t value, uint32_t mask ) {
   assert( matches != NULL );
 
-  if ( mask == 0 ) {
+  if ( mask == UINT32_MAX ) {
     return append_ovs_match_32( matches, ( ovs_match_header ) OVSM_OVS_REG( index ), value );
   }
 
@@ -594,7 +598,7 @@ bool
 append_ovs_match_tun_id( ovs_matches *matches, uint64_t id, uint64_t mask ) {
   assert( matches != NULL );
 
-  if ( mask == 0 ) {
+  if ( mask == UINT64_MAX ) {
     return append_ovs_match_64( matches, OVSM_OVS_TUN_ID, id );
   }
 
