@@ -256,7 +256,11 @@ class Network
       end
 
       # debug
-      agent = DB::Agent.find( datapath_id.to_i )
+      begin
+        agent = DB::Agent.find( datapath_id.to_i )
+      rescue
+        agent = nil
+      end
       logger.debug "agent #{ agent.nil? ? "not " : "" }found (datapath_id = #{ datapath_id })"
       if port_no != DB::PORT_NO_UNDEFINED
         # check of port_no

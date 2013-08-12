@@ -173,7 +173,7 @@ than 32-bit.
   <td rowspan="4">POST</td>
   <td>id</td>
   <td>A unique identifier of the network.
-      The value must be an unsigned integer value smaller than 16777216.
+      The value must be a value between 0 and 16777215.
       If omitted, the value is automatically assigned.</td>
   <td rowspan="4">application/json</td>
   <td rowspan="4"><a href="create_network.json">create_network.json</a></td>
@@ -378,7 +378,7 @@ than 32-bit.
   <td rowspan="6">POST</td>
   <td>id</td>
   <td>A unique identifier of the switch port.
-      The value must be an unsigned 32-bit integer value.
+      The value must be a value between 1 and 4294967295.
       If omitted, the value is automatically assigned.</td>
   <td rowspan="6">application/json</td>
   <td rowspan="6"><a href="create_port.json">create_port.json</a></td>
@@ -401,7 +401,7 @@ than 32-bit.
 <tr>
   <td>number</td>
   <td rowspan="2">Port number and name of the switch port.
-                  Port number must be an unsigned integer less than or equal to 65280.
+                  Port number must be a value between 1 and 65280.
                   Port name must be a text string.
                   <i>number</i> and <i>name</i> are exclusive and one of them must be provided.</td>
   <td>404 Not found</td>
@@ -420,8 +420,9 @@ than 32-bit.
   <td>vid</td>
   <td>VLAN identifier of the switch port.
       You can multiplex multiple networks on a single switch port with 802.1q VLAN.
-      The value must be an unsigned integer value smaller than 4096 or equal to 65535.
-      If 65535 is specified, no VLAN is associated.</td>
+      The value must be a value between 0 and 4095 or equal to 65535.
+      If 65535 is specified, no VLAN is associated.
+      </td>
   <td>486 Another update is in progress</td>
   <td>-</td>
   <td>-</td>
