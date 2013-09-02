@@ -254,11 +254,11 @@ class ConfigurationFrontend < Sinatra::Base
     body no_message_body data
   end
 
-  put '/networks/:net_id/ports/?' do | net_id |
+  put '/networks/:net_id/ports/:port_id/mac_addresses/?' do | net_id, port_id |
     status 405
   end
 
-  delete '/networks/:net_id/ports/?' do | net_id |
+  delete '/networks/:net_id/ports/:port_id/mac_addresses/?' do | net_id, port_id |
     status 405
   end
 
