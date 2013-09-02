@@ -238,7 +238,7 @@ class ConfigurationFrontend < Sinatra::Base
     logger.debug "#{__FILE__}:#{__LINE__}: List all the mac addresses associated with the switch port."
     parameters = { :net_id => net_id, :id => port_id }
     content_type :json, :charset => 'utf-8'
-    status 202
+    status 200
     body json_generate Network.show_mac_addresses( parameters )
   end
 
@@ -266,7 +266,7 @@ class ConfigurationFrontend < Sinatra::Base
     logger.debug "#{__FILE__}:#{__LINE__}: Check existence of the MAC address."
     parameters = { :net_id => net_id, :id => port_id, :address => mac_address }
     content_type :json, :charset => 'utf-8'
-    status 202
+    status 200
     body json_generate Network.show_mac_address( parameters )
   end
 
