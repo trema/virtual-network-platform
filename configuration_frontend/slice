@@ -55,7 +55,7 @@ option.on( '-h arg', '--db-host=arg' ) do | arg |
   db_config[ 'host' ] = arg
 end
 option.on( '--db-port=arg' ) do | arg |
-  db_config[ 'port' ] = arg
+  db_config[ 'port' ] = arg.to_i
 end
 option.on( '-u arg', '--db-user=arg' ) do | arg |
   db_config[ 'username' ] = arg

@@ -275,7 +275,7 @@ class Network
       # create port
       update_slice slice_id, update_transaction? do
         port = DB::Port.new
-        port.id = port_id if not port_id.nil?
+        port.id = port_id if (not port_id.nil? and port_id != 0)
         port.slice_id = slice_id
         port.datapath_id = datapath_id
         port.port_no = port_no
