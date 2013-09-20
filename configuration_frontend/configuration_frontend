@@ -566,7 +566,7 @@ class ConfigurationFrontend < Sinatra::Base
     db_config[ 'host' ] = arg
   end
   option.on( '--db-port=arg', "Database port number to use for connection (default '#{ db_config[ 'port' ] }')" ) do | arg |
-    db_config[ 'port' ] = arg
+    db_config[ 'port' ] = arg.to_i
   end
   option.on( '-u arg', '--db-user=arg', "Database user for login (default '#{ db_config[ 'username' ] }')" ) do | arg |
     db_config[ 'username' ] = arg
