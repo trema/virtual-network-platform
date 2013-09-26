@@ -15,42 +15,36 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 
-require 'db/base'
-require 'db/mac-learning'
-require 'db/slice-state'
-
 module DB
 
-  class Slice < Base
-    def state
-      SliceState.new read_attribute( :state )
+  MAC_LEARNING_DISABLE  = 0
+  MAC_LEARNING_ENABLE   = 1
+  MAC_LEARNING_MAX = 2
+
+  class MacLearning
+    def initialize mac_learning
+      @mac_learning = mac_learning
+      raise StandardError.new "Mac learning (#{ mac_learning }) is illegal range." unless ( @mac_learning >= 0 and @mac_learning < MAC_LEARNING_MAX )
     end
 
-    def state= ( value )
-      write_attribute( :state, value.to_i )
+    def to_i
+      @mac_learning
     end
 
-    def mac_learning
-      MacLearning.new read_attribute( :mac_learning )
+    def to_s
+      names = {
+        MAC_LEARNING_DISABLE => "disable",
+        MAC_LEARNING_ENABLE  => "enable",
+      }
+      names[ @mac_learning ] or "MAC_LEARNING_%d" % @mac_learning
     end
 
-    def mac_learning= ( value )
-      if value.nil?
-        value = MAC_LEARNING_DISABLE
-      end
-      write_attribute( :mac_learning, value.to_i )
+    def ==( other )
+      other.to_i == @mac_learning
     end
 
-    def self.generate_id
-      begin
-        for i in 1..10
-          id = rand( 16777216 )
-          find( id )
-        end
-        raise StandardError.new
-      rescue ActiveRecord::RecordNotFound
-        id
-      end
+    def mac_learning?
+      @mac_learning == MAC_LEARNING_ENABLE
     end
 
   end

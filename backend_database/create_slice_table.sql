@@ -7,6 +7,7 @@ use vnet;
 create table slices (
        id              int unsigned not null,
        description     text,
+       mac_learning    tinyint unsigned not null,
        state           tinyint unsigned not null,
        updated_at      timestamp,
        primary key (id),
@@ -22,6 +23,7 @@ create table ports (
        vid             smallint unsigned not null,
        type            tinyint unsigned not null,
        description     text,
+       mac_learning    tinyint unsigned not null,
        state           tinyint unsigned not null,
        updated_at      timestamp,
        primary key (id,slice_id),

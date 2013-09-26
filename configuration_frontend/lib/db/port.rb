@@ -17,6 +17,7 @@
 
 require 'db/base'
 require 'db/datapath-id'
+require 'db/mac-learning'
 require 'db/port-state'
 require 'db/port-type'
 
@@ -48,6 +49,17 @@ module DB
 
     def datapath_id= ( value )
       write_attribute( :datapath_id, value.to_i )
+    end
+
+    def mac_learning
+      MacLearning.new read_attribute( :mac_learning )
+    end
+
+    def mac_learning= ( value )
+      if value.nil?
+        value = MAC_LEARNING_DISABLE
+      end
+      write_attribute( :mac_learning, value.to_i )
     end
 
   end

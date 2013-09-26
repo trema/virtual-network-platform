@@ -73,6 +73,12 @@ enum {
 };
 
 enum {
+  MAC_LEARNING_DISABLE,
+  MAC_LEARNING_ENABLE,
+  MAC_LEARNING_MAX,
+};
+
+enum {
   MAC_STATE_INSTALLED,
   MAC_STATE_READY_TO_INSTALL,
   MAC_STATE_INSTALLING,
@@ -863,6 +869,7 @@ typedef struct {
   char port_name[ PORT_NAME_LENGTH ];
   uint16_t vid;
   uint8_t type;
+  uint8_t mac_learning;
 } port_in_slice;
 
 
@@ -870,8 +877,8 @@ static void
 dump_port_in_slice( port_in_slice *port ) {
   assert( port != NULL );
 
-  debug( "Port in slice ( %p ): datapath_id = %#" PRIx64 ", port_id = %#x, port_no = %u, port_name = %s, vid = %#x, type = %#x.",
-         port, port->datapath_id, port->port_id, port->port_no, port->port_name, port->vid, port->type );
+  debug( "Port in slice ( %p ): datapath_id = %#" PRIx64 ", port_id = %#x, port_no = %u, port_name = %s, vid = %#x, type = %#x, mac_learning = %#x.",
+         port, port->datapath_id, port->port_id, port->port_no, port->port_name, port->vid, port->type, port->mac_learning );
 }
 
 
@@ -921,6 +928,14 @@ append_port( MYSQL_ROW row, const uint64_t datapath_id, list_element **ports ) {
   }
   port->type = ( uint8_t ) u32;
 
+  u32 = ( uint32_t ) strtoul( row[ 5 ], &endp, 0 );
+  if ( *endp != '\0' || u32 >= MAC_LEARNING_MAX ) {
+    error( "Invalid mac_learning ( %s ).", row[ 5 ] );
+    xfree( port );
+    return false;
+  }
+  port->mac_learning = ( uint8_t ) u32;
+
   if ( port->port_no == OFPP_NONE ) {
     if ( strlen( port->port_name ) > 0 ) {
       bool ret = get_port_no_by_name( datapath_id, port->port_name, &port->port_no );
@@ -956,7 +971,7 @@ get_active_ports_in_slice( uint64_t datapath_id, uint32_t slice_id, list_element
 
   *n_ports = 0;
 
-  bool ret = execute_query( db, "select id,port_no,port_name,vid,type,state from ports where datapath_id = %" PRIu64 " and "
+  bool ret = execute_query( db, "select id,port_no,port_name,vid,type,mac_learning,state from ports where datapath_id = %" PRIu64 " and "
                             "slice_id = %u and ( state = %u or state = %u or state = %u )",
                             datapath_id, slice_id,
                             PORT_STATE_CONFIRMED, PORT_STATE_READY_TO_UPDATE, PORT_STATE_UPDATING );
@@ -970,7 +985,7 @@ get_active_ports_in_slice( uint64_t datapath_id, uint32_t slice_id, list_element
     return false;
   }
 
-  assert( mysql_num_fields( result ) == 6 );
+  assert( mysql_num_fields( result ) == 7 );
 
   if ( mysql_num_rows( result ) == 0 ) {
     mysql_free_result( result );
@@ -1014,7 +1029,7 @@ get_inactive_ports_in_slice( uint64_t datapath_id, uint32_t slice_id, list_eleme
 
   *n_ports = 0;
 
-  bool ret = execute_query( db, "select id,port_no,port_name,vid,type,state from ports where datapath_id = %" PRIu64 " and "
+  bool ret = execute_query( db, "select id,port_no,port_name,vid,type,mac_learning,state from ports where datapath_id = %" PRIu64 " and "
                             "slice_id = %u and ( state = %u or state = %u or state = %u )",
                             datapath_id, slice_id,
                             PORT_STATE_READY_TO_DESTROY, PORT_STATE_DESTROYING, PORT_STATE_DESTROYED );
@@ -1028,7 +1043,7 @@ get_inactive_ports_in_slice( uint64_t datapath_id, uint32_t slice_id, list_eleme
     return false;
   }
 
-  assert( mysql_num_fields( result ) == 6 );
+  assert( mysql_num_fields( result ) == 7 );
 
   if ( mysql_num_rows( result ) == 0 ) {
     mysql_free_result( result );
@@ -1110,6 +1125,14 @@ append_overlay_port( MYSQL_ROW row, list_element **ports, pid_t pid ) {
   }
   port->type = ( uint8_t ) u32;
 
+  u32 = ( uint32_t ) strtoul( row[ 5 ], &endp, 0 );
+  if ( *endp != '\0' || u32 >= MAC_LEARNING_MAX ) {
+    error( "Invalid mac_learning ( %s ).", row[ 5 ] );
+    xfree( port );
+    return false;
+  }
+  port->mac_learning = ( uint8_t ) u32;
+
   append_to_tail( ports, port );
 
   debug( "port %s ( port_id = %#x, port_no = %u, vid = %#x, type = %#x ) is appended to port list ( %p ).",
@@ -1130,7 +1153,7 @@ get_activating_overlay_port( uint32_t slice_id, uint64_t datapath_id, list_eleme
 
   *n_ports = 0;
 
-  bool ret = execute_query( db, "select id,datapath_id,port_name,vid,type from ports where slice_id = %u and datapath_id = %" PRIu64 " and "
+  bool ret = execute_query( db, "select id,datapath_id,port_name,vid,mac_learning,type from ports where slice_id = %u and datapath_id = %" PRIu64 " and "
                             "type = %u and ( state = %u or state = %u )",
                             slice_id, datapath_id, PORT_TYPE_OVERLAY, PORT_STATE_READY_TO_UPDATE, PORT_STATE_UPDATING );
   if ( !ret ) {
@@ -1143,7 +1166,7 @@ get_activating_overlay_port( uint32_t slice_id, uint64_t datapath_id, list_eleme
     return false;
   }
 
-  assert( mysql_num_fields( result ) == 5 );
+  assert( mysql_num_fields( result ) == 6 );
 
   if ( mysql_num_rows( result ) == 0 ) {
     mysql_free_result( result );
@@ -1184,7 +1207,7 @@ get_inactivating_overlay_port( uint32_t slice_id, uint64_t datapath_id, list_ele
 
   *n_ports = 0;
 
-  bool ret = execute_query( db, "select id,datapath_id,port_name,vid,type from ports where slice_id = %u and datapath_id = %" PRIu64 " and "
+  bool ret = execute_query( db, "select id,datapath_id,port_name,vid,mac_learning,type from ports where slice_id = %u and datapath_id = %" PRIu64 " and "
                             "type = %u and ( state = %u or state = %u )",
                             slice_id, datapath_id, PORT_TYPE_OVERLAY, PORT_STATE_READY_TO_DESTROY, PORT_STATE_DESTROYING );
   if ( !ret ) {
@@ -1197,7 +1220,7 @@ get_inactivating_overlay_port( uint32_t slice_id, uint64_t datapath_id, list_ele
     return false;
   }
 
-  assert( mysql_num_fields( result ) == 5 );
+  assert( mysql_num_fields( result ) == 6 );
 
   if ( mysql_num_rows( result ) == 0 ) {
     mysql_free_result( result );
@@ -2002,6 +2025,28 @@ add_transactions_to_install_port_flow_entries( uint64_t datapath_id, uint32_t sl
     }
     openflow_actions *actions = create_actions();
     append_ovs_action_reg_load( actions, 0, 32, OVSM_OVS_REG0, slice_id );
+    // MAC learning action
+    ovs_flow_mod_specs *flow_mod_specs = NULL;
+    if ( port->mac_learning == MAC_LEARNING_ENABLE ) {
+      uint16_t learn_priority = 512;
+      if ( port->type == PORT_TYPE_OVERLAY ) {
+        learn_priority = 256;
+      }
+      flow_mod_specs = create_ovs_flow_mod_specs();
+      append_ovs_flow_mod_specs_add_match_field( flow_mod_specs, OVSM_OVS_REG0, OVSM_OVS_REG0, 32 );
+      append_ovs_flow_mod_specs_add_match_field( flow_mod_specs, OVSM_OF_ETH_SRC, OVSM_OF_ETH_DST, 48 );
+      append_ovs_flow_mod_specs_add_load_field( flow_mod_specs, OVSM_OF_VLAN_TCI, OVSM_OF_VLAN_TCI, 12 );
+      append_ovs_flow_mod_specs_add_output_action( flow_mod_specs, OVSM_OF_IN_PORT );
+      // FIXME: hard-coded idle timeout, hard timeout, table id and priority
+      append_ovs_action_learn( actions,
+                               60, // idle_timeout
+                               0, // hard_timeout
+                               learn_priority,
+                               UINT64_MAX, // cookie,
+                               0, // flags
+                               3, // table_id
+                               flow_mod_specs );
+    }
     // FIXME: hard-coded table id
     append_ovs_action_resubmit_table( actions, OFPP_IN_PORT, 2 );
     // FIXME: hard-coded table id and priority
@@ -2013,6 +2058,9 @@ add_transactions_to_install_port_flow_entries( uint64_t datapath_id, uint32_t sl
                                          flow_mod_port_succeeded, update, flow_mod_port_failed, update );
     delete_ovs_matches( match );
     delete_actions( actions );
+    if ( flow_mod_specs != NULL ) {
+      delete_ovs_flow_mod_specs( flow_mod_specs );
+    }
     if ( !ret ) {
       char match_str[ 256 ];
       ovs_matches_to_string( match, match_str, sizeof( match_str ) );
@@ -2078,7 +2126,7 @@ add_transactions_to_install_port_flow_entries( uint64_t datapath_id, uint32_t sl
     }
 
     // FIXME: hard-coded table id and priority
-    const uint8_t table_id = 2;
+    const uint8_t table_id = 3;
     const uint16_t priority = 128;
     buffer *flow_mod = create_ovs_flow_mod( get_transaction_id(), slice_id, OFPFC_MODIFY_STRICT,
                                             table_id, 0, 0, priority, UINT32_MAX, OFPP_NONE, 0, match, actions );
@@ -2168,7 +2216,7 @@ add_transactions_to_delete_port_flow_entries( uint64_t datapath_id, uint32_t sli
     }
 
     // FIXME: hard-coded table id and priority
-    const uint8_t table_id = 2;
+    const uint8_t table_id = 3;
     const uint16_t priority = 128;
     buffer *flow_mod = create_ovs_flow_mod( get_transaction_id(), slice_id, OFPFC_DELETE_STRICT,
                                             table_id, 0, 0, priority, UINT32_MAX, OFPP_NONE, 0, match, NULL );
@@ -2313,6 +2361,7 @@ add_transactions_to_install_mac_flow_entries( uint64_t datapath_id, uint32_t sli
       append_action_strip_vlan( actions );
     }
     append_action_output( actions, port->port_no, UINT16_MAX );
+    // FIXME: hard-coded table id and priority
     table_id = 2;
     if ( port->type == PORT_TYPE_CUSTOMER ) {
       priority = 512;
@@ -2427,6 +2476,7 @@ add_transactions_to_delete_mac_flow_entries( uint64_t datapath_id, uint32_t slic
     match = create_ovs_matches();
     append_ovs_match_reg( match, 0, slice_id, UINT32_MAX );
     append_ovs_match_eth_dst( match, addr, mask );
+    // FIXME: hard-coded table id and priority
     table_id = 2;
     if ( port->type == PORT_TYPE_CUSTOMER ) {
       priority = 512;

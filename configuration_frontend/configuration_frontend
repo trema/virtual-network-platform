@@ -118,7 +118,7 @@ class ConfigurationFrontend < Sinatra::Base
   get '/networks/?' do
     logger.debug "#{__FILE__}:#{__LINE__}: List existing networks."
     parameters = {}
-    #parameters[ :datapath_id ] = params[ :datapath_id ] if not params[ :datapath_id ].nil?
+    parameters[ :datapath_id ] = params[ :datapath_id ] if not params[ :datapath_id ].nil?
     content_type :json, :charset => 'utf-8'
     status 200
     body json_generate Network.list parameters
@@ -180,7 +180,7 @@ class ConfigurationFrontend < Sinatra::Base
   get '/networks/:net_id/ports/?' do | net_id |
     logger.debug "#{__FILE__}:#{__LINE__}: List all switch ports associated with the network identified by net_id."
     parameters = { :net_id => net_id }
-    #parameters[ :datapath_id ] = params[ :datapath_id ] if not params[ :datapath_id ].nil?
+    parameters[ :datapath_id ] = params[ :datapath_id ] if not params[ :datapath_id ].nil?
     content_type :json, :charset => 'utf-8'
     status 200
     body json_generate Network.show_ports( parameters )

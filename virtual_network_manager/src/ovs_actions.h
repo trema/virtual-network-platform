@@ -26,10 +26,26 @@
 #include "trema.h"
 
 
+typedef struct {
+  int n_flow_mod_specs;
+  list_element *list;
+} ovs_flow_mod_specs;
+
+
 bool append_ovs_action_reg_load( openflow_actions *actions, const uint16_t offset, const uint8_t n_bits,
                                  const uint32_t destination, const uint64_t value );
 bool append_ovs_action_resubmit( openflow_actions *actions, const uint16_t in_port );
 bool append_ovs_action_resubmit_table( openflow_actions *actions, const uint16_t in_port, const uint8_t table_id );
+bool append_ovs_action_learn( openflow_actions *actions, const uint16_t idle_timeout, const uint16_t hard_timeout,
+                              const uint16_t priority, const uint64_t cookie, const uint16_t flags, const uint8_t table_id,
+                              const ovs_flow_mod_specs *flow_mod_specs );
+
+
+ovs_flow_mod_specs *create_ovs_flow_mod_specs( void );
+bool delete_ovs_flow_mod_specs( ovs_flow_mod_specs *flow_mod_specs );
+bool append_ovs_flow_mod_specs_add_match_field( ovs_flow_mod_specs *flow_mod_specs, uint32_t src, uint32_t dst, uint16_t n_bits );
+bool append_ovs_flow_mod_specs_add_load_field( ovs_flow_mod_specs *flow_mod_specs, uint32_t src, uint32_t dst, uint16_t n_bits );
+bool append_ovs_flow_mod_specs_add_output_action( ovs_flow_mod_specs *flow_mod_specs, uint32_t src );
 
 
 #endif // OVS_ACTIONS_H

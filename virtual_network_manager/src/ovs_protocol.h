@@ -115,6 +115,7 @@ enum {
   OVSAST_RESUBMIT = 1,
   OVSAST_REG_LOAD = 7,
   OVSAST_RESUBMIT_TABLE = 14,
+  OVSAST_LEARN = 16,
 };
 
 
@@ -179,6 +180,21 @@ typedef struct {
 
 
 typedef struct {
+  uint16_t type;
+  uint16_t len;
+  uint32_t vendor;
+  uint16_t subtype;
+  uint16_t idle_timeout;
+  uint16_t hard_timeout;
+  uint16_t priority;
+  uint64_t cookie;
+  uint16_t flags;
+  uint8_t table_id;
+  uint8_t pad[ 5 ];
+} ovs_action_learn;
+
+
+typedef struct {
   struct ofp_header header;
   uint32_t vendor;
   uint32_t subtype;
@@ -214,6 +230,41 @@ typedef struct {
   uint64_t packet_count;
   uint64_t byte_count;
 } ovs_flow_removed;
+
+
+#define OVS_LEARN_N_BITS_MASK 0x3ff
+#define OVS_LEARN_SRC_SHIFT 13
+#define OVS_LEARN_SRC_FIELD     (0 << OVS_LEARN_SRC_SHIFT)
+#define OVS_LEARN_SRC_IMMEDIATE (1 << OVS_LEARN_SRC_SHIFT)
+#define OVS_LEARN_SRC_MASK      (1 << OVS_LEARN_SRC_SHIFT)
+#define OVS_LEARN_DST_SHIFT 11
+#define OVS_LEARN_DST_MATCH  (0 << OVS_LEARN_DST_SHIFT)
+#define OVS_LEARN_DST_LOAD   (1 << OVS_LEARN_DST_SHIFT)
+#define OVS_LEARN_DST_OUTPUT (2 << OVS_LEARN_DST_SHIFT)
+#define OVS_LEARN_DST_MASK   (3 << OVS_LEARN_DST_SHIFT)
+
+
+#define ROUND_UP_16( n ) ( ( ( n ) + 15 ) / 16 )
+#define OVS_LEARN_HEADER_LENGTH ( ( int ) sizeof( uint16_t ) )
+#define OVS_LEARN_SRC_IMMEDIATE_LENGTH( header ) ( 2 * ( ROUND_UP_16( ( header ) & OVS_LEARN_DST_OUTPUT ) ) )
+#define OVS_LEARN_MATCH_LENGTH ( ( int ) sizeof( uint32_t ) )
+#define OVS_LEARN_OFS_LENGTH ( ( int ) sizeof( uint16_t ) )
+
+
+static inline uint16_t ovs_flow_mod_spec_length( uint16_t header ) {
+  int length = 0;
+  length += OVS_LEARN_HEADER_LENGTH;
+  if ( ( header & OVS_LEARN_SRC_MASK ) == OVS_LEARN_SRC_IMMEDIATE ) {
+    length += OVS_LEARN_SRC_IMMEDIATE_LENGTH( header );
+  }
+  else {
+    length += ( OVS_LEARN_MATCH_LENGTH + OVS_LEARN_OFS_LENGTH );
+  }
+  if ( ( header & OVS_LEARN_DST_MASK ) != OVS_LEARN_DST_OUTPUT ) {
+    length += ( OVS_LEARN_MATCH_LENGTH + OVS_LEARN_OFS_LENGTH );
+  }
+  return ( uint16_t ) length;
+}
 
 
 #endif // OVS_PROTOCOL_H

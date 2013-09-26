@@ -27,6 +27,7 @@ class Network
     def create parameters
       slice_id = convert_slice_id parameters[ :id ]
       description = convert_description parameters[ :description ]
+      mac_learning = convert_mac_learning parameters[ :mac_learning ]
 
       logger.debug "#{ __FILE__ }:#{ __LINE__ }: create a new network (slice_id = #{ slice_id }, description = '#{ description }')"
 
@@ -49,6 +50,7 @@ class Network
         slice = DB::Slice.new
         slice.id = slice_id
         slice.description = description
+	slice.mac_learning = mac_learning
         if update_transaction?
           logger.debug "#{ __FILE__ }:#{ __LINE__ }: update-transaction begin (slice_id = #{ slice_id })"
           slice.state = DB::SLICE_STATE_PREPARING_TO_UPDATE
@@ -56,7 +58,7 @@ class Network
           slice.state = DB::SLICE_STATE_CONFIRMED
         end
         slice.save!
-        { :id => slice.id, :description => slice.description, :state => slice.state.to_s }
+        { :id => slice.id, :description => slice.description, :mac_learning => slice.mac_learning.to_s, :state => slice.state.to_s }
       rescue ActiveRecord::StatementInvalid
         DB::OverlayNetwork.delete( slice_id )
         raise NetworkManagementError.new
@@ -69,6 +71,7 @@ class Network
 
       slice_id = convert_slice_id parameters[ :id ]
       description = convert_description parameters[ :description ]
+      #mac_learning = convert_mac_learning parameters[ :mac_learning ] # not-supported
 
       logger.debug "#{ __FILE__ }:#{ __LINE__ }: update the network (slice_id = #{ slice_id }, description = '#{ description }')"
 
@@ -128,7 +131,7 @@ class Network
       responses = []
       DB::Slice.find( :all, :readonly => true ).each do | each |
         if id_by_dpid.nil? or id_by_dpid.include?( each.id )
-          response = { :id => each.id, :description => each.description, :state => each.state.to_s }
+          response = { :id => each.id, :description => each.description, :mac_learning => each.mac_learning.to_s, :state => each.state.to_s }
           response[ :updated_at ] = each.updated_at.to_s( :db ) unless parameters[ :require_updated_at ].nil?
           responses << response
         end
@@ -144,7 +147,7 @@ class Network
       logger.debug "#{ __FILE__ }:#{ __LINE__ }: show details of network (slice_id = #{ slice_id })"
 
       slice = find_slice( slice_id )
-      response = { :id => slice.id, :description => slice.description, :state => slice.state.to_s }
+      response = { :id => slice.id, :description => slice.description, :mac_learning => slice.mac_learning.to_s, :state => slice.state.to_s }
       response[ :updated_at ] = slice.updated_at.to_s( :db ) unless parameters[ :require_updated_at ].nil?
       response
     end
@@ -229,10 +232,14 @@ class Network
       port_name = convert_port_name parameters[ :name ]
       vid = convert_vid parameters[ :vid ]
       description = convert_description parameters[ :description ]
+      mac_learning = convert_mac_learning parameters[ :mac_learning ]
 
-      logger.debug "#{ __FILE__ }:#{ __LINE__ }: create a new port (port_id = #{ port_id }, slice_id = #{ slice_id }, datapath_id = #{ datapath_id }, port_no = #{ port_no }, port_name = '#{ port_name }', vid = #{ vid }, description = '#{ description }')"
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: create a new port (port_id = #{ port_id }, slice_id = #{ slice_id }, datapath_id = #{ datapath_id }, port_no = #{ port_no }, port_name = '#{ port_name }', vid = #{ vid }, description = '#{ description }', mac_learning = '#{ mac_learning }')"
 
       slice = find_slice( slice_id )
+      if mac_learning.nil?
+        mac_learning = slice.mac_learning
+      end
       raise NetworkManagementError.new if slice.state.failed?
       if update_transaction?
         logger.debug "#{ __FILE__ }:#{ __LINE__ }: update-transaction (slice_id = #{ slice_id })"
@@ -283,10 +290,11 @@ class Network
         port.vid = vid
         port.type = DB::PORT_TYPE_CUSTOMER
         port.description = description
+        port.mac_learning = mac_learning
         port.state = DB::PORT_STATE_READY_TO_UPDATE
         port.save!
         port_id = port.id
-        add_overlay_ports slice_id
+        add_overlay_ports slice_id, slice.mac_learning
       end
       { :id => port_id }
     end
@@ -307,7 +315,7 @@ class Network
       end
       DB::Port.find( :all,
                      :readonly => true,
-                     :select => 'id, datapath_id, port_no, port_name, vid, type as port_type, description, state, updated_at',
+                     :select => 'id, datapath_id, port_no, port_name, vid, type as port_type, description, mac_learning, state, updated_at',
                      :conditions => conditions ).collect do | each |
         response = {
           :id => each.id,
@@ -317,6 +325,7 @@ class Network
           :vid => each.vid,
           :type => each.type.to_s,
           :description => each.description,
+          :mac_learning => each.mac_learning.to_s,
           :state => each.state.to_s
         }
         response[ :updated_at ] = each.updated_at.to_s( :db ) unless parameters[ :require_updated_at ].nil?
@@ -336,7 +345,7 @@ class Network
 
       port = DB::Port.find( :first,
                             :readonly => true,
-                            :select => 'id, datapath_id, port_no, port_name, vid, type as port_type, description, state, updated_at',
+                            :select => 'id, datapath_id, port_no, port_name, vid, type as port_type, description, mac_learning, state, updated_at',
                             :conditions => [
                               "id = ? AND slice_id = ? AND type = ?",
                               port_id, slice_id, DB::PORT_TYPE_CUSTOMER ] )
@@ -349,7 +358,8 @@ class Network
         :vid => port.vid,
         :type => port.type.to_s,
         :description => port.description,
-        :state => port.state.to_s,
+        :mac_learning => port.mac_learning.to_s,
+        :state => port.state.to_s
       }
       response[ :updated_at ] = port.updated_at.to_s( :db ) unless parameters[ :require_updated_at ].nil?
       response
@@ -756,8 +766,8 @@ class Network
       end
     end
 
-    def add_overlay_ports slice_id
-      logger.debug "#{ __FILE__ }:#{ __LINE__ }: Adding overlay ports (slice_id = #{ slice_id })"
+    def add_overlay_ports slice_id, mac_learning
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: Adding overlay ports (slice_id = #{ slice_id }, mac_learnin = #{ mac_learning })"
 
       ports = get_active_ports slice_id
       switches = get_active_switches_from ports
@@ -775,12 +785,12 @@ class Network
           next if datapath_id == remote_datapath_id
           remote_mac_addresses.push mac_address
         end
-        add_overlay_port( slice_id, datapath_id, remote_mac_addresses )
+        add_overlay_port( slice_id, mac_learning, datapath_id, remote_mac_addresses )
       end
     end
 
-    def add_overlay_port slice_id, datapath_id, remote_mac_addresses
-      logger.debug "#{ __FILE__ }:#{ __LINE__ }: Adding an overlay port (slice_id = #{ slice_id }, datapath_id = #{ datapath_id }, remote_mac_addresses = [ #{ remote_mac_addresses.join( "," ) })"
+    def add_overlay_port slice_id, mac_learning, datapath_id, remote_mac_addresses
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: Adding an overlay port (slice_id = #{ slice_id }, mac_learning = #{ mac_learning }, datapath_id = #{ datapath_id }, remote_mac_addresses = [ #{ remote_mac_addresses.join( "," ) })"
 
       port_name = "vxlan%u" % slice_id
 
@@ -799,6 +809,7 @@ class Network
         overlay_port.vid = DB::VLAN_ID_UNSPECIFIED
         overlay_port.type = DB::PORT_TYPE_OVERLAY
         overlay_port.description = "generated by Configuration Frontend"
+	overlay_port.mac_learning = mac_learning
         overlay_port.state = DB::PORT_STATE_READY_TO_UPDATE
         overlay_port.save!
       rescue
@@ -935,7 +946,7 @@ class Network
     def find_port slice_id, port_id
       port = DB::Port.find( :first,
                             :readonly => true,
-                            :select => 'id, datapath_id, port_no, port_name, vid, type as port_type, description, state, updated_at',
+                            :select => 'id, datapath_id, port_no, port_name, vid, type as port_type, description, mac_learning, state, updated_at',
                             :conditions => [
                               "slice_id = ? AND id = ? AND type = ?",
                               slice_id, port_id, DB::PORT_TYPE_CUSTOMER ] )

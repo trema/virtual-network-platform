@@ -181,7 +181,7 @@ default_flow_entry_not_installed( uint64_t datapath_id, const buffer *message, v
 
 static bool
 install_default_flow_entry( uint64_t datapath_id, uint8_t table_id, uint16_t priority, const ovs_matches *matches,
-                            ongoing_transactions *transactions ) {
+                            openflow_actions *actions, ongoing_transactions *transactions ) {
   assert( matches != NULL );
   assert( transactions != NULL );
 
@@ -198,7 +198,7 @@ install_default_flow_entry( uint64_t datapath_id, uint8_t table_id, uint16_t pri
 
   buffer *flow_mod = create_ovs_flow_mod( get_transaction_id(), get_cookie(), OFPFC_MODIFY_STRICT,
                                          entry->table_id, 0, 0, entry->priority, UINT32_MAX,
-                                         OFPP_NONE, 0, matches, NULL );
+                                         OFPP_NONE, 0, matches, actions );
   bool ret = execute_transaction( datapath_id, flow_mod,
                                   default_flow_entry_installed, entry,
                                   default_flow_entry_not_installed, entry );
@@ -226,7 +226,7 @@ ovs_flow_mod_table_id_succeeded( uint64_t datapath_id, const buffer *message, vo
   transactions->failed = false;
 
   ovs_matches *match = create_ovs_matches();
-  bool ret = install_default_flow_entry( datapath_id, 0, 0, match, transactions );
+  bool ret = install_default_flow_entry( datapath_id, 0, 0, match, NULL, transactions );
   delete_ovs_matches( match );
   if ( !ret ) {
     return;
@@ -236,7 +236,7 @@ ovs_flow_mod_table_id_succeeded( uint64_t datapath_id, const buffer *message, vo
   uint8_t addr[ OFP_ETH_ALEN] = { 0, 0, 0, 0, 0, 0 };
   uint8_t mask[ OFP_ETH_ALEN ] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
   append_ovs_match_eth_dst( match, addr, mask );
-  ret = install_default_flow_entry( datapath_id, 0, UINT16_MAX, match, transactions );
+  ret = install_default_flow_entry( datapath_id, 0, UINT16_MAX, match, NULL, transactions );
   delete_ovs_matches( match );
   if ( !ret ) {
     return;
@@ -244,7 +244,7 @@ ovs_flow_mod_table_id_succeeded( uint64_t datapath_id, const buffer *message, vo
 
   match = create_ovs_matches();
   append_ovs_match_eth_src( match, addr );
-  ret = install_default_flow_entry( datapath_id, 0, UINT16_MAX, match, transactions );
+  ret = install_default_flow_entry( datapath_id, 0, UINT16_MAX, match, NULL, transactions );
   delete_ovs_matches( match );
   if ( !ret ) {
     return;
@@ -253,15 +253,25 @@ ovs_flow_mod_table_id_succeeded( uint64_t datapath_id, const buffer *message, vo
   match = create_ovs_matches();
   memset( addr, 0xff, sizeof( addr ) );
   append_ovs_match_eth_src( match, addr );
-  ret = install_default_flow_entry( datapath_id, 0, UINT16_MAX, match, transactions );
+  ret = install_default_flow_entry( datapath_id, 0, UINT16_MAX, match, NULL, transactions );
   delete_ovs_matches( match );
   if ( !ret ) {
     return;
   }
 
+  // FIXME: hard-coded table id
   // default flow entries for table #2
   match = create_ovs_matches();
-  install_default_flow_entry( datapath_id, 2, 0, match, transactions );
+  openflow_actions *actions = create_actions();
+  append_ovs_action_resubmit_table( actions, OFPP_IN_PORT, 3 );
+  install_default_flow_entry( datapath_id, 2, 0, match, actions, transactions );
+  delete_actions( actions );
+  delete_ovs_matches( match );
+
+  // FIXME: hard-coded table id
+  // default flow entries for table #3
+  match = create_ovs_matches();
+  install_default_flow_entry( datapath_id, 3, 0, match, NULL, transactions );
   delete_ovs_matches( match );
 }
 

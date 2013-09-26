@@ -69,6 +69,28 @@ def convert_description value
   value
 end
 
+def convert_mac_learning value
+  return nil if value.nil?
+
+  case value
+    when Integer
+      mac_learning = value
+    when /^[[:digit:]]*$/
+      mac_learning = value.to_i
+    when 'enable', 'true', 'yes', 'mac-learning'
+      mac_learning = DB::MAC_LEARNING_ENABLE
+    when 'disable', 'false', 'no', 'no-mac-learning'
+      mac_learning = DB::MAC_LEARNING_DISABLE
+    else
+      raise BadRequestError.new "MAC learning (#{ value }) is illegal format."
+  end
+  begin
+    DB::MacLearning.new mac_learning
+  rescue => e
+    raise BadRequestError.new e.message
+  end
+end
+
 PORT_ID_MIN = 1
 PORT_ID_MAX = 0xffffffff
 

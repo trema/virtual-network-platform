@@ -1164,6 +1164,99 @@ hton_ovs_action_resubmit( ovs_action_resubmit *dst, const ovs_action_resubmit *s
 }
 
 
+static void
+hton_ovs_action_learn_front( ovs_action_learn *dst, const ovs_action_learn *src ) {
+  assert( src != NULL );
+  assert( dst != NULL );
+
+  dst->type = htons( src->type );
+  dst->len = htons( src->len );
+  dst->vendor = htonl( src->vendor );
+  dst->subtype = htons( src->subtype );
+  dst->idle_timeout = htons( src->idle_timeout );
+  dst->hard_timeout = htons( src->hard_timeout );
+  dst->priority = htons( src->priority );
+  dst->cookie = htonll( src->cookie );
+  dst->flags = htons( src->flags );
+  dst->table_id = src->table_id;
+  dst->pad[ 0 ] = 0;
+  dst->pad[ 1 ] = 0; dst->pad[ 2 ] = 0; // fin_idle_timeout
+  dst->pad[ 3 ] = 0; dst->pad[ 4 ] = 0; // fin_hard_timeout
+}
+
+
+static void
+hton_ovs_flow_mod_spec( uint16_t header, char *dst, const char *src ) {
+  assert( src != NULL );
+  assert( dst != NULL );
+
+  *( uint16_t * ) dst = htons( *( const uint16_t * ) src );
+  src += OVS_LEARN_HEADER_LENGTH;
+  dst += OVS_LEARN_HEADER_LENGTH;
+
+  if ( ( header & OVS_LEARN_SRC_MASK ) == OVS_LEARN_SRC_IMMEDIATE ) {
+    int src_len = OVS_LEARN_SRC_IMMEDIATE_LENGTH( header );
+    switch ( src_len ) {
+      case sizeof( uint16_t ):
+        *( uint16_t * ) dst = htons( *( const uint16_t * ) src );
+        break;
+      case sizeof( uint32_t ):
+        *( uint32_t * ) dst = htonl( *( const uint32_t * ) src );
+        break;
+      case sizeof( uint64_t ):
+        *( uint64_t * ) dst = htonll( *( const uint64_t * ) src );
+        break;
+      default:
+        memcpy( dst, src, ( size_t ) src_len ); // network byte order
+        break;
+    }
+    src += src_len;
+    dst += src_len;
+  }
+  else {
+    *( uint32_t * ) dst = htonl( *( const uint32_t * ) src );
+    src += OVS_LEARN_MATCH_LENGTH;
+    dst += OVS_LEARN_MATCH_LENGTH;
+    *( uint16_t * ) dst = htons( *( const uint16_t * ) src );
+    src += OVS_LEARN_OFS_LENGTH;
+    dst += OVS_LEARN_OFS_LENGTH;
+  }
+
+  if ( ( header & OVS_LEARN_DST_MASK ) != OVS_LEARN_DST_OUTPUT ) {
+    *( uint32_t * ) dst = htonl( *( const uint32_t * ) src );
+    src += OVS_LEARN_MATCH_LENGTH;
+    dst += OVS_LEARN_MATCH_LENGTH;
+    *( uint16_t * ) dst = htons( *( const uint16_t * ) src );
+    src += OVS_LEARN_OFS_LENGTH;
+    dst += OVS_LEARN_OFS_LENGTH;
+  }
+}
+
+
+void
+hton_ovs_action_learn( ovs_action_learn *dst, const ovs_action_learn *src ) {
+  assert( src != NULL );
+  assert( dst != NULL );
+
+  hton_ovs_action_learn_front( dst, src );
+  int length = src->len - ( int ) sizeof( ovs_action_learn );
+  const char *src_spec = ( const char * ) src + sizeof( ovs_action_learn );
+  char *dst_spec = ( char * ) dst + sizeof( ovs_action_learn );
+  memset( dst_spec, 0, ( size_t ) length );
+  while ( length > ( int ) sizeof( uint16_t ) ) {
+    uint16_t header = *( const uint16_t * ) src_spec;
+    int spec_len = ovs_flow_mod_spec_length( header );
+    if ( length < spec_len ) {
+      break;
+    }
+    hton_ovs_flow_mod_spec( header, dst_spec, src_spec );
+    length -= spec_len;
+    src_spec = src_spec + spec_len;
+    dst_spec = dst_spec + spec_len;
+  }
+}
+
+
 void
 hton_ovs_action( ovs_action_header *dst, const ovs_action_header *src ) {
   assert( src != NULL );
@@ -1193,11 +1286,46 @@ hton_ovs_action( ovs_action_header *dst, const ovs_action_header *src ) {
     }
     break;
 
+    case OVSAST_LEARN:
+    {
+      hton_ovs_action_learn( ( ovs_action_learn * ) dst,
+                             ( const ovs_action_learn * ) src );
+    }
+    break;
+
     default:
     {
       error( "Unsupported or undefined action ( subtype = %#x ).", src->subtype );
     }
     break;
+  }
+}
+
+
+#define ntoh_ovs_action_learn_front hton_ovs_action_learn_front
+#define ntoh_ovs_flow_mod_spec hton_ovs_flow_mod_spec
+
+
+void
+ntoh_ovs_action_learn( ovs_action_learn *dst, const ovs_action_learn *src ) {
+  assert( src != NULL );
+  assert( dst != NULL );
+
+  ntoh_ovs_action_learn_front( dst, src );
+  int length = dst->len - ( int ) sizeof( ovs_action_learn );
+  const char *src_spec = ( const char * ) src + sizeof( ovs_action_learn );
+  char *dst_spec = ( char * ) dst + sizeof( ovs_action_learn );
+  memset( dst_spec, 0, ( size_t ) length );
+  while ( length > ( int ) sizeof( uint16_t ) ) {
+    uint16_t header = ntohs( *( const uint16_t * ) src_spec );
+    int spec_len = ovs_flow_mod_spec_length( header );
+    if ( length < spec_len ) {
+      break;
+    }
+    ntoh_ovs_flow_mod_spec( header, dst_spec, src_spec );
+    length -= spec_len;
+    src_spec = src_spec + spec_len;
+    dst_spec = dst_spec + spec_len;
   }
 }
 
@@ -1229,6 +1357,13 @@ ntoh_ovs_action( ovs_action_header *dst, const ovs_action_header *src ) {
     {
       ntoh_ovs_action_resubmit_table( ( ovs_action_resubmit * ) dst,
                                       ( const ovs_action_resubmit * ) src );
+    }
+    break;
+
+    case OVSAST_LEARN:
+    {
+      ntoh_ovs_action_learn( ( ovs_action_learn * ) dst,
+                             ( const ovs_action_learn * ) src );
     }
     break;
 
