@@ -246,7 +246,7 @@ typedef struct {
 
 #define ROUND_UP_16( n ) ( ( ( n ) + 15 ) / 16 )
 #define OVS_LEARN_HEADER_LENGTH ( ( int ) sizeof( uint16_t ) )
-#define OVS_LEARN_SRC_IMMEDIATE_LENGTH( header ) ( 2 * ( ROUND_UP_16( ( header ) & OVS_LEARN_DST_OUTPUT ) ) )
+#define OVS_LEARN_SRC_IMMEDIATE_LENGTH( header ) ( 2 * ( ROUND_UP_16( ( header ) & OVS_LEARN_N_BITS_MASK ) ) )
 #define OVS_LEARN_MATCH_LENGTH ( ( int ) sizeof( uint32_t ) )
 #define OVS_LEARN_OFS_LENGTH ( ( int ) sizeof( uint16_t ) )
 

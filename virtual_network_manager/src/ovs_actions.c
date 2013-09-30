@@ -226,6 +226,8 @@ append_ovs_flow_mod_specs_add_match_field( ovs_flow_mod_specs *flow_mod_specs, u
 
 bool
 append_ovs_flow_mod_specs_add_load_field( ovs_flow_mod_specs *flow_mod_specs, uint32_t src, uint32_t dst, uint16_t n_bits ) {
+  assert( flow_mod_specs != NULL );
+
   uint16_t header = ( uint16_t ) ( OVS_LEARN_SRC_FIELD | OVS_LEARN_DST_LOAD | ( n_bits & OVS_LEARN_N_BITS_MASK ) );
   uint16_t src_ofs = 0;
   uint16_t dst_ofs = 0;
