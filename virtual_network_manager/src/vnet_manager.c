@@ -349,7 +349,7 @@ handle_switch_disconnected( uint64_t datapath_id, void *user_data ) {
 
   unschedule_disconnect_switch( datapath_id );
 
-  bool ret = delete_switch( datapath_id );
+  bool ret = delete_switch( datapath_id, hostname, getpid() );
   if ( !ret ) {
     error( "Failed to delete a switch from database ( datapath_id = %#" PRIx64 " ).", datapath_id );
   }
@@ -391,7 +391,7 @@ handle_features_reply( uint64_t datapath_id, uint32_t transaction_id, uint32_t n
   }
 
   if ( errors != 0 ) {
-    ret = delete_switch( datapath_id );
+    ret = delete_switch( datapath_id, hostname, pid );
     if ( !ret ) {
       error( "Failed to delete a switch from switch database ( datapath_id = %#" PRIx64
              ", constroller_host = %s, controller_pid = %u ).", datapath_id, hostname, pid );

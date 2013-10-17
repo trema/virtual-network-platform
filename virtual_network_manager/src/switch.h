@@ -42,7 +42,7 @@ typedef void ( *switch_port_event_handler )(
 
 
 bool add_switch( uint64_t datapath_id, const char *controller_host, pid_t controller_pid );
-bool delete_switch( uint64_t datapath_id );
+bool delete_switch( uint64_t datapath_id, const char *controller_host, pid_t controller_pid );
 bool delete_switch_by_host_pid( const char* controller_host, pid_t controller_pid );
 bool switch_on_duty( uint64_t datapath_id, const char *controller_host, pid_t controller_pid );
 bool add_port( uint64_t datapath_id, uint16_t port_no, const char *name );

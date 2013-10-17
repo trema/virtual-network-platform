@@ -166,19 +166,23 @@ get_port_no_by_name( uint64_t datapath_id, const char *name, uint16_t *port_no )
 
 
 static bool
-delete_port_by_datapath_id( uint64_t datapath_id ) {
-  debug( "Deleting switch ports from port database ( datapath_id = %#" PRIx64 " ).", datapath_id );
+delete_ports_by_datapath_id( uint64_t datapath_id, const char *controller_host, pid_t controller_pid ) {
+  debug( "Deleting switch ports from port database ( datapath_id = %#" PRIx64 ", "
+         "controller_host = %s, controller_pid = %u ).", datapath_id, controller_host, controller_pid );
 
   assert( db != NULL );
 
-  bool ret = execute_query( db, "delete from switch_ports where datapath_id = %" PRIu64, datapath_id );
+  bool ret = execute_query( db, "delete from switch_ports where datapath_id in (select datapath_id from "
+                            "switches where datapath_id = %" PRIu64 " and controller_host = \'%s\' and "
+                            "controller_pid = %u)", datapath_id, controller_host, controller_pid );
   if ( !ret ) {
     return false;
   }
 
   my_ulonglong n_rows = mysql_affected_rows( db );
   if ( n_rows == 0 ) {
-    warn( "Failed to delete ports from database ( datapath_id = %#" PRIx64 " ).", datapath_id );
+    warn( "Failed to delete ports from database ( datapath_id = %#" PRIx64 ", "
+          "controller_host = %s, controller_pid = %u ).", datapath_id, controller_host, controller_pid );
     return false;
   }
 
@@ -189,8 +193,8 @@ delete_port_by_datapath_id( uint64_t datapath_id ) {
     port_event_callback( SWITCH_PORT_DELETED, datapath_id, NULL, OFPP_ALL, port_event_user_data );
   }
 
-  debug( "Switch ports are deleted from port database successfully ( datapath_id = %#" PRIx64 " ).",
-         datapath_id );
+  debug( "Switch ports are deleted from port database successfully ( datapath_id = %#" PRIx64 ", "
+         "controller_host = %s, controller_pid = %u ).", datapath_id, controller_host, controller_pid );
 
   return true;
 }
@@ -224,25 +228,38 @@ add_switch( uint64_t datapath_id, const char *controller_host, pid_t controller_
 
 
 bool
-delete_switch( uint64_t datapath_id ) {
-  debug( "Deleting a switch %#" PRIx64 " from switch database.", datapath_id );
+delete_switch( uint64_t datapath_id, const char *controller_host, pid_t controller_pid ) {
+  debug( "Deleting a switch %#" PRIx64 " ( controller_host = %s, controller_pid = %u ) "
+         "from switch database.", datapath_id, controller_host, controller_pid );
 
   assert( db != NULL );
 
-  bool ret = execute_query( db, "delete from switches where datapath_id = %" PRIu64, datapath_id );
+  int n_errors = 0;
+  bool ret = delete_ports_by_datapath_id( datapath_id, controller_host, controller_pid );
   if ( !ret ) {
+    warn( "Failed to delete switch ports from database ( datapath_id = %#" PRIx64 ", "
+          "controller_host = %s, controller_pid = %u ).", datapath_id, controller_host, controller_pid );
+    n_errors++;
+  }
+
+  ret = execute_query( db, "delete from switches where datapath_id = %" PRIu64 " and "
+                       "controller_host = \'%s\' and controller_pid = %u",
+                       datapath_id, controller_host, controller_pid );
+
+  if ( !ret ) {
+    warn( "Failed to delete a switch from database ( datapath_id = %#" PRIx64 ", "
+          "controller_host = %s, controller_pid = %u ).", datapath_id, controller_host, controller_pid );
+    n_errors++;
+  }
+
+  if ( n_errors > 0 ) {
     return false;
   }
 
   my_ulonglong n_rows = mysql_affected_rows( db );
   if ( n_rows == 0 ) {
-    error( "Failed to delete a switch from database ( datapath_id = %#" PRIx64 " ).", datapath_id );
-    return false;
-  }
-
-  ret = delete_port_by_datapath_id( datapath_id );
-  if ( !ret ) {
-    error( "Failed to delete a switch from database ( datapath_id = %#" PRIx64 " ).", datapath_id );
+    warn( "Failed to delete a switch from database ( datapath_id = %#" PRIx64 ", "
+          "controller_host = %s, controller_pid = %u ).", datapath_id, controller_host, controller_pid );
     return false;
   }
 
@@ -293,7 +310,7 @@ delete_switch_by_host_pid( const char* controller_host, pid_t controller_pid ) {
       continue;
     }
 
-    bool ret = delete_switch( datapath_id );
+    bool ret = delete_switch( datapath_id, controller_host, controller_pid );
     if ( !ret ) {
       n_errors++;
     }
