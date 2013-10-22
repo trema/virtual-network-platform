@@ -606,6 +606,20 @@ append_ovs_match_tun_id( ovs_matches *matches, uint64_t id, uint64_t mask ) {
 }
 
 
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 5, 0 )
+bool
+append_ovs_match_cookie( ovs_matches *matches, uint64_t cookie, uint64_t mask ) {
+  assert( matches != NULL );
+
+  if ( mask == UINT64_MAX ) {
+    return append_ovs_match_64( matches, OVSM_OVS_COOKIE, cookie );
+  }
+
+  return append_ovs_match_64w( matches, OVSM_OVS_COOKIE_W, cookie, mask );
+}
+#endif
+
+
 /*
  * Local variables:
  * c-basic-offset: 2

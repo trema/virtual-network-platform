@@ -734,6 +734,30 @@ ovs_match_ip_ttl_to_string( const ovs_match_header *header, char *str, size_t le
 }
 
 
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 5, 0 )
+static bool
+ovs_match_cookie_to_string( const ovs_match_header *header, char *str, size_t length ) {
+  assert( header != NULL );
+  assert( str != NULL );
+  assert( length > 0 );
+
+  switch ( *header ) {
+    case OVSM_OVS_COOKIE:
+      return ovs_match_64_to_hex_string( header, str, length, "cookie" );
+
+    case OVSM_OVS_COOKIE_W:
+      return ovs_match_64w_to_hex_string( header, str, length, "cookie" );
+
+    default:
+      assert( 0 );
+      break;
+  }
+
+  return false;
+}
+#endif
+
+
 static bool
 ovs_match_to_string( const ovs_match_header *header, char *str, size_t length ) {
   assert( header != NULL );
@@ -869,6 +893,13 @@ ovs_match_to_string( const ovs_match_header *header, char *str, size_t length ) 
     case OVSM_OVS_IP_TTL: 
       ret = ovs_match_ip_ttl_to_string( header, str, length );
       break;
+
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 5, 0 )
+    case OVSM_OVS_COOKIE:
+    case OVSM_OVS_COOKIE_W:
+      ret = ovs_match_cookie_to_string( header, str, length );
+      break;
+#endif
 
     default:
     {

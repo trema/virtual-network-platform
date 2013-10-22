@@ -26,6 +26,12 @@
 #include <openflow.h>
 
 
+#define OVS_VERSION( a, b, c ) ( ( ( a ) << 16 ) + ( ( b ) << 8 ) + ( c ) )
+#ifndef OVS_VERSION_CODE
+#define OVS_VERSION_CODE OVS_VERSION( 1, 4, 0 )
+#endif
+
+
 #define OVSM_HEADER( _vendor, _field, _length ) ( ( ( _vendor ) << 16 ) | ( ( _field ) << 9 ) | ( 0 << 8 ) | ( _length ) )
 #define OVSM_HEADER_W( _vendor, _field, _length ) ( ( ( _vendor ) << 16 ) | ( ( _field ) << 9 ) | ( 1 << 8 ) | ( ( _length ) * 2 ) )
 #define OVSM_OVS_REG( _index ) OVSM_HEADER( 0x0001, _index, 4 )
@@ -85,6 +91,10 @@ enum {
   OVSM_OVS_IPV6_LABEL = OVSM_HEADER( 0x0001, 27, 4 ),
   OVSM_OVS_IP_ECN = OVSM_HEADER( 0x0001, 28, 1 ),
   OVSM_OVS_IP_TTL = OVSM_HEADER( 0x0001, 29, 1 ),
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 5, 0 )
+  OVSM_OVS_COOKIE = OVSM_HEADER( 0x0001, 30, 8 ),
+  OVSM_OVS_COOKIE_W = OVSM_HEADER_W( 0x0001, 30, 8 ),
+#endif
 };
 
 
@@ -190,7 +200,13 @@ typedef struct {
   uint64_t cookie;
   uint16_t flags;
   uint8_t table_id;
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 6, 0 )
+  uint8_t pad;
+  uint16_t fin_idle_timeout;
+  uint16_t fin_hard_timeout;
+#else
   uint8_t pad[ 5 ];
+#endif
 } ovs_action_learn;
 
 

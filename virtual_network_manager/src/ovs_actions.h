@@ -38,6 +38,9 @@ bool append_ovs_action_resubmit( openflow_actions *actions, const uint16_t in_po
 bool append_ovs_action_resubmit_table( openflow_actions *actions, const uint16_t in_port, const uint8_t table_id );
 bool append_ovs_action_learn( openflow_actions *actions, const uint16_t idle_timeout, const uint16_t hard_timeout,
                               const uint16_t priority, const uint64_t cookie, const uint16_t flags, const uint8_t table_id,
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 6, 0 )
+                              const uint16_t fin_idle_timeout, const uint16_t fin_hard_timeout,
+#endif
                               const ovs_flow_mod_specs *flow_mod_specs );
 
 

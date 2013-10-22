@@ -76,6 +76,9 @@ bool append_ovs_match_arp_sha( ovs_matches *matches, uint8_t addr[ OFP_ETH_ALEN]
 bool append_ovs_match_arp_tha( ovs_matches *matches, uint8_t addr[ OFP_ETH_ALEN] );
 bool append_ovs_match_reg( ovs_matches *matches, uint8_t index, uint32_t value, uint32_t mask );
 bool append_ovs_match_tun_id( ovs_matches *matches, uint64_t id, uint64_t mask );
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 5, 0 )
+bool append_ovs_match_cookie( ovs_matches *matches, uint64_t cookie, uint64_t mask );
+#endif
 
 
 #endif // OVS_MATCH_H

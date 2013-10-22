@@ -439,6 +439,22 @@ hton_ovs_match_tun_id( ovs_match_header *dst, const ovs_match_header *src ) {
 }
 
 
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 5, 0 )
+void
+hton_ovs_match_cookie( ovs_match_header *dst, const ovs_match_header *src ) {
+  assert( dst != NULL );
+  assert( src != NULL );
+  assert( *src == OVSM_OVS_COOKIE || *src == OVSM_OVS_COOKIE_W );
+
+  if ( ovs_match_has_mask( *src ) ) {
+    return hton_ovs_match_64w( dst, src );
+  }
+
+  hton_ovs_match_64( dst, src );
+}
+#endif
+
+
 void
 hton_ovs_match( ovs_match_header *dst, const ovs_match_header *src ) {
   assert( dst != NULL );
@@ -621,6 +637,15 @@ hton_ovs_match( ovs_match_header *dst, const ovs_match_header *src ) {
       hton_ovs_match_ip_ttl( dst, src );
     }
     break;
+
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 5, 0 )
+    case OVSM_OVS_COOKIE:
+    case OVSM_OVS_COOKIE_W:
+    {
+      hton_ovs_match_cookie( dst, src );
+    }
+    break;
+#endif
 
     default:
     {
@@ -938,6 +963,24 @@ ntoh_ovs_match_tun_id( ovs_match_header *dst, const ovs_match_header *src ) {
 }
 
 
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 5, 0 )
+void
+ntoh_ovs_match_cookie( ovs_match_header *dst, const ovs_match_header *src ) {
+  assert( dst != NULL );
+  assert( src != NULL );
+
+  if ( ovs_match_has_mask( ntohl( *src ) ) ) {
+    ntoh_ovs_match_64w( dst, src );
+    assert( *dst == OVSM_OVS_COOKIE_W );
+    return;
+  }
+
+  ntoh_ovs_match_64( dst, src );
+  assert( *dst == OVSM_OVS_COOKIE );
+}
+#endif
+
+
 void
 ntoh_ovs_match( ovs_match_header *dst, const ovs_match_header *src ) {
   assert( dst != NULL );
@@ -1121,6 +1164,15 @@ ntoh_ovs_match( ovs_match_header *dst, const ovs_match_header *src ) {
     }
     break;
 
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 5, 0 )
+    case OVSM_OVS_COOKIE:
+    case OVSM_OVS_COOKIE_W:
+    {
+      ntoh_ovs_match_cookie( dst, src );
+    }
+    break;
+#endif
+
     default:
     {
       ovs_match_header header;
@@ -1179,9 +1231,15 @@ hton_ovs_action_learn_front( ovs_action_learn *dst, const ovs_action_learn *src 
   dst->cookie = htonll( src->cookie );
   dst->flags = htons( src->flags );
   dst->table_id = src->table_id;
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 6, 0 )
+  dst->pad = 0;
+  dst->fin_idle_timeout = htons( src->fin_idle_timeout );
+  dst->fin_hard_timeout = htons( src->fin_hard_timeout );
+#else
   dst->pad[ 0 ] = 0;
-  dst->pad[ 1 ] = 0; dst->pad[ 2 ] = 0; // fin_idle_timeout
-  dst->pad[ 3 ] = 0; dst->pad[ 4 ] = 0; // fin_hard_timeout
+  dst->pad[ 1 ] = 0; dst->pad[ 2 ] = 0;
+  dst->pad[ 3 ] = 0; dst->pad[ 4 ] = 0;
+#endif
 }
 
 

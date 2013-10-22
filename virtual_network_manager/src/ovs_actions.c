@@ -95,6 +95,9 @@ append_ovs_action_resubmit_table( openflow_actions *actions,
 bool
 append_ovs_action_learn( openflow_actions *actions, const uint16_t idle_timeout, const uint16_t hard_timeout,
                          const uint16_t priority, const uint64_t cookie, const uint16_t flags, const uint8_t table_id,
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 6, 0 )
+                         const uint16_t fin_idle_timeout, const uint16_t fin_hard_timeout,
+#endif
                          const ovs_flow_mod_specs *flow_mod_specs ) {
   assert( actions != NULL );
   assert( flow_mod_specs != NULL );
@@ -123,6 +126,10 @@ append_ovs_action_learn( openflow_actions *actions, const uint16_t idle_timeout,
   action_learn->cookie = cookie;
   action_learn->flags = flags;
   action_learn->table_id = table_id;
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 6, 0 )
+  action_learn->fin_idle_timeout = fin_idle_timeout;
+  action_learn->fin_hard_timeout = fin_hard_timeout;
+#endif
   char *p = ( char * ) action_learn + sizeof( ovs_action_learn );
   element = flow_mod_specs->list;
   while ( element != NULL ) {

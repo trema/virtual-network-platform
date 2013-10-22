@@ -44,6 +44,10 @@
 #define PORT_NAME_LENGTH 256
 
 
+#define COOKIE_FOR_NEW_FLOW( slice_id, port_no, vid ) \
+  ( ( ( uint64_t ) ( ( vid ) & 0x0fff ) ) >> 48 | ( ( uint64_t ) ( ( port_no ) & 0xffff ) ) >> 32 | ( ( uint64_t ) ( slice_id ) & 0xffffffff ) )
+
+
 enum {
   SLICE_STATE_CONFIRMED,
   SLICE_STATE_PREPARING_TO_UPDATE,
@@ -2042,9 +2046,13 @@ add_transactions_to_install_port_flow_entries( uint64_t datapath_id, uint32_t sl
                                60, // idle_timeout
                                0, // hard_timeout
                                learn_priority,
-                               UINT64_MAX, // cookie,
+                               COOKIE_FOR_NEW_FLOW( slice_id, port->port_no, port->vid ),
                                0, // flags
                                3, // table_id
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 6, 0 )
+                               0, // fin_idle_timeout
+                               0, // fin_hard_timeout
+#endif
                                flow_mod_specs );
     }
     // FIXME: hard-coded table id
@@ -2199,6 +2207,36 @@ add_transactions_to_delete_port_flow_entries( uint64_t datapath_id, uint32_t sli
       break;
     }
     increment_port_transactions( update, 1 );
+
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 5, 0 )
+    // remove learned MAC addresses from the table #3
+    if ( port->mac_learning == MAC_LEARNING_ENABLE ) {
+      match = create_ovs_matches();
+      append_ovs_match_cookie( match, COOKIE_FOR_NEW_FLOW( slice_id, port->port_no, port->vid ), UINT64_MAX );
+      append_ovs_match_reg( match, 0, slice_id, UINT32_MAX );
+      // FIXME: hard-coded table id and priority
+      uint8_t learn_table_id = 3;
+      uint16_t learn_priority = 512;
+      if ( port->type == PORT_TYPE_OVERLAY ) {
+        learn_priority = 256;
+      }
+      flow_mod = create_ovs_flow_mod( get_transaction_id(), slice_id, OFPFC_DELETE,
+                                      learn_table_id, 0, 0, learn_priority, UINT32_MAX, port->port_no, 0, match, NULL );
+      ret = add_openflow_transaction( update->transactions, datapath_id, flow_mod,
+                                      flow_mod_port_succeeded, update, flow_mod_port_failed, update );
+      delete_ovs_matches( match );
+      if ( !ret ) {
+        char match_str[ 256 ];
+        ovs_matches_to_string( match, match_str, sizeof( match_str ) );
+        error( "Failed to add an OpenFlow transaction ( datapath_id = %#" PRIx64 ", table_id = %#x, "
+              "priority = %u, match = [%s] ).", datapath_id, learn_table_id, learn_priority, match_str );
+        mark_ongoing_port_update_as_failed( update );
+        n_errors++;
+        break;
+      }
+      increment_port_transactions( update, 1 );
+    }
+#endif
   }
 
   for ( list_element *e = ports_in_slice; e != NULL; e = e->next ) {
