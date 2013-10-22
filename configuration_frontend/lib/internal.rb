@@ -40,7 +40,7 @@ module Internal
         rescue ActiveRecord::RecordNotFound
           raise NotFoundError.new "Not found the specified agent (datapath id #{ datapath_id } is not exists)."
         end
-	{ :id => switch.datapath_id.to_s, :registered_at => switch.registered_at.to_s( :db ) }
+        { :id => switch.datapath_id.to_s, :registered_at => switch.registered_at.to_s( :db ) }
       end
     
     end
@@ -50,15 +50,15 @@ module Internal
   class SwitchPort
     class << self
       def list parameters
-	raise BadRequestError.new "Datapath id must be specified." if parameters[ :id ].nil?
+        raise BadRequestError.new "Datapath id must be specified." if parameters[ :id ].nil?
 
-	datapath_id = convert_datapath_id parameters[ :id ]
+        datapath_id = convert_datapath_id parameters[ :id ]
 
-	DB::SwitchPort.find( :all,
-			     :readonly => true,
-			     :conditions => [ "datapath_id = ?", datapath_id.to_i ] ).collect do | each |
-	  { :port_no => each.port_no, :name => each.name, :registered_at => each.registered_at.to_s( :db ) }
-	end
+        DB::SwitchPort.find( :all,
+                             :readonly => true,
+                             :conditions => [ "datapath_id = ?", datapath_id.to_i ] ).collect do | each |
+          { :port_no => each.port_no, :name => each.name, :registered_at => each.registered_at.to_s( :db ) }
+        end
       end
 
     end
@@ -83,7 +83,7 @@ module Internal
         rescue ActiveRecord::RecordNotFound
           raise NotFoundError.new "Not found the specified agent (datapath id #{ datapath_id } is not exists)."
         end
-	{ :id => agent.datapath_id.to_s, :uri => agent.uri }
+        { :id => agent.datapath_id.to_s, :uri => agent.uri }
       end
     
     end
@@ -95,7 +95,7 @@ module Internal
       def list parameters = {}
         DB::TunnelEndpoint.find( :all, :readonly => true ).collect do | each |
           each.datapath_id.to_s
-	end
+        end
       end
 
       def show parameters
@@ -108,7 +108,7 @@ module Internal
         rescue ActiveRecord::RecordNotFound
           raise NotFoundError.new "Not found the specified agent (datapath id #{ datapath_id } is not exists)."
         end
-	{ :id => tunnel_endpoint.datapath_id.to_s, :local_address => tunnel_endpoint.local_address, :local_port => tunnel_endpoint.local_port }
+        { :id => tunnel_endpoint.datapath_id.to_s, :local_address => tunnel_endpoint.local_address, :local_port => tunnel_endpoint.local_port }
       end
 
     end

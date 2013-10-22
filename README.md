@@ -110,11 +110,11 @@ build Trema before building Virtual Network Manager.
 
 1. Build Trema
 
-	$ sudo apt-get install gcc make git ruby rubygems ruby-dev libpcap-dev \
-	libsqlite3-dev libglib2.0-dev
+        $ sudo apt-get install gcc make git ruby rubygems ruby-dev libpcap-dev \
+        libsqlite3-dev libglib2.0-dev
         $ sudo gem install --remote bundler
         $ cd trema
-	$ bundle install
+        $ bundle install
         $ ./build.rb
         $ mkdir -p tmp/log tmp/sock tmp/pid
         $ cd ..
