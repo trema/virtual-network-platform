@@ -79,16 +79,20 @@ class Agent
           slices.each do | slice_id |
             DB::Port.update_all(
               [ "state = ?", DB::PORT_STATE_READY_TO_UPDATE ],
-              [ "slice_id = ? AND ( state = ? OR state = ? )", slice_id, DB::PORT_STATE_CONFIRMED, DB::PORT_STATE_UPDATE_FAILED ] )
+              [ "slice_id = ? AND datapath_id = ? AND ( state = ? OR state = ? )",
+                slice_id, datapath_id.to_i, DB::PORT_STATE_CONFIRMED, DB::PORT_STATE_UPDATE_FAILED ] )
             DB::Port.update_all(
               [ "state = ?", DB::PORT_STATE_READY_TO_DESTROY ],
-              [ "slice_id = ? AND state = ?", slice_id, DB::PORT_STATE_DESTROY_FAILED ] )
+              [ "slice_id = ? AND datapath_id = ? AND state = ?",
+                slice_id, datapath_id.to_i, DB::PORT_STATE_DESTROY_FAILED ] )
             DB::MacAddress.update_all(
               [ "state = ?", DB::MAC_STATE_READY_TO_INSTALL ],
-              [ "slice_id = ? AND ( state = ? OR state = ? )", slice_id, DB::MAC_STATE_INSTALLED, DB::MAC_STATE_INSTALL_FAILED ] )
+              [ "slice_id = ? AND ( state = ? OR state = ? ) AND port_id IN ( SELECT id FROM ports WHERE slice_id = ? AND datapath_id = ? )",
+                slice_id, DB::MAC_STATE_INSTALLED, DB::MAC_STATE_INSTALL_FAILED, slice_id, datapath_id.to_i ] )
             DB::MacAddress.update_all(
               [ "state = ?", DB::MAC_STATE_READY_TO_DELETE ],
-              [ "slice_id = ? AND state = ?", slice_id, DB::MAC_STATE_DELETE_FAILED ] )
+              [ "slice_id = ? AND state = ? AND port_id IN ( SELECT id FROM ports WHERE slice_id = ? AND datapath_id = ? )",
+                slice_id, DB::MAC_STATE_DELETE_FAILED, slice_id, datapath_id.to_i ] )
           end
         end
       end
