@@ -2064,16 +2064,18 @@ add_transactions_to_install_port_flow_entries( uint64_t datapath_id, uint32_t sl
                                             table_id, 0, 0, priority, UINT32_MAX, OFPP_NONE, 0, match, actions );
     bool ret = add_openflow_transaction( update->transactions, datapath_id, flow_mod,
                                          flow_mod_port_succeeded, update, flow_mod_port_failed, update );
+    if ( !ret ) {
+      char match_str[ 256 ];
+      ovs_matches_to_string( match, match_str, sizeof( match_str ) );
+      error( "Failed to add an OpenFlow transaction ( datapath_id = %#" PRIx64 ", table_id = %#x, "
+             "priority = %u, match = [%s] ).", datapath_id, table_id, priority, match_str );
+    }
     delete_ovs_matches( match );
     delete_actions( actions );
     if ( flow_mod_specs != NULL ) {
       delete_ovs_flow_mod_specs( flow_mod_specs );
     }
     if ( !ret ) {
-      char match_str[ 256 ];
-      ovs_matches_to_string( match, match_str, sizeof( match_str ) );
-      error( "Failed to add an OpenFlow transaction ( datapath_id = %#" PRIx64 ", table_id = %#x, "
-             "priority = %u, match = [%s] ).", datapath_id, table_id, priority, match_str );
       mark_ongoing_port_update_as_failed( update );
       n_errors++;
       break;
@@ -2140,13 +2142,15 @@ add_transactions_to_install_port_flow_entries( uint64_t datapath_id, uint32_t sl
                                             table_id, 0, 0, priority, UINT32_MAX, OFPP_NONE, 0, match, actions );
     bool ret = add_openflow_transaction( update->transactions, datapath_id, flow_mod,
                                          flow_mod_port_succeeded, update, flow_mod_port_failed, update );
-    delete_ovs_matches( match );
-    delete_actions( actions );
     if ( !ret ) {
       char match_str[ 256 ];
       ovs_matches_to_string( match, match_str, sizeof( match_str ) );
       error( "Failed to add an OpenFlow transaction ( datapath_id = %#" PRIx64 ", table_id = %#x, "
              "priority = %u, match = [%s] ).", datapath_id, table_id, priority, match_str );
+    }
+    delete_ovs_matches( match );
+    delete_actions( actions );
+    if ( !ret ) {
       mark_ongoing_port_update_as_failed( update );
       n_errors++;
       break;
@@ -2196,12 +2200,14 @@ add_transactions_to_delete_port_flow_entries( uint64_t datapath_id, uint32_t sli
                                             table_id, 0, 0, priority, UINT32_MAX, OFPP_NONE, 0, match, NULL );
     bool ret = add_openflow_transaction( update->transactions, datapath_id, flow_mod,
                                          flow_mod_port_succeeded, update, flow_mod_port_failed, update );
-    delete_ovs_matches( match );
     if ( !ret ) {
       char match_str[ 256 ];
       ovs_matches_to_string( match, match_str, sizeof( match_str ) );
       error( "Failed to add an OpenFlow transaction ( datapath_id = %#" PRIx64 ", table_id = %#x, "
              "priority = %u, match = [%s] ).", datapath_id, table_id, priority, match_str );
+    }
+    delete_ovs_matches( match );
+    if ( !ret ) {
       mark_ongoing_port_update_as_failed( update );
       n_errors++;
       break;
@@ -2224,12 +2230,14 @@ add_transactions_to_delete_port_flow_entries( uint64_t datapath_id, uint32_t sli
                                       learn_table_id, 0, 0, learn_priority, UINT32_MAX, port->port_no, 0, match, NULL );
       ret = add_openflow_transaction( update->transactions, datapath_id, flow_mod,
                                       flow_mod_port_succeeded, update, flow_mod_port_failed, update );
-      delete_ovs_matches( match );
       if ( !ret ) {
         char match_str[ 256 ];
         ovs_matches_to_string( match, match_str, sizeof( match_str ) );
         error( "Failed to add an OpenFlow transaction ( datapath_id = %#" PRIx64 ", table_id = %#x, "
               "priority = %u, match = [%s] ).", datapath_id, learn_table_id, learn_priority, match_str );
+      }
+      delete_ovs_matches( match );
+      if ( !ret ) {
         mark_ongoing_port_update_as_failed( update );
         n_errors++;
         break;
@@ -2260,12 +2268,14 @@ add_transactions_to_delete_port_flow_entries( uint64_t datapath_id, uint32_t sli
                                             table_id, 0, 0, priority, UINT32_MAX, OFPP_NONE, 0, match, NULL );
     bool ret = add_openflow_transaction( update->transactions, datapath_id, flow_mod,
                                          flow_mod_port_succeeded, update, flow_mod_port_failed, update );
-    delete_ovs_matches( match );
     if ( !ret ) {
       char match_str[ 256 ];
       ovs_matches_to_string( match, match_str, sizeof( match_str ) );
       error( "Failed to add an OpenFlow transaction ( datapath_id = %#" PRIx64 ", table_id = %#x, "
              "priority = %u, match = [%s] ).", datapath_id, table_id, priority, match_str );
+    }
+    delete_ovs_matches( match );
+    if ( !ret ) {
       mark_ongoing_port_update_as_failed( update );
       n_errors++;
       break;
@@ -2374,12 +2384,14 @@ add_transactions_to_install_mac_flow_entries( uint64_t datapath_id, uint32_t sli
                                       table_id, 0, 0, priority, UINT32_MAX, OFPP_NONE, 0, match, NULL );
       bool ret = add_openflow_transaction( update->transactions, datapath_id, flow_mod,
                                            flow_mod_mac_succeeded, update, flow_mod_mac_failed, update );
-      delete_ovs_matches( match );
       if ( !ret ) {
         char match_str[ 256 ];
         ovs_matches_to_string( match, match_str, sizeof( match_str ) );
         error( "Failed to add an OpenFlow transaction ( datapath_id = %#" PRIx64 ", table_id = %#x, "
                "priority = %u, match = [%s] ).", datapath_id, table_id, priority, match_str );
+      }
+      delete_ovs_matches( match );
+      if ( !ret ) {
         mark_ongoing_mac_update_as_failed( update );
         n_errors++;
       }
@@ -2419,13 +2431,15 @@ add_transactions_to_install_mac_flow_entries( uint64_t datapath_id, uint32_t sli
                                     table_id, 0, 0, priority, UINT32_MAX, OFPP_NONE, 0, match, actions );
     bool ret = add_openflow_transaction( update->transactions, datapath_id, flow_mod,
                                          flow_mod_mac_succeeded, update, flow_mod_mac_failed, update );
-    delete_ovs_matches( match );
-    delete_actions( actions );
     if ( !ret ) {
       char match_str[ 256 ];
       ovs_matches_to_string( match, match_str, sizeof( match_str ) );
       error( "Failed to add an OpenFlow transaction ( datapath_id = %#" PRIx64 ", table_id = %#x, "
              "priority = %u, match = [%s] ).", datapath_id, table_id, priority, match_str );
+    }
+    delete_ovs_matches( match );
+    delete_actions( actions );
+    if ( !ret ) {
       mark_ongoing_mac_update_as_failed( update );
       n_errors++;
     }
@@ -2497,12 +2511,14 @@ add_transactions_to_delete_mac_flow_entries( uint64_t datapath_id, uint32_t slic
                                       table_id, 0, 0, priority, UINT32_MAX, OFPP_NONE, 0, match, NULL );
       bool ret = add_openflow_transaction( update->transactions, datapath_id, flow_mod,
                                            flow_mod_mac_succeeded, update, flow_mod_mac_failed, update );
-      delete_ovs_matches( match );
       if ( !ret ) {
         char match_str[ 256 ];
         ovs_matches_to_string( match, match_str, sizeof( match_str ) );
         error( "Failed to add an OpenFlow transaction ( datapath_id = %#" PRIx64 ", table_id = %#x, "
                "priority = %u, match = [%s] ).", datapath_id, table_id, priority, match_str );
+      }
+      delete_ovs_matches( match );
+      if ( !ret ) {
         mark_ongoing_mac_update_as_failed( update );
         n_errors++;
       }
@@ -2534,12 +2550,14 @@ add_transactions_to_delete_mac_flow_entries( uint64_t datapath_id, uint32_t slic
                                     table_id, 0, 0, priority, UINT32_MAX, port->port_no, 0, match, NULL );
     bool ret = add_openflow_transaction( update->transactions, datapath_id, flow_mod,
                                          flow_mod_mac_succeeded, update, flow_mod_mac_failed, update );
-    delete_ovs_matches( match );
     if ( !ret ) {
       char match_str[ 256 ];
       ovs_matches_to_string( match, match_str, sizeof( match_str ) );
       error( "Failed to add an OpenFlow transaction ( datapath_id = %#" PRIx64 ", table_id = %#x, "
              "priority = %u, match = [%s] ).", datapath_id, table_id, priority, match_str );
+    }
+    delete_ovs_matches( match );
+    if ( !ret ) {
       mark_ongoing_mac_update_as_failed( update );
       n_errors++;
     }
