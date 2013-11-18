@@ -105,6 +105,8 @@ commands
     show id                          - Show details of network
     destroy id                       - Remove the network
     reset id                         - Reset the network
+                                       ("destroy-failed" state => "ready-to-destroy" state,
+                                        "confirmed" and "update-failed" state => "ready-to-update" state)
     show-port [--datapath-id=datapath_id] net_id [id]
                                      - Retrieve detail of the port
     create-port [--id=id] [--mac-learning=enable] net_id datapath_id (number|name) [vid [description]]
@@ -223,7 +225,25 @@ command 'reset' do | args |
   help_and_exit "Too many arguments" unless args.size == 0
   parameters[ :force ] = options[ 'force' ]
   Network.reset( parameters )
-  puts "A slice is resetted successfully."
+  puts "A slice was reset successfully."
+end
+
+# revert-destroy: debug only
+# revert-destroy id  - Reset the network and revert destory
+#                      ("confirmed", "update-failed" and "destroy-failed" state => "ready-to-update" state)
+command 'revert-destroy' do | args |
+  options = {}
+  option = OptionParser.new
+  option.on( '-f', '--force' ) do | arg |
+    options[ 'force' ] = arg
+  end
+  option.order! args
+  parameters = {}
+  parameters[ :id ] = args.shift or help_and_exit "Too few arguments"
+  help_and_exit "Too many arguments" unless args.size == 0
+  parameters[ :force ] = options[ 'force' ]
+  Network.revert_destroy( parameters )
+  puts "A slice was revert-destroy successfully."
 end
 
 # failed: debug only

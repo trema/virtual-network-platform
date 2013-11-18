@@ -171,6 +171,25 @@ class Network
       end
     end
 
+    def revert_destroy parameters
+      raise BadRequestError.new "Slice id must be specified." if parameters[ :id ].nil?
+
+      slice_id = convert_slice_id parameters[ :id ]
+
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: revert-destroy the network (slice_id = #{ slice_id })"
+
+      slice = find_slice( slice_id )
+      if parameters[ :force ].nil? or parameters[ :force ] == false
+        raise BusyHereError unless slice.state.can_reset?
+      end
+
+      revert_destroy_slice slice_id do
+        revert_destroy_ports slice_id do
+          revert_destroy_mac_addresses slice_id
+        end
+      end
+    end
+
     def failed parameters
       raise BadRequestError.new "Slice id must be specified." if parameters[ :id ].nil?
 
@@ -660,7 +679,7 @@ class Network
         a_proc.call
       rescue
         DB::Port.update_all(
-          [ "state = ?", DB::PORT_STATE_UPDATE_FAILED ],
+          [ "state = ?", DB::PORT_STATE_DESTROY_FAILED ],
           [ "slice_id = ? AND id = ? AND type =? AND state = ?",
             slice_id, port_id, port_type, DB::SLICE_STATE_PREPARING_TO_DESTROY ] )
         raise
@@ -714,7 +733,7 @@ class Network
     def reset_all_ports slice_id, &a_proc
       DB::Port.transaction do
         DB::Port.update_all(
-          [ "state = ?", DB::PORT_STATE_READY_TO_UPDATE ],
+          [ "state = ?", DB::PORT_STATE_PREPARING_TO_UPDATE ],
           [ "slice_id = ? AND ( state = ? OR state = ? )",
             slice_id,
             DB::PORT_STATE_CONFIRMED,
@@ -725,7 +744,7 @@ class Network
         a_proc.call
         DB::Port.update_all(
           [ "state = ?", DB::PORT_STATE_READY_TO_UPDATE ],
-          [ "slice_id = ? AND state = ?", slice_id, DB::PORT_STATE_PREPARING_TO_DESTROY ] )
+          [ "slice_id = ? AND state = ?", slice_id, DB::PORT_STATE_PREPARING_TO_UPDATE ] )
         DB::Port.update_all(
           [ "state = ?", DB::PORT_STATE_READY_TO_DESTROY ],
           [ "slice_id = ? AND state = ?", slice_id, DB::PORT_STATE_PREPARING_TO_DESTROY ] )
@@ -746,6 +765,50 @@ class Network
             slice_id,
             DB::MAC_STATE_DELETE_FAILED ] )
       end
+    end
+
+    def revert_destroy_slice slice_id, &a_proc
+      DB::Slice.transaction do
+        DB::Slice.update_all(
+          [ "state = ?", DB::SLICE_STATE_PREPARING_TO_UPDATE ],
+          [ "id = ? AND ( state = ? OR state = ? OR state = ? )",
+            slice_id,
+            DB::SLICE_STATE_CONFIRMED,
+            DB::SLICE_STATE_UPDATE_FAILED,
+            DB::SLICE_STATE_DESTROY_FAILED ] )
+        a_proc.call
+        DB::Slice.update_all(
+          [ "state = ?", DB::SLICE_STATE_READY_TO_UPDATE ],
+          [ "id = ? AND state = ?",
+            slice_id,
+            DB::SLICE_STATE_PREPARING_TO_UPDATE ] )
+      end
+    end
+
+    def revert_destroy_ports slice_id, &a_proc
+      DB::Port.transaction do
+        DB::Port.update_all(
+          [ "state = ?", DB::PORT_STATE_PREPARING_TO_UPDATE ],
+          [ "slice_id = ? AND ( state = ? OR state = ? OR state = ? )",
+            slice_id,
+            DB::PORT_STATE_CONFIRMED,
+            DB::PORT_STATE_UPDATE_FAILED,
+            DB::PORT_STATE_DESTROY_FAILED ] )
+        a_proc.call
+        DB::Port.update_all(
+          [ "state = ?", DB::PORT_STATE_READY_TO_UPDATE ],
+          [ "slice_id = ? AND state = ?", slice_id, DB::PORT_STATE_PREPARING_TO_UPDATE ] )
+      end
+    end
+
+    def revert_destroy_mac_addresses slice_id
+      DB::MacAddress.update_all(
+        [ "state = ?", DB::MAC_STATE_READY_TO_INSTALL ],
+        [ "slice_id = ? AND ( state = ? OR state = ? OR state = ? )",
+          slice_id,
+          DB::MAC_STATE_INSTALLED,
+          DB::MAC_STATE_INSTALL_FAILED,
+          DB::MAC_STATE_DELETE_FAILED ] )
     end
 
     def get_active_overlay_port slice_id, datapath_id, port_name
