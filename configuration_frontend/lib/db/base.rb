@@ -32,7 +32,9 @@ module DB
   end
 
   def connect
-    ActiveRecord::Base.establish_connection( DB::Configure.instance.to_hash )
+    unless ActiveRecord::Base.connected?
+      ActiveRecord::Base.establish_connection( DB::Configure.instance.to_hash )
+    end
   end
   module_function :connect
 
