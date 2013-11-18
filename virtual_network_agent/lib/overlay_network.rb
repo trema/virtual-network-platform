@@ -67,13 +67,18 @@ class OverlayNetwork
 
       port_name = Vxlan::Instance.name( vni )
 
-      if OVS::Port.exists?( port_name )
+      ovs_port_exists = OVS::Port.exists?( port_name )
+      vxlan_exists = Vxlan::Instance.exists?( vni )
+      if ovs_port_exists and vxlan_exists
         raise DuplicatedOverlayNetwork.new vni
       end
-      if Vxlan::Instance.exists?( vni )
-        Vxlan::Instance.delete( vni )
-      end
       begin
+        if ovs_port_exists
+          OVS::Port.delete port_name
+        end
+        if vxlan_exists
+          Vxlan::Instance.delete( vni )
+        end
         Vxlan::Instance.add( vni, broadcast_address )
         OVS::Port.add port_name
       rescue =>e
@@ -90,12 +95,16 @@ class OverlayNetwork
 
       port_name = Vxlan::Instance.name( vni )
 
-      unless OVS::Port.exists?( port_name )
+      ovs_port_not_exists = !OVS::Port.exists?( port_name )
+      vxlan_not_exists = !Vxlan::Instance.exists?( vni )
+      if ovs_port_not_exists and vxlan_not_exists
         raise NoOverlayNetworkFound.new vni
       end
       begin
-        OVS::Port.delete port_name
-        if Vxlan::Instance.exists?( vni )
+        unless ovs_port_not_exists
+          OVS::Port.delete port_name
+        end
+        unless vxlan_not_exists
           Vxlan::Instance.delete( vni )
         end
       rescue =>e
