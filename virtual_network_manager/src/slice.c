@@ -1157,7 +1157,7 @@ get_activating_overlay_port( uint32_t slice_id, uint64_t datapath_id, list_eleme
 
   *n_ports = 0;
 
-  bool ret = execute_query( db, "select id,datapath_id,port_name,vid,mac_learning,type from ports where slice_id = %u and datapath_id = %" PRIu64 " and "
+  bool ret = execute_query( db, "select id,datapath_id,port_name,vid,type,mac_learning from ports where slice_id = %u and datapath_id = %" PRIu64 " and "
                             "type = %u and ( state = %u or state = %u )",
                             slice_id, datapath_id, PORT_TYPE_OVERLAY, PORT_STATE_READY_TO_UPDATE, PORT_STATE_UPDATING );
   if ( !ret ) {
@@ -1211,7 +1211,7 @@ get_inactivating_overlay_port( uint32_t slice_id, uint64_t datapath_id, list_ele
 
   *n_ports = 0;
 
-  bool ret = execute_query( db, "select id,datapath_id,port_name,vid,mac_learning,type from ports where slice_id = %u and datapath_id = %" PRIu64 " and "
+  bool ret = execute_query( db, "select id,datapath_id,port_name,vid,type,mac_learning from ports where slice_id = %u and datapath_id = %" PRIu64 " and "
                             "type = %u and ( state = %u or state = %u )",
                             slice_id, datapath_id, PORT_TYPE_OVERLAY, PORT_STATE_READY_TO_DESTROY, PORT_STATE_DESTROYING );
   if ( !ret ) {
