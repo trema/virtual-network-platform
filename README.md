@@ -233,7 +233,7 @@ build Trema before building Virtual Network Manager.
 
         $ sudo ovs-vsctl set Bridge br0 \
         other-config:datapath-id=[datapath id in hex]
-        $ sudo ovs-vsctl set-controller br0 tcp:192.168.1.254
+        $ sudo ovs-vsctl set-controller br0 tcp:192.168.1.254:6653
         $ sudo ovs-vsctl set-fail-mode br0 secure
 
     Datapath id must be a 64-bit unique identifier for specifying the
