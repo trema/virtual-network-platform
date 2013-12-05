@@ -402,11 +402,15 @@ class Network
       port = find_port( slice_id, port_id )
       raise NetworkManagementError.new if port.state.failed?
       raise BusyHereError unless port.state.can_delete?
+      datapath_id = port.datapath_id
 
       # delete port
       update_slice slice_id do
         destroy_port slice_id, port_id do
           destroy_mac_addresses slice_id, port_id
+          get_mac_addresses( slice_id, port_id ).each do | mac |
+            delete_mac_address_from_remotes slice_id, datapath_id, mac
+          end
         end
         delete_overlay_ports slice_id
       end
@@ -673,8 +677,8 @@ class Network
     def destroy_port slice_id, port_id, port_type = DB::PORT_TYPE_CUSTOMER, &a_proc
       DB::Port.update_all(
         [ "state = ?", DB::SLICE_STATE_PREPARING_TO_DESTROY ],
-        [ "slice_id = ? AND id = ? AND type = ? AND state = ?",
-          slice_id, port_id, port_type, DB::PORT_STATE_CONFIRMED ] )
+        [ "slice_id = ? AND id = ? AND type = ? AND ( state = ? OR state = ? )",
+          slice_id, port_id, port_type, DB::PORT_STATE_CONFIRMED, DB::PORT_STATE_READY_TO_UPDATE ] )
       begin
         a_proc.call
       rescue
@@ -1052,6 +1056,17 @@ class Network
       get_active_switches( slice_id ).each do | each |
         next if each == datapath_id
         add_mac_address_to_remote slice_id, each, mac
+      end
+    end
+
+    def get_mac_addresses slice_id, port_id
+      DB::MacAddress.find( :all,
+                           :readonly => true,
+                           :select => 'mac',
+                           :conditions => [
+                             "slice_id = ? AND port_id = ? AND type = ?",
+                             slice_id, port_id, DB::MAC_TYPE_LOCAL ] ).collect do | each |
+        each.mac
       end
     end
 
