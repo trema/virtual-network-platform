@@ -47,8 +47,7 @@ static void
 notify_distributor() {
   pthread_mutex_lock( &mutex );
 
-  packet_buffer *packet = peek( received_packets );
-  if ( packet != NULL ) {
+  if ( received_packets->length > 0 ) {
     pthread_cond_signal( &cond );
   }
 
