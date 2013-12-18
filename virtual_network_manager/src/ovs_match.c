@@ -619,6 +619,19 @@ append_ovs_match_cookie( ovs_matches *matches, uint64_t cookie, uint64_t mask ) 
 }
 #endif
 
+#if OVS_VERSION_CODE >= OVS_VERSION( 2, 1, 0 )
+bool
+append_ovs_match_tcp_flags( ovs_matches *matches, uint16_t tcp_flags, uint16_t mask ) {
+  assert( matches != NULL );
+
+  if ( mask == UINT16_MAX ) {
+    return append_ovs_match_16( matches, OVSM_OVS_TCP_FLAGS, tcp_flags );
+  }
+
+  return append_ovs_match_16w( matches, OVSM_OVS_TCP_FLAGS_W, tcp_flags, mask );
+}
+#endif
+
 
 /*
  * Local variables:
