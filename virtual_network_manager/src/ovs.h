@@ -38,8 +38,11 @@
 
 
 typedef void ( *ovs_flow_removed_handler )( uint64_t datapath_id, uint32_t transaction_id,
-                                            uint64_t cookie, uint16_t priority, uint8_t reason,
-                                            uint32_t duration_sec, uint32_t duration_nsec,
+                                            uint64_t cookie, uint16_t priority,
+#if OVS_VERSION_CODE >= OVS_VERSION( 2, 0, 0 )
+                                            uint8_t table_id,
+#endif
+                                            uint8_t reason, uint32_t duration_sec, uint32_t duration_nsec,
                                             uint16_t idle_timeout, uint64_t packet_count, uint64_t byte_count,
                                             const ovs_matches *matches, void *user_data );
 

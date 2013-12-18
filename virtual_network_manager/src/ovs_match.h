@@ -79,6 +79,9 @@ bool append_ovs_match_tun_id( ovs_matches *matches, uint64_t id, uint64_t mask )
 #if OVS_VERSION_CODE >= OVS_VERSION( 1, 5, 0 )
 bool append_ovs_match_cookie( ovs_matches *matches, uint64_t cookie, uint64_t mask );
 #endif
+#if OVS_VERSION_CODE >= OVS_VERSION( 2, 1, 0 )
+bool append_ovs_match_tcp_flags( ovs_matches *matches, uint16_t tcp_flags, uint16_t mask );
+#endif
 
 
 #endif // OVS_MATCH_H
