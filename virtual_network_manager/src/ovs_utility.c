@@ -76,6 +76,24 @@ ovs_match_16_to_dec_string( const ovs_match_header *header, char *str, size_t le
   return true;
 }
 
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 6, 0 )
+static bool
+ovs_match_16w_to_dec_string( const ovs_match_header *header, char *str, size_t length, const char *key ) {
+  assert( header != NULL );
+  assert( str != NULL );
+  assert( length > 0 );
+  assert( key != NULL );
+
+  const uint16_t *value = ( const uint16_t * ) ( ( const char * ) header + sizeof( ovs_match_header ) );
+  const uint16_t *mask = ( const uint16_t * ) ( ( const char * ) value + sizeof( uint16_t ) );
+  int ret = snprintf( str, length, "%s = %u/%u", key, *value, *mask );
+  if ( ( ret >= ( int ) length ) || ( ret < 0 ) ) {
+    return false;
+  }
+
+  return true;
+}
+#endif
 
 static bool
 ovs_match_16_to_hex_string( const ovs_match_header *header, char *str, size_t length, const char *key ) {
@@ -128,7 +146,24 @@ ovs_match_32_to_hex_string( const ovs_match_header *header, char *str, size_t le
   return true;
 }
 
+#if OVS_VERSION_CODE >= OVS_VERSION( 2, 0, 0 )
+static bool
+ovs_match_32w_to_hex_string( const ovs_match_header *header, char *str, size_t length, const char *key ) {
+  assert( header != NULL );
+  assert( str != NULL );
+  assert( length > 0 );
+  assert( key != NULL );
 
+  const uint32_t *value = ( const uint32_t * ) ( ( const char * ) header + sizeof( ovs_match_header ) );
+  const uint32_t *mask = ( const uint32_t * ) ( ( const char * ) value + sizeof( uint32_t ) );
+  int ret = snprintf( str, length, "%s = %#x/%#x", key, *value, *mask );
+  if ( ( ret >= ( int ) length ) || ( ret < 0 ) ) {
+    return false;
+  }
+
+  return true;
+}
+#endif
 
 static bool
 ovs_match_64_to_hex_string( const ovs_match_header *header, char *str, size_t length, const char *key ) {
@@ -313,6 +348,11 @@ ovs_match_eth_addr_to_string( const ovs_match_header *header, char *str, size_t 
     case OVSM_OF_ETH_SRC:
       return ovs_match_eth_addr_to_hex_string( header, str, length, "eth_src" );
 
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 8, 0 )
+    case OVSM_OF_ETH_SRC_W:
+      return ovs_match_eth_addr_w_to_hex_string( header, str, length, "eth_src" );
+#endif
+
     default:
       assert( 0 );
       break;
@@ -419,6 +459,14 @@ ovs_match_tcp_port_to_string( const ovs_match_header *header, char *str, size_t 
     case OVSM_OF_TCP_DST:
       return ovs_match_16_to_dec_string( header, str, length, "tcp_dst" );
 
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 6, 0 )
+    case OVSM_OF_TCP_SRC_W:
+      return ovs_match_16w_to_dec_string( header, str, length, "tcp_src" );
+
+    case OVSM_OF_TCP_DST_W:
+      return ovs_match_16w_to_dec_string( header, str, length, "tcp_dst" );
+#endif
+
     default:
       assert( 0 );
       break;
@@ -440,6 +488,14 @@ ovs_match_udp_port_to_string( const ovs_match_header *header, char *str, size_t 
 
     case OVSM_OF_UDP_DST:
       return ovs_match_16_to_dec_string( header, str, length, "udp_dst" );
+
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 6, 0 )
+    case OVSM_OF_UDP_SRC_W:
+      return ovs_match_16w_to_dec_string( header, str, length, "udp_src" );
+
+    case OVSM_OF_UDP_DST_W:
+      return ovs_match_16w_to_dec_string( header, str, length, "udp_dst" );
+#endif
 
     default:
       assert( 0 );
@@ -528,6 +584,11 @@ ovs_match_reg_to_string( const ovs_match_header *header, char *str, size_t lengt
     case OVSM_OVS_REG2:
     case OVSM_OVS_REG3:
     case OVSM_OVS_REG4:
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 7, 0 )
+    case OVSM_OVS_REG5:
+    case OVSM_OVS_REG6:
+    case OVSM_OVS_REG7:
+#endif
       ret = snprintf( str, length, "reg%u = %#x", index, *value );
       break;
 
@@ -536,6 +597,11 @@ ovs_match_reg_to_string( const ovs_match_header *header, char *str, size_t lengt
     case OVSM_OVS_REG2_W:
     case OVSM_OVS_REG3_W:
     case OVSM_OVS_REG4_W:
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 7, 0 )
+    case OVSM_OVS_REG5_W:
+    case OVSM_OVS_REG6_W:
+    case OVSM_OVS_REG7_W:
+#endif
       ret = snprintf( str, length, "reg%u = %#x/%#x", index, *value, *mask );
       break;
 
@@ -651,9 +717,22 @@ ovs_match_nd_target_to_string( const ovs_match_header *header, char *str, size_t
   assert( header != NULL );
   assert( str != NULL );
   assert( length > 0 );
-  assert( *header == OVSM_OVS_ND_TARGET );
 
-  return ovs_match_ipv6_addr_to_hex_string( header, str, length, "nd_target" );
+  switch ( *header ) {
+    case OVSM_OVS_ND_TARGET:
+      return ovs_match_ipv6_addr_to_hex_string( header, str, length, "nd_target" );
+
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 7, 0 )
+    case OVSM_OVS_ND_TARGET_W:
+      return ovs_match_ipv6_addr_w_to_hex_string( header, str, length, "nd_target" );
+#endif
+
+    default:
+      assert( 0 );
+      break;
+  }
+
+  return false;
 }
 
 
@@ -708,7 +787,21 @@ ovs_match_ipv6_label_to_string( const ovs_match_header *header, char *str, size_
   assert( length > 0 );
   assert( *header == OVSM_OVS_IPV6_LABEL );
 
-  return ovs_match_32_to_hex_string( header, str, length, "ipv6_label" );
+  switch( *header ) {
+    case OVSM_OVS_IPV6_LABEL:
+      return ovs_match_32_to_hex_string( header, str, length, "ipv6_label" );
+
+#if OVS_VERSION_CODE >= OVS_VERSION( 2, 1, 0 )
+    case OVSM_OVS_IPV6_LABEL_W:
+      return ovs_match_32w_to_hex_string( header, str, length, "ipv6_label" );
+#endif
+
+    default:
+      assert( 0 );
+      break;
+  }
+
+  return false;
 }
 
 
@@ -757,6 +850,79 @@ ovs_match_cookie_to_string( const ovs_match_header *header, char *str, size_t le
 }
 #endif
 
+#if OVS_VERSION_CODE >= OVS_VERSION( 2, 0, 0 )
+static bool
+ovs_match_tun_ipv4_addr_to_string( const ovs_match_header *header, char *str, size_t length ) {
+  assert( header != NULL );
+  assert( str != NULL );
+  assert( length > 0 );
+
+  switch ( *header ) {
+    case OVSM_OVS_TUN_IPV4_SRC:
+      return ovs_match_ip_addr_to_dec_string( header, str, length, "tun_ipv4_src" );
+
+    case OVSM_OVS_TUN_IPV4_SRC_W:
+      return ovs_match_ip_addr_w_to_dec_string( header, str, length, "tun_ipv4_src" );
+
+    case OVSM_OVS_TUN_IPV4_DST:
+      return ovs_match_ip_addr_to_dec_string( header, str, length, "tun_ipv4_dst" );
+
+    case OVSM_OVS_TUN_IPV4_DST_W:
+      return ovs_match_ip_addr_w_to_dec_string( header, str, length, "tun_ipv4_dst" );
+
+    default:
+      assert( 0 );
+      break;
+  }
+
+  return false;
+}
+
+
+static bool
+ovs_match_pkt_mark_to_string( const ovs_match_header *header, char *str, size_t length ) {
+  assert( header != NULL );
+  assert( str != NULL );
+  assert( length > 0 );
+
+  switch ( *header ) {
+    case OVSM_OVS_PKT_MARK:
+      return ovs_match_32_to_hex_string( header, str, length, "pkt_mark" );
+
+    case OVSM_OVS_PKT_MARK_W:
+      return ovs_match_32w_to_hex_string( header, str, length, "pkt_mark" );
+
+    default:
+      assert( 0 );
+      break;
+  }
+
+  return false;
+}
+#endif
+
+#if OVS_VERSION_CODE >= OVS_VERSION( 2, 1, 0 )
+static bool
+ovs_match_tcp_flags_to_string( const ovs_match_header *header, char *str, size_t length ) {
+  assert( header != NULL );
+  assert( str != NULL );
+  assert( length > 0 );
+
+  switch ( *header ) {
+    case OVSM_OVS_TCP_FLAGS:
+      return ovs_match_16_to_hex_string( header, str, length, "tcp_flags" );
+
+    case OVSM_OVS_TCP_FLAGS_W:
+      return ovs_match_16w_to_hex_string( header, str, length, "tcp_flags" );
+
+    default:
+      assert( 0 );
+      break;
+  }
+
+  return false;
+}
+#endif
 
 static bool
 ovs_match_to_string( const ovs_match_header *header, char *str, size_t length ) {
@@ -774,6 +940,9 @@ ovs_match_to_string( const ovs_match_header *header, char *str, size_t length ) 
     case OVSM_OF_ETH_DST:
     case OVSM_OF_ETH_DST_W:
     case OVSM_OF_ETH_SRC:
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 8, 0 )
+    case OVSM_OF_ETH_SRC_W:
+#endif
       ret = ovs_match_eth_addr_to_string( header, str, length );
       break;
 
@@ -803,11 +972,19 @@ ovs_match_to_string( const ovs_match_header *header, char *str, size_t length ) 
 
     case OVSM_OF_TCP_SRC:
     case OVSM_OF_TCP_DST:
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 6, 0 )
+    case OVSM_OF_TCP_SRC_W:
+    case OVSM_OF_TCP_DST_W:
+#endif
       ret = ovs_match_tcp_port_to_string( header, str, length );
       break;
 
     case OVSM_OF_UDP_SRC:
     case OVSM_OF_UDP_DST:
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 6, 0 )
+    case OVSM_OF_UDP_SRC_W:
+    case OVSM_OF_UDP_DST_W:
+#endif
       ret = ovs_match_udp_port_to_string( header, str, length );
       break;
 
@@ -840,6 +1017,14 @@ ovs_match_to_string( const ovs_match_header *header, char *str, size_t length ) 
     case OVSM_OVS_REG3_W:
     case OVSM_OVS_REG4:
     case OVSM_OVS_REG4_W:
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 7, 0 )
+    case OVSM_OVS_REG5:
+    case OVSM_OVS_REG5_W:
+    case OVSM_OVS_REG6:
+    case OVSM_OVS_REG6_W:
+    case OVSM_OVS_REG7:
+    case OVSM_OVS_REG7_W:
+#endif
       ret = ovs_match_reg_to_string( header, str, length );
       break;
 
@@ -869,6 +1054,9 @@ ovs_match_to_string( const ovs_match_header *header, char *str, size_t length ) 
       break;
 
     case OVSM_OVS_ND_TARGET:
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 7, 0 )
+    case OVSM_OVS_ND_TARGET_W:
+#endif
       ret = ovs_match_nd_target_to_string( header, str, length );
       break;
 
@@ -883,6 +1071,9 @@ ovs_match_to_string( const ovs_match_header *header, char *str, size_t length ) 
       break;
 
     case OVSM_OVS_IPV6_LABEL:
+#if OVS_VERSION_CODE >= OVS_VERSION( 2, 1, 0 )
+    case OVSM_OVS_IPV6_LABEL_W:
+#endif
       ret = ovs_match_ipv6_label_to_string( header, str, length );
       break;
 
@@ -898,6 +1089,27 @@ ovs_match_to_string( const ovs_match_header *header, char *str, size_t length ) 
     case OVSM_OVS_COOKIE:
     case OVSM_OVS_COOKIE_W:
       ret = ovs_match_cookie_to_string( header, str, length );
+      break;
+#endif
+
+#if OVS_VERSION_CODE >= OVS_VERSION( 2, 0, 0 )
+    case OVSM_OVS_TUN_IPV4_SRC:
+    case OVSM_OVS_TUN_IPV4_SRC_W:
+    case OVSM_OVS_TUN_IPV4_DST:
+    case OVSM_OVS_TUN_IPV4_DST_W:
+      ret = ovs_match_tun_ipv4_addr_to_string( header, str, length );
+      break;
+
+    case OVSM_OVS_PKT_MARK:
+    case OVSM_OVS_PKT_MARK_W:
+      ret = ovs_match_pkt_mark_to_string( header, str, length );
+      break;
+#endif
+
+#if OVS_VERSION_CODE >= OVS_VERSION( 2, 1, 0 )
+    case OVSM_OVS_TCP_FLAGS:
+    case OVSM_OVS_TCP_FLAGS_W:
+      ret = ovs_match_tcp_flags_to_string( header, str, length );
       break;
 #endif
 
