@@ -172,6 +172,9 @@ handle_ovs_flow_removed( uint64_t datapath_id, uint32_t transaction_id, const bu
   ovs_flow_removed *flow_removed = ( ovs_flow_removed * ) ( ( char * ) data->data - offsetof( ovs_header, subtype ) );
   uint64_t cookie = ntohll( flow_removed->cookie );
   uint16_t priority = ntohs( flow_removed->priority );
+#if OVS_VERSION_CODE >= OVS_VERSION( 2, 0, 0 )
+  uint8_t table_id = flow_removed->table_id;
+#endif
   uint8_t reason = flow_removed->reason;
   uint32_t duration_sec = ntohl( flow_removed->duration_sec );
   uint32_t duration_nsec = ntohl( flow_removed->duration_nsec );
@@ -197,17 +200,27 @@ handle_ovs_flow_removed( uint64_t datapath_id, uint32_t transaction_id, const bu
   ovs_matches_to_string( matches, matches_str, sizeof( matches_str ) );
 
   debug( "An Open vSwitch extended flow removed received ( datapath_id = %#" PRIx64 ", "
-         "transaction_id = %#x, cookie = %#" PRIx64 ", priority = %u, reason = %#x, "
-         "duration = %u.%09u, idle_timeout = %u, packet_count = %" PRIu64
+         "transaction_id = %#x, cookie = %#" PRIx64 ", priority = %u, "
+#if OVS_VERSION_CODE >= OVS_VERSION( 2, 0, 0 )
+         "table_id = %#x, "
+#endif
+         "reason = %#x, duration = %u.%09u, idle_timeout = %u, packet_count = %" PRIu64
          ", byte_count = %" PRIu64 ", matches = [%s], user_data = %p ).",
-         datapath_id, transaction_id, cookie, priority, reason, duration_sec, duration_nsec,
+         datapath_id, transaction_id, cookie, priority,
+#if OVS_VERSION_CODE >= OVS_VERSION( 2, 0, 0 )
+         table_id,
+#endif
+         reason, duration_sec, duration_nsec,
          idle_timeout, packet_count, byte_count, matches_str,
          event_handlers.ovs_flow_removed_user_data );
 
   if ( event_handlers.ovs_flow_removed_callback != NULL ) {
     event_handlers.ovs_flow_removed_callback( datapath_id, transaction_id,
-                                             cookie, priority, reason,
-                                             duration_sec, duration_nsec,
+                                             cookie, priority,
+#if OVS_VERSION_CODE >= OVS_VERSION( 2, 0, 0 )
+                                             table_id,
+#endif
+                                             reason, duration_sec, duration_nsec,
                                              idle_timeout, packet_count, byte_count,
                                              matches,
                                              event_handlers.ovs_flow_removed_user_data );
