@@ -61,7 +61,7 @@ typedef struct {
 } tunnel_endpoint;
 
 typedef struct {
-  char data[ PACKET_SIZE ];
+  char data[ PACKET_SIZE + 1 ];
   size_t length;
   struct iphdr *ip;
   struct udphdr *udp;

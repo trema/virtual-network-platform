@@ -103,7 +103,8 @@ receiver_main( void *args ) {
       continue;
     }
 
-    if ( length < ( sizeof( struct iphdr ) + sizeof( struct udphdr ) + sizeof( struct vxlanhdr ) ) ) {
+    if ( length < ( sizeof( struct iphdr ) + sizeof( struct udphdr ) + sizeof( struct vxlanhdr ) ) ||
+         length > PACKET_SIZE ) {
       continue;
     }
 
