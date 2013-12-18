@@ -29,7 +29,7 @@
 #include "log.h"
 
 
-static const char *log_levels[] = { "ciritical", "error", "warning", "notice", "info", "debug" };
+static const char *log_levels[] = { "critical", "error", "warning", "notice", "info", "debug" };
 
 static pthread_mutex_t mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 static uint8_t output_to = 0;
