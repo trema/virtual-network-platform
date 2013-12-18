@@ -479,17 +479,28 @@ handle_flow_removed( uint64_t datapath_id, uint32_t transaction_id, struct ofp_m
 
 static void
 handle_ovs_flow_removed( uint64_t datapath_id, uint32_t transaction_id,
-                         uint64_t cookie, uint16_t priority, uint8_t reason, uint32_t duration_sec,
+                         uint64_t cookie, uint16_t priority,
+#if OVS_VERSION_CODE >= OVS_VERSION( 2, 0, 0 )
+                         uint8_t table_id,
+#endif
+                         uint8_t reason, uint32_t duration_sec,
                          uint32_t duration_nsec, uint16_t idle_timeout, uint64_t packet_count,
                          uint64_t byte_count, const ovs_matches *matches, void *user_data ) {
   char matches_str[ 256 ];
   ovs_matches_to_string( matches, matches_str, sizeof( matches_str ) );
 
   error( "Unexpected Open vSwitch extended flow removed message received ( datapath_id = %#" PRIx64 ", "
-         "transaction_id = %#x, cookie = %#" PRIx64 ", priority = %u, reason = %#x, "
-         "duration = %u.%09u, idle_timeout = %u, packet_count = %" PRIu64
+         "transaction_id = %#x, cookie = %#" PRIx64 ", priority = %u, "
+#if OVS_VERSION_CODE >= OVS_VERSION( 2, 0, 0 )
+         "table_id = %#x, "
+#endif
+         "reason = %#x, duration = %u.%09u, idle_timeout = %u, packet_count = %" PRIu64
          ", byte_count = %" PRIu64 ", matches = [%s], user_data = %p ).",
-         datapath_id, transaction_id, cookie, priority, reason, duration_sec, duration_nsec,
+         datapath_id, transaction_id, cookie, priority,
+#if OVS_VERSION_CODE >= OVS_VERSION( 2, 0, 0 )
+         table_id,
+#endif
+         reason, duration_sec, duration_nsec,
          idle_timeout, packet_count, byte_count, matches_str, user_data );
 
   schedule_disconnect_switch( datapath_id );

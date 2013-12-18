@@ -170,7 +170,11 @@ void
 hton_ovs_match_eth_addr( ovs_match_header *dst, const ovs_match_header *src ) {
   assert( dst != NULL );
   assert( src != NULL );
-  assert( *src == OVSM_OF_ETH_SRC || *src == OVSM_OF_ETH_DST || *src == OVSM_OF_ETH_DST_W ||
+  assert( *src == OVSM_OF_ETH_SRC ||
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 8, 0 )
+          *src == OVSM_OF_ETH_SRC_W ||
+#endif
+          *src == OVSM_OF_ETH_DST || *src == OVSM_OF_ETH_DST_W ||
           *src == OVSM_OVS_ARP_SHA || *src == OVSM_OVS_ARP_THA ||
           *src == OVSM_OVS_ND_SLL || *src == OVSM_OVS_ND_TLL );
 
@@ -229,7 +233,12 @@ hton_ovs_match_ip_addr( ovs_match_header *dst, const ovs_match_header *src ) {
   assert( dst != NULL );
   assert( src != NULL );
   assert( *src == OVSM_OF_IP_SRC || *src == OVSM_OF_IP_SRC_W ||
-          *src == OVSM_OF_IP_DST || *src == OVSM_OF_IP_DST_W );
+          *src == OVSM_OF_IP_DST || *src == OVSM_OF_IP_DST_W
+#if OVS_VERSION_CODE >= OVS_VERSION( 2, 0, 0 )
+          || *src == OVSM_OVS_TUN_IPV4_SRC || *src == OVSM_OVS_TUN_IPV4_SRC_W
+          || *src == OVSM_OVS_TUN_IPV4_DST || *src == OVSM_OVS_TUN_IPV4_DST_W
+#endif
+        );
 
   if ( ovs_match_has_mask( *src ) ) {
     return hton_ovs_match_32w( dst, src );
@@ -245,7 +254,11 @@ hton_ovs_match_ipv6_addr( ovs_match_header *dst, const ovs_match_header *src ) {
   assert( src != NULL );
   assert( *src == OVSM_OVS_IPV6_SRC || *src == OVSM_OVS_IPV6_SRC_W ||
           *src == OVSM_OVS_IPV6_DST || *src == OVSM_OVS_IPV6_DST_W ||
-          *src == OVSM_OVS_ND_TARGET );
+          *src == OVSM_OVS_ND_TARGET
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 7, 0 )
+          || *src == OVSM_OVS_ND_TARGET_W
+#endif
+        );
 
   uint8_t length = get_ovs_match_length( *src );
   hton_ovs_match_header( dst, src );
@@ -277,7 +290,11 @@ void
 hton_ovs_match_nd_target( ovs_match_header *dst, const ovs_match_header *src ) {
   assert( dst != NULL );
   assert( src != NULL );
-  assert( *src == OVSM_OVS_ND_TARGET );
+  assert( *src == OVSM_OVS_ND_TARGET
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 7, 0 )
+          || *src == OVSM_OVS_ND_TARGET_W
+#endif
+        );
 
   hton_ovs_match_ipv6_addr( dst, src );
 }
@@ -311,7 +328,16 @@ void
 hton_ovs_match_ipv6_label( ovs_match_header *dst, const ovs_match_header *src ) {
   assert( dst != NULL );
   assert( src != NULL );
-  assert( *src == OVSM_OVS_IPV6_LABEL );
+  assert( *src == OVSM_OVS_IPV6_LABEL
+#if OVS_VERSION_CODE >= OVS_VERSION( 2, 1, 0 )
+          || *src == OVSM_OVS_IPV6_LABEL_W
+#endif
+        );
+#if OVS_VERSION_CODE >= OVS_VERSION( 2, 1, 0 )
+  if ( ovs_match_has_mask( *src ) ) {
+    return hton_ovs_match_32w( dst, src );
+  }
+#endif
 
   hton_ovs_match_32( dst, src );
 }
@@ -341,7 +367,16 @@ void
 hton_ovs_match_tcp_port( ovs_match_header *dst, const ovs_match_header *src ) {
   assert( dst != NULL );
   assert( src != NULL );
-  assert( *src == OVSM_OF_TCP_SRC || *src == OVSM_OF_TCP_DST );
+  assert( *src == OVSM_OF_TCP_SRC || *src == OVSM_OF_TCP_DST
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 6, 0 )
+          || *src == OVSM_OF_TCP_SRC_W || *src == OVSM_OF_TCP_DST_W
+#endif
+        );
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 6, 0 )
+  if ( ovs_match_has_mask( *src ) ) {
+    return hton_ovs_match_16w( dst, src );
+  }
+#endif
 
   hton_ovs_match_16( dst, src );
 }
@@ -351,7 +386,17 @@ void
 hton_ovs_match_udp_port( ovs_match_header *dst, const ovs_match_header *src ) {
   assert( dst != NULL );
   assert( src != NULL );
-  assert( *src == OVSM_OF_UDP_SRC || *src == OVSM_OF_UDP_DST );
+  assert( *src == OVSM_OF_UDP_SRC || *src == OVSM_OF_UDP_DST
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 6, 0 )
+          || *src == OVSM_OF_UDP_SRC_W || *src == OVSM_OF_UDP_DST_W
+#endif
+        );
+
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 6, 0 )
+  if ( ovs_match_has_mask( *src ) ) {
+    return hton_ovs_match_16w( dst, src );
+  }
+#endif
 
   hton_ovs_match_16( dst, src );
 }
@@ -454,6 +499,33 @@ hton_ovs_match_cookie( ovs_match_header *dst, const ovs_match_header *src ) {
 }
 #endif
 
+#if OVS_VERSION_CODE >= OVS_VERSION( 2, 0, 0 )
+void hton_ovs_match_pkt_mark( ovs_match_header *dst, const ovs_match_header *src ) {
+  assert( dst != NULL );
+  assert( src != NULL );
+  assert( *src == OVSM_OVS_PKT_MARK || *src == OVSM_OVS_PKT_MARK_W );
+
+  if ( ovs_match_has_mask( *src ) ) {
+    return hton_ovs_match_32w( dst, src );
+  }
+
+  hton_ovs_match_32( dst, src );
+}
+#endif
+
+#if OVS_VERSION_CODE >= OVS_VERSION( 2, 1, 0 )
+void hton_ovs_match_tcp_flags( ovs_match_header *dst, const ovs_match_header *src ) {
+  assert( dst != NULL );
+  assert( src != NULL );
+  assert( *src == OVSM_OVS_TCP_FLAGS || *src == OVSM_OVS_TCP_FLAGS_W );
+
+  if ( ovs_match_has_mask( *src ) ) {
+    return hton_ovs_match_16w( dst, src );
+  }
+
+  hton_ovs_match_16( dst, src );
+}
+#endif
 
 void
 hton_ovs_match( ovs_match_header *dst, const ovs_match_header *src ) {
@@ -470,6 +542,9 @@ hton_ovs_match( ovs_match_header *dst, const ovs_match_header *src ) {
     case OVSM_OF_ETH_DST:
     case OVSM_OF_ETH_DST_W:
     case OVSM_OF_ETH_SRC:
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 8, 0 )
+    case OVSM_OF_ETH_SRC_W:
+#endif
     {
       hton_ovs_match_eth_addr( dst, src );
     }
@@ -511,6 +586,10 @@ hton_ovs_match( ovs_match_header *dst, const ovs_match_header *src ) {
 
     case OVSM_OF_TCP_SRC:
     case OVSM_OF_TCP_DST:
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 6, 0 )
+    case OVSM_OF_TCP_SRC_W:
+    case OVSM_OF_TCP_DST_W:
+#endif
     {
       hton_ovs_match_tcp_port( dst, src );
     }
@@ -518,6 +597,10 @@ hton_ovs_match( ovs_match_header *dst, const ovs_match_header *src ) {
 
     case OVSM_OF_UDP_SRC:
     case OVSM_OF_UDP_DST:
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 6, 0 )
+    case OVSM_OF_UDP_SRC_W:
+    case OVSM_OF_UDP_DST_W:
+#endif
     {
       hton_ovs_match_udp_port( dst, src );
     }
@@ -560,6 +643,14 @@ hton_ovs_match( ovs_match_header *dst, const ovs_match_header *src ) {
     case OVSM_OVS_REG3_W:
     case OVSM_OVS_REG4:
     case OVSM_OVS_REG4_W:
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 7, 0 )
+    case OVSM_OVS_REG5:
+    case OVSM_OVS_REG5_W:
+    case OVSM_OVS_REG6:
+    case OVSM_OVS_REG6_W:
+    case OVSM_OVS_REG7:
+    case OVSM_OVS_REG7_W:
+#endif
     {
       hton_ovs_match_reg( dst, src );
     }
@@ -601,6 +692,9 @@ hton_ovs_match( ovs_match_header *dst, const ovs_match_header *src ) {
     break;
 
     case OVSM_OVS_ND_TARGET:
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 7, 0 )
+    case OVSM_OVS_ND_TARGET_W:
+#endif
     {
       hton_ovs_match_nd_target( dst, src );
     }
@@ -621,6 +715,9 @@ hton_ovs_match( ovs_match_header *dst, const ovs_match_header *src ) {
     break;
 
     case OVSM_OVS_IPV6_LABEL:
+#if OVS_VERSION_CODE >= OVS_VERSION( 2, 1, 0 )
+    case OVSM_OVS_IPV6_LABEL_W:
+#endif
     {
       hton_ovs_match_ipv6_label( dst, src );
     }
@@ -643,6 +740,33 @@ hton_ovs_match( ovs_match_header *dst, const ovs_match_header *src ) {
     case OVSM_OVS_COOKIE_W:
     {
       hton_ovs_match_cookie( dst, src );
+    }
+    break;
+#endif
+
+#if OVS_VERSION_CODE >= OVS_VERSION( 2, 0, 0 )
+    case OVSM_OVS_TUN_IPV4_SRC:
+    case OVSM_OVS_TUN_IPV4_SRC_W:
+    case OVSM_OVS_TUN_IPV4_DST:
+    case OVSM_OVS_TUN_IPV4_DST_W:
+    {
+      hton_ovs_match_ip_addr( dst, src );
+    }
+    break;
+
+    case OVSM_OVS_PKT_MARK:
+    case OVSM_OVS_PKT_MARK_W:
+    {
+      hton_ovs_match_pkt_mark( dst, src );
+    }
+    break;
+#endif
+
+#if OVS_VERSION_CODE >= OVS_VERSION( 2, 1, 0 )
+    case OVSM_OVS_TCP_FLAGS:
+    case OVSM_OVS_TCP_FLAGS_W:
+    {
+      hton_ovs_match_tcp_flags( dst, src );
     }
     break;
 #endif
@@ -685,7 +809,11 @@ ntoh_ovs_match_eth_addr( ovs_match_header *dst, const ovs_match_header *src ) {
   assert( src != NULL );
 
   ntoh_ovs_match_header( dst, src );
-  assert( *dst == OVSM_OF_ETH_DST || *dst == OVSM_OF_ETH_DST || *dst == OVSM_OF_ETH_DST_W ||
+  assert( *dst == OVSM_OF_ETH_DST ||
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 8, 0 )
+          *dst == OVSM_OF_ETH_DST_W ||
+#endif
+          *dst == OVSM_OF_ETH_DST || *dst == OVSM_OF_ETH_DST_W ||
           *dst == OVSM_OVS_ARP_SHA || *dst == OVSM_OVS_ARP_THA ||
           *dst == OVSM_OVS_ND_SLL || *dst == OVSM_OVS_ND_TLL );
   uint8_t length = get_ovs_match_length( *dst );
@@ -747,12 +875,20 @@ ntoh_ovs_match_ip_addr( ovs_match_header *dst, const ovs_match_header *src ) {
 
   if ( ovs_match_has_mask( ntohl( *src ) ) ) {
     ntoh_ovs_match_32w( dst, src );
-    assert( *dst == OVSM_OF_IP_SRC_W || *dst == OVSM_OF_IP_DST_W );
+    assert( *dst == OVSM_OF_IP_SRC_W || *dst == OVSM_OF_IP_DST_W
+#if OVS_VERSION_CODE >= OVS_VERSION( 2, 0, 0 )
+            || *dst == OVSM_OVS_TUN_IPV4_SRC_W || *dst == OVSM_OVS_TUN_IPV4_DST_W
+#endif
+          );
     return;
   }
 
   ntoh_ovs_match_32( dst, src );
-  assert( *dst == OVSM_OF_IP_SRC || *dst == OVSM_OF_IP_DST );
+  assert( *dst == OVSM_OF_IP_SRC || *dst == OVSM_OF_IP_DST
+#if OVS_VERSION_CODE >= OVS_VERSION( 2, 0, 0 )
+          || *dst == OVSM_OVS_TUN_IPV4_SRC || *dst == OVSM_OVS_TUN_IPV4_DST
+#endif
+        );
 }
 
 
@@ -764,7 +900,11 @@ ntoh_ovs_match_ipv6_addr( ovs_match_header *dst, const ovs_match_header *src ) {
   ntoh_ovs_match_header( dst, src );
   assert( *dst == OVSM_OVS_IPV6_SRC || *dst == OVSM_OVS_IPV6_SRC_W ||
           *dst == OVSM_OVS_IPV6_DST || *dst == OVSM_OVS_IPV6_DST_W ||
-          *dst == OVSM_OVS_ND_TARGET );
+          *dst == OVSM_OVS_ND_TARGET
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 7, 0 )
+          || *dst == OVSM_OVS_ND_TARGET_W
+#endif
+        );
   uint8_t length = get_ovs_match_length( *dst );
 
   memmove( ( char * ) dst + sizeof( ovs_match_header ), ( const char * ) src + sizeof( ovs_match_header ), length );
@@ -797,7 +937,11 @@ ntoh_ovs_match_nd_target( ovs_match_header *dst, const ovs_match_header *src ) {
   assert( src != NULL );
 
   ntoh_ovs_match_ipv6_addr( dst, src );
-  assert( *dst == OVSM_OVS_ND_TARGET );
+  assert( *dst == OVSM_OVS_ND_TARGET
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 7, 0 )
+          || *dst == OVSM_OVS_ND_TARGET_W
+#endif
+        );
 }
 
 
@@ -832,6 +976,13 @@ ntoh_ovs_match_ipv6_label( ovs_match_header *dst, const ovs_match_header *src ) 
   assert( dst != NULL );
   assert( src != NULL );
 
+#if OVS_VERSION_CODE >= OVS_VERSION( 2, 1, 0 )
+  if ( ovs_match_has_mask( ntohl( *src ) ) ) {
+    ntoh_ovs_match_32w( dst, src );
+    assert( *dst == OVSM_OVS_IPV6_LABEL_W );
+    return;
+  }
+#endif
   ntoh_ovs_match_32( dst, src );
   assert( *dst == OVSM_OVS_IPV6_LABEL );
 }
@@ -862,6 +1013,13 @@ ntoh_ovs_match_tcp_port( ovs_match_header *dst, const ovs_match_header *src ) {
   assert( dst != NULL );
   assert( src != NULL );
 
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 6, 0 )
+  if ( ovs_match_has_mask( ntohl( *src ) ) ) {
+    ntoh_ovs_match_16w( dst, src );
+    assert( *dst == OVSM_OF_TCP_SRC_W || *dst == OVSM_OF_TCP_DST_W );
+    return;
+  }
+#endif
   ntoh_ovs_match_16( dst, src );
   assert( *dst == OVSM_OF_TCP_SRC || *dst == OVSM_OF_TCP_DST );
 }
@@ -872,6 +1030,13 @@ ntoh_ovs_match_udp_port( ovs_match_header *dst, const ovs_match_header *src ) {
   assert( dst != NULL );
   assert( src != NULL );
 
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 6, 0 )
+  if ( ovs_match_has_mask( ntohl( *src ) ) ) {
+    ntoh_ovs_match_16w( dst, src );
+    assert( *dst == OVSM_OF_UDP_SRC_W || *dst == OVSM_OF_UDP_DST_W );
+    return;
+  }
+#endif
   ntoh_ovs_match_16( dst, src );
   assert( *dst == OVSM_OF_UDP_SRC || *dst == OVSM_OF_UDP_DST );
 }
@@ -980,6 +1145,39 @@ ntoh_ovs_match_cookie( ovs_match_header *dst, const ovs_match_header *src ) {
 }
 #endif
 
+#if OVS_VERSION_CODE >= OVS_VERSION( 2, 0, 0 )
+void
+ntoh_ovs_match_pkt_mark( ovs_match_header *dst, const ovs_match_header *src ) {
+  assert( dst != NULL );
+  assert( src != NULL );
+
+  if ( ovs_match_has_mask( ntohl( *src ) ) ) {
+    ntoh_ovs_match_32w( dst, src );
+    assert( *dst == OVSM_OVS_PKT_MARK_W );
+    return;
+  }
+
+  ntoh_ovs_match_32( dst, src );
+  assert( *dst == OVSM_OVS_PKT_MARK );
+}
+#endif
+
+#if OVS_VERSION_CODE >= OVS_VERSION( 2, 1, 0 )
+void
+ntoh_ovs_match_tcp_flags( ovs_match_header *dst, const ovs_match_header *src ) {
+  assert( dst != NULL );
+  assert( src != NULL );
+
+  if ( ovs_match_has_mask( ntohl( *src ) ) ) {
+    ntoh_ovs_match_16w( dst, src );
+    assert( *dst == OVSM_OVS_TCP_FLAGS_W );
+    return;
+  }
+
+  ntoh_ovs_match_16( dst, src );
+  assert( *dst == OVSM_OVS_TCP_FLAGS );
+}
+#endif
 
 void
 ntoh_ovs_match( ovs_match_header *dst, const ovs_match_header *src ) {
@@ -996,6 +1194,9 @@ ntoh_ovs_match( ovs_match_header *dst, const ovs_match_header *src ) {
     case OVSM_OF_ETH_DST:
     case OVSM_OF_ETH_DST_W:
     case OVSM_OF_ETH_SRC:
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 8, 0 )
+    case OVSM_OF_ETH_SRC_W:
+#endif
     {
       ntoh_ovs_match_eth_addr( dst, src );
     }
@@ -1037,6 +1238,10 @@ ntoh_ovs_match( ovs_match_header *dst, const ovs_match_header *src ) {
 
     case OVSM_OF_TCP_SRC:
     case OVSM_OF_TCP_DST:
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 6, 0 )
+    case OVSM_OF_TCP_SRC_W:
+    case OVSM_OF_TCP_DST_W:
+#endif
     {
       ntoh_ovs_match_tcp_port( dst, src );
     }
@@ -1044,6 +1249,10 @@ ntoh_ovs_match( ovs_match_header *dst, const ovs_match_header *src ) {
 
     case OVSM_OF_UDP_SRC:
     case OVSM_OF_UDP_DST:
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 6, 0 )
+    case OVSM_OF_UDP_SRC_W:
+    case OVSM_OF_UDP_DST_W:
+#endif
     {
       ntoh_ovs_match_udp_port( dst, src );
     }
@@ -1086,6 +1295,14 @@ ntoh_ovs_match( ovs_match_header *dst, const ovs_match_header *src ) {
     case OVSM_OVS_REG3_W:
     case OVSM_OVS_REG4:
     case OVSM_OVS_REG4_W:
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 7, 0 )
+    case OVSM_OVS_REG5:
+    case OVSM_OVS_REG5_W:
+    case OVSM_OVS_REG6:
+    case OVSM_OVS_REG6_W:
+    case OVSM_OVS_REG7:
+    case OVSM_OVS_REG7_W:
+#endif
     {
       ntoh_ovs_match_reg( dst, src );
     }
@@ -1127,6 +1344,9 @@ ntoh_ovs_match( ovs_match_header *dst, const ovs_match_header *src ) {
     break;
 
     case OVSM_OVS_ND_TARGET:
+#if OVS_VERSION_CODE >= OVS_VERSION( 1, 7, 0 )
+    case OVSM_OVS_ND_TARGET_W:
+#endif
     {
       ntoh_ovs_match_nd_target( dst, src );
     }
@@ -1147,6 +1367,9 @@ ntoh_ovs_match( ovs_match_header *dst, const ovs_match_header *src ) {
     break;
 
     case OVSM_OVS_IPV6_LABEL:
+#if OVS_VERSION_CODE >= OVS_VERSION( 2, 1, 0 )
+    case OVSM_OVS_IPV6_LABEL_W:
+#endif
     {
       ntoh_ovs_match_ipv6_label( dst, src );
     }
@@ -1169,6 +1392,33 @@ ntoh_ovs_match( ovs_match_header *dst, const ovs_match_header *src ) {
     case OVSM_OVS_COOKIE_W:
     {
       ntoh_ovs_match_cookie( dst, src );
+    }
+    break;
+#endif
+
+#if OVS_VERSION_CODE >= OVS_VERSION( 2, 0, 0 )
+    case OVSM_OVS_TUN_IPV4_SRC:
+    case OVSM_OVS_TUN_IPV4_SRC_W:
+    case OVSM_OVS_TUN_IPV4_DST:
+    case OVSM_OVS_TUN_IPV4_DST_W:
+    {
+      ntoh_ovs_match_ip_addr( dst, src );
+    }
+    break;
+
+    case OVSM_OVS_PKT_MARK:
+    case OVSM_OVS_PKT_MARK_W:
+    {
+      ntoh_ovs_match_pkt_mark( dst, src );
+    }
+    break;
+#endif
+
+#if OVS_VERSION_CODE >= OVS_VERSION( 2, 1, 0 )
+    case OVSM_OVS_TCP_FLAGS:
+    case OVSM_OVS_TCP_FLAGS_W:
+    {
+      ntoh_ovs_match_tcp_flags( dst, src );
     }
     break;
 #endif
