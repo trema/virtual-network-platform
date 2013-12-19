@@ -37,12 +37,12 @@ module Vxlan
           VxlanCtl.name vni
         end
 
-        def list
-          VxlanCtl.list_instances
+        def list vni = nil
+          VxlanCtl.list_instances vni
         end
 
         def exists? vni
-          list.has_key? vni
+          list( vni ).has_key? vni
         end
 
         def mtu vni, mtu
@@ -73,9 +73,12 @@ module Vxlan
           vxlanctl '--del_instance', options
         end
 
-        def list_instances
+        def list_instances vni = nil
           list = {}
           options = [ '--quiet' ]
+          if not vni.nil?
+            options = [ '--vni', vni ]
+          end
           vxlanctl( '--list_instances', options ).split( "\n").each do | row |
             row = $1 if /^\s*(\S+(?:\s+\S+)*)\s*$/ =~ row
             vni, address, port, aging_time, state = row.split( /\s*\|\s*/, 5 )
@@ -101,8 +104,11 @@ module Vxlan
           result = ""
           Open3.popen3( "#{ full_path } #{ command } #{ options.join ' ' }" ) do | stdin, stdout, stderr |
             stdin.close
+            t = Thread.start do
+              result << stdout.read
+            end
             error = stderr.read
-            result << stdout.read
+            t.join
             raise "Permission denied #{ full_path }" if /Permission denied/ =~ result
             raise "#{ result } #{ full_path }" if /Failed to/ =~ result
             raise "#{ error } #{ full_path }" unless error.length == 0

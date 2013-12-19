@@ -47,7 +47,7 @@ module Vxlan
         end
 
         def list vni
-          tunnel_endpoints = Ctl.list_tunnel_endpoints
+          tunnel_endpoints = Ctl.list_tunnel_endpoints vni
           tunnel_endpoints.has_key?( vni ) and tunnel_endpoints[ vni ] or nil
         end
 
@@ -112,8 +112,11 @@ module Vxlan
           result = ""
           Open3.popen3( command_options ) do | stdin, stdout, stderr |
             stdin.close
+            t = Thread.start do
+              result << stdout.read
+            end
             error = stderr.read
-            result << stdout.read
+            t.join
             raise "Permission denied #{ full_path }" if /Permission denied/ =~ result
             raise "#{ result } #{ full_path }" if /Failed to/ =~ result
             raise "#{ error } #{ full_path }" unless error.length == 0
