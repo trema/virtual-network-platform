@@ -47,7 +47,7 @@ module Vxlan
         end
 
         def list vni
-          tunnel_endpoints = Ctl.list_tunnel_endpoints vni
+          tunnel_endpoints = Ctl.list_tunnel_endpoints
           tunnel_endpoints.has_key?( vni ) and tunnel_endpoints[ vni ] or nil
         end
 
