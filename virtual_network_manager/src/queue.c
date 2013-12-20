@@ -19,6 +19,7 @@
 
 
 #include <assert.h>
+#include "memory_barrier.h"
 #include "queue.h"
 #ifdef UNIT_TEST
 #include "queue_unittest.h"
@@ -74,7 +75,12 @@ collect_garbage( queue *queue ) {
   assert( queue != NULL );
   assert( queue->length >= 0 );
 
-  while ( queue->head != queue->divider ) {
+  while ( 1 ) {
+    volatile queue_element *divider = queue->divider;
+    read_memory_barrier();
+    if ( queue->head == divider ) {
+      break;
+    }
     queue_element *e = queue->head;
     queue->head = queue->head->next;
     xfree( e );
@@ -98,6 +104,7 @@ enqueue( queue *queue, void *data ) {
 
   queue->tail->next = new_tail;
   queue->tail = new_tail;
+  write_memory_barrier();
   __sync_add_and_fetch( &queue->length, 1 );
 
   collect_garbage( queue );
@@ -115,11 +122,15 @@ dequeue( queue *queue ) {
   assert( queue != NULL );
   assert( queue->length >= 0 );
 
-  if ( queue->divider != queue->tail ) {
+  volatile queue_element *tail = queue->tail;
+  read_memory_barrier();
+
+  if ( queue->divider != tail ) {
     queue_element *next = queue->divider->next;
     void *data = next->data;
     next->data = NULL; // data must be freed by caller
     queue->divider = next;
+    write_memory_barrier();
     __sync_sub_and_fetch( &queue->length, 1 );
 
     debug( "Dequeue completed ( queue = %p, length = %d, data = %p ).", queue, queue->length, data );
