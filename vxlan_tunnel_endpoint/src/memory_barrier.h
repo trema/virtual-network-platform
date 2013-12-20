@@ -1,7 +1,7 @@
 /*
  * Author: Yasunobu Chiba
  *
- * Copyright (C) 2012-2013 NEC Corporation
+ * Copyright (C) 2013 NEC Corporation
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License, version 2, as
@@ -18,39 +18,19 @@
  */
 
 
-#ifndef QUEUE_H
-#define QUEUE_H
+#ifndef MEMORY_BARRIER_H
+#define MEMORY_BARRIER_H
 
 
-#include <stdbool.h>
+#if defined __i386__ || defined __amd64__
+#define memory_barrier() asm volatile( "mfence" ::: "memory" )
+#define read_memory_barrier() asm volatile( "lfence" ::: "memory" )
+#define write_memory_barrier() asm volatile( "sfence" ::: "memory" )
+#else
+#define memory_barrier() __sync_synchronize()
+#define read_memory_barrier() __sync_synchronize()
+#define write_memory_barrier() __sync_synchronize()
+#endif
 
 
-typedef struct queue_element {
-  void *data;
-  struct queue_element *next;
-} queue_element;
-
-typedef struct queue {
-  queue_element *head;
-  volatile queue_element *divider;
-  volatile queue_element *tail;
-  volatile int length;
-} queue;
-
-
-queue *create_queue( void );
-bool delete_queue( queue *queue );
-bool enqueue( queue *queue, void *data );
-void *peek( queue *queue );
-void *dequeue( queue *queue );
-
-
-#endif // QUEUE_H
-
-
-/*
- * Local variables:
- * c-basic-offset: 2
- * indent-tabs-mode: nil
- * End:
- */
+#endif // MEMORY_BARRIER_H
