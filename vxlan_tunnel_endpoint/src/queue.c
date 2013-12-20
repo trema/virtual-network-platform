@@ -20,6 +20,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include "memory_barrier.h"
 #include "queue.h"
 
 
@@ -57,7 +58,12 @@ delete_queue( queue *queue ) {
 
 static void
 collect_garbage( queue *queue ) {
-  while ( queue->head != queue->divider ) {
+  while ( 1 ) {
+    volatile queue_element *divider = queue->divider;
+    read_memory_barrier();
+    if ( queue->head == divider ) {
+      break;
+    }
     queue_element *e = queue->head;
     queue->head = queue->head->next;
     free( e );
@@ -76,7 +82,8 @@ enqueue( queue *queue, void *data ) {
 
   queue->tail->next = new_tail;
   queue->tail = new_tail;
-  __sync_add_and_fetch( &queue->length, 1 ); // this must be an atomic operation for thread safety
+  write_memory_barrier();
+  __sync_add_and_fetch( &queue->length, 1 );
 
   collect_garbage( queue );
 
@@ -88,8 +95,12 @@ void *
 peek( queue *queue ) {
   assert( queue != NULL );
 
-  if ( queue->divider != queue->tail ) {
-    return queue->divider->next->data;
+  volatile queue_element *divider = queue->divider;
+  volatile queue_element *tail = queue->tail;
+  read_memory_barrier();
+
+  if ( divider != tail ) {
+    return divider->next->data;
   }
 
   return NULL;
@@ -100,12 +111,16 @@ void *
 dequeue( queue *queue ) {
   assert( queue != NULL );
 
-  if ( queue->divider != queue->tail ) {
+  volatile queue_element *tail = queue->tail;
+  read_memory_barrier();
+
+  if ( queue->divider != tail ) {
     queue_element *next = queue->divider->next;
     void *data = next->data;
     next->data = NULL; // data must be freed by caller
     queue->divider = next;
-    __sync_sub_and_fetch( &queue->length, 1 ); // this must be an atomic operation for thread safety
+    write_memory_barrier();
+    __sync_sub_and_fetch( &queue->length, 1 );
 
     return data;
   }
