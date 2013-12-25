@@ -15,7 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 
-require 'open3'
+require 'systemu'
 require 'vxlan/configure'
 
 module Vxlan
@@ -112,13 +112,8 @@ module Vxlan
         end
 
         def ip_link command, options = []
-          result = ""
-          Open3.popen3( "#{ config[ 'ip' ] } link #{ command } #{ options.join ' ' }" ) do | stdin, stdout, stderr |
-            stdin.close
-            error = stderr.read
-            result << stdout.read
-            raise "#{ error } #{ config[ 'ip' ] }" unless error.length == 0
-          end
+          status, result, error = systemu "#{ config[ 'ip' ] } link #{ command } #{ options.join ' ' }"
+          raise "#{ result } #{ error } #{ status.inspect } #{ config[ 'ip' ] }" unless status.success?
           result
         end
 

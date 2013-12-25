@@ -15,7 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 
-require 'open3'
+require 'systemu'
 require 'vxlan/configure'
 require 'vxlan/log'
 
@@ -101,18 +101,8 @@ module Vxlan
           end
           command_options = "#{ full_path } #{ command } #{ options.join ' ' }"
           logger.debug "vxlanctl: '#{ command_options }'"
-          result = ""
-          Open3.popen3( "#{ full_path } #{ command } #{ options.join ' ' }" ) do | stdin, stdout, stderr |
-            stdin.close
-            t = Thread.start do
-              result << stdout.read
-            end
-            error = stderr.read
-            t.join
-            raise "Permission denied #{ full_path }" if /Permission denied/ =~ result
-            raise "#{ result } #{ full_path }" if /Failed to/ =~ result
-            raise "#{ error } #{ full_path }" unless error.length == 0
-          end
+          status, result, error = systemu command_options
+          raise "#{ result } #{ error } #{ status.inspect } #{ full_path }" unless status.success?
           result
         end
 
@@ -137,13 +127,8 @@ module Vxlan
         end
 
         def ip_link command, options = []
-          result = ""
-          Open3.popen3( "#{ config[ 'ip' ] } link #{ command } #{ options.join ' ' }" ) do | stdin, stdout, stderr |
-            stdin.close
-            error = stderr.read
-            result << stdout.read
-            raise "#{ error } #{ config[ 'ip' ] }" unless error.length == 0
-          end
+          status, result, error = systemu "#{ config[ 'ip' ] } link #{ command } #{ options.join ' ' }"
+          raise "#{ result } #{ error } #{ status.inspect } #{ config[ 'ip' ] }" unless status.success?
           result
         end
 

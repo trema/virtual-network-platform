@@ -14,7 +14,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 
-require 'open3'
+require 'systemu'
 require 'ovs/configure'
 require 'ovs/log'
 
@@ -122,14 +122,8 @@ module OVS
       def ovs_vsctl options, command, args = []
         command_args = "#{ config[ 'vsctl' ] } #{ options.join ' ' } #{ command } #{ args.join ' ' }"
         logger.debug "ovs_vsctl: '#{ command_args }'"
-        result = ""
-        Open3.popen3( command_args ) do | stdin, stdout, stderr |
-          stdin.close
-          error = stderr.read
-          result << stdout.read
-          raise "Permission denied #{ config[ 'vsctl' ] }" if /Permission denied/ =~ error
-          raise "#{ error } #{ config[ 'vsctl' ] }" unless error.length == 0
-        end
+        status, result, error = systemu command_args
+        raise "#{ result } #{ error } #{ status.inspect } #{ config[ 'vsctl' ] }" unless status.success?
         result
       end
 
