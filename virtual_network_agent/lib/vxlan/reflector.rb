@@ -15,7 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 
-require 'open3'
+require 'systemu'
 require 'vxlan/configure'
 require 'vxlan/log'
 
@@ -109,18 +109,8 @@ module Vxlan
           end
           command_options = "#{ full_path } #{ command } #{ options.join ' ' }"
           logger.debug "reflectorctl: '#{ command_options }'"
-          result = ""
-          Open3.popen3( command_options ) do | stdin, stdout, stderr |
-            stdin.close
-            t = Thread.start do
-              result << stdout.read
-            end
-            error = stderr.read
-            t.join
-            raise "Permission denied #{ full_path }" if /Permission denied/ =~ result
-            raise "#{ result } #{ full_path }" if /Failed to/ =~ result
-            raise "#{ error } #{ full_path }" unless error.length == 0
-          end
+          status, result, error = systemu command_options
+          raise "#{ result } #{ error } #{ status.inspect } #{ full_path }" unless status.success?
           result
         end
 
