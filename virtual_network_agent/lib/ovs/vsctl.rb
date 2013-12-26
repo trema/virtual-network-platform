@@ -75,6 +75,27 @@ module OVS
         Vsctl.is_connected?
       end
     end
+
+  end
+
+  class VsctlError < SystemCallError
+    attr_reader :exit_status
+    attr_reader :stdout
+    attr_reader :stderr
+    attr_reader :command
+
+    def initialize( status, stdout, stderr, command )
+      @exit_status = status
+      @stdout = stdout
+      @stderr = stderr
+      @command = command
+      message = ""
+      message << "#{ stdout } - " if stdout.length != 0
+      message << "#{ stderr } - " if stderr.length != 0
+      message << "#{ status.inspect } - #{ command }"
+      super( message )
+    end
+
   end
 
   class Vsctl
@@ -123,7 +144,7 @@ module OVS
         command_args = "#{ config[ 'vsctl' ] } #{ options.join ' ' } #{ command } #{ args.join ' ' }"
         logger.debug "ovs_vsctl: '#{ command_args }'"
         status, result, error = systemu command_args
-        raise "#{ result } #{ error } #{ status.inspect } #{ config[ 'vsctl' ] }" unless status.success?
+        raise VsctlError.new( status, result, error, command_args ) unless status.success?
         result
       end
 
