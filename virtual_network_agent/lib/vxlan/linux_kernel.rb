@@ -54,6 +54,26 @@ module Vxlan
 
     end
 
+    class IpLinkError < SystemCallError
+      attr_reader :exit_status
+      attr_reader :stdout
+      attr_reader :stderr
+      attr_reader :command
+
+      def initialize( status, stdout, stderr, command )
+	@exit_status = status
+	@stdout = stdout
+	@stderr = stderr
+	@command = command
+	message = ""
+	message << "#{ stdout } - " if stdout.length != 0
+	message << "#{ stderr } - " if stderr.length != 0
+	message << "#{ status.inspect } - #{ command }"
+	super( message )
+      end
+
+    end
+
     class IpLink
       class << self
         def name vni
@@ -112,8 +132,9 @@ module Vxlan
         end
 
         def ip_link command, options = []
-          status, result, error = systemu "#{ config[ 'ip' ] } link #{ command } #{ options.join ' ' }"
-          raise "#{ result } #{ error } #{ status.inspect } #{ config[ 'ip' ] }" unless status.success?
+          command_options = "#{ config[ 'ip' ] } link #{ command } #{ options.join ' ' }"
+          status, result, error = systemu command_options
+          raise IpLinkError.new( status, result, error, command_options ) unless status.success?
           result
         end
 

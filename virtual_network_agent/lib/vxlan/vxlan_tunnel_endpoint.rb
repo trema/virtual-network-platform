@@ -54,6 +54,35 @@ module Vxlan
 
     end
 
+    class VxlanCtlError < SystemCallError
+      SUCCEEDED = 0
+      INVALID_ARGUMENT = 1
+      ALREADY_RUNNING = 2
+      PORT_ALREADY_IN_USE = 3
+      SOURCE_PORTS_NOT_ALLOCATED = 4
+      DUPLICATED_INSTANCE = 5
+      INSTANCE_NOT_FOUND = 6
+      OTHER_ERROR = 255
+
+      attr_reader :exit_status
+      attr_reader :stdout
+      attr_reader :stderr
+      attr_reader :command
+
+      def initialize( status, stdout, stderr, command )
+	@exit_status = status
+	@stdout = stdout
+	@stderr = stderr
+	@command = command
+	message = ""
+	message << "#{ stdout } - " if stdout.length != 0
+	message << "#{ stderr } - " if stderr.length != 0
+	message << "#{ status.inspect } - #{ command }"
+	super( message )
+      end
+
+    end
+
     class VxlanCtl
       class << self
         def name vni
@@ -102,7 +131,7 @@ module Vxlan
           command_options = "#{ full_path } #{ command } #{ options.join ' ' }"
           logger.debug "vxlanctl: '#{ command_options }'"
           status, result, error = systemu command_options
-          raise "#{ result } #{ error } #{ status.inspect } #{ full_path }" unless status.success?
+          raise VxlanCtlError.new( status, result, error, command_options ) unless status.success?
           result
         end
 
@@ -110,6 +139,26 @@ module Vxlan
           Log.instance
         end
 
+      end
+
+    end
+
+    class IpLinkError < SystemCallError
+      attr_reader :exit_status
+      attr_reader :stdout
+      attr_reader :stderr
+      attr_reader :command
+
+      def initialize( status, stdout, stderr, command )
+	@exit_status = status
+	@stdout = stdout
+	@stderr = stderr
+	@command = command
+	message = ""
+	message << "#{ stdout } - " if stdout.length != 0
+	message << "#{ stderr } - " if stderr.length != 0
+	message << "#{ status.inspect } - #{ command }"
+	super( message )
       end
 
     end
@@ -127,8 +176,9 @@ module Vxlan
         end
 
         def ip_link command, options = []
-          status, result, error = systemu "#{ config[ 'ip' ] } link #{ command } #{ options.join ' ' }"
-          raise "#{ result } #{ error } #{ status.inspect } #{ config[ 'ip' ] }" unless status.success?
+          command_options = "#{ config[ 'ip' ] } link #{ command } #{ options.join ' ' }"
+          status, result, error = systemu command_options
+          raise IpLinkError.new( status, result, error, command_options ) unless status.success?
           result
         end
 
