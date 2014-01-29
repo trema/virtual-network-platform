@@ -88,9 +88,9 @@ You can retrieve a copy of the source code as follows:
 
 If you prefer to use HTTP, follow the instructions below:
 
-    $ git clone http://github.com/trema/virtual-network-platform.git
+    $ git clone https://github.com/trema/virtual-network-platform.git
     $ cd virtual-network-platform
-    $ git config submodule.trema.url http://github.com/trema/trema.git
+    $ git config submodule.trema.url https://github.com/trema/trema.git
     $ git submodule init
     $ git submodule update
 
