@@ -636,12 +636,12 @@ class Network
 
     def destroy_all_ports slice_id, &a_proc
       DB::Port.update_all(
-        [ "state = ?", DB::SLICE_STATE_PREPARING_TO_DESTROY ],
+        [ "state = ?", DB::PORT_STATE_PREPARING_TO_DESTROY ],
         [ "slice_id = ? AND state = ?", slice_id, DB::PORT_STATE_CONFIRMED ] )
       a_proc.call
       DB::Port.update_all(
         [ "state = ?", DB::PORT_STATE_READY_TO_DESTROY ],
-        [ "slice_id = ? AND state = ?", slice_id, DB::SLICE_STATE_PREPARING_TO_DESTROY ] )
+        [ "slice_id = ? AND state = ?", slice_id, DB::PORT_STATE_PREPARING_TO_DESTROY ] )
     end
 
     def destroy_all_mac_addresses slice_id
@@ -676,7 +676,7 @@ class Network
 
     def destroy_port slice_id, port_id, port_type = DB::PORT_TYPE_CUSTOMER, &a_proc
       DB::Port.update_all(
-        [ "state = ?", DB::SLICE_STATE_PREPARING_TO_DESTROY ],
+        [ "state = ?", DB::PORT_STATE_PREPARING_TO_DESTROY ],
         [ "slice_id = ? AND id = ? AND type = ? AND ( state = ? OR state = ? )",
           slice_id, port_id, port_type, DB::PORT_STATE_CONFIRMED, DB::PORT_STATE_READY_TO_UPDATE ] )
       begin
@@ -685,7 +685,7 @@ class Network
         DB::Port.update_all(
           [ "state = ?", DB::PORT_STATE_DESTROY_FAILED ],
           [ "slice_id = ? AND id = ? AND type =? AND state = ?",
-            slice_id, port_id, port_type, DB::SLICE_STATE_PREPARING_TO_DESTROY ] )
+            slice_id, port_id, port_type, DB::PORT_STATE_PREPARING_TO_DESTROY ] )
         raise
       end
       DB::Port.update_all(
