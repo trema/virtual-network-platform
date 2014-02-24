@@ -255,6 +255,15 @@ command 'failed' do | args |
   puts "State of the slice is updated successfully."
 end
 
+# update-transaction-begin: debug only
+command 'update-transaction-begin' do | args |
+  parameters = {}
+  parameters[ :id ] = args.shift or help_and_exit "Too few arguments"
+  help_and_exit "Too many arguments" unless args.size == 0
+  Network.update_transaction_begin( parameters )
+  puts "A slice is update-transaction-begin successfully."
+end
+
 # update-transaction-end: debug only
 command 'update-transaction-end' do | args |
   parameters = {}

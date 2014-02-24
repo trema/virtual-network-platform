@@ -215,6 +215,23 @@ class Network
       end
     end
 
+    def update_transaction_begin parameters
+      raise BadRequestError.new "Slice id must be specified." if parameters[ :id ].nil?
+
+      slice_id = convert_slice_id parameters[ :id ]
+
+      logger.debug "#{ __FILE__ }:#{ __LINE__ }: update-transaction end (slice_id = #{ slice_id })"
+
+      slice = find_slice( slice_id )
+      raise NetworkManagementError.new unless slice.state == DB::SLICE_STATE_CONFIRMED
+
+      DB::Slice.update_all(
+        [ "state = ?", DB::SLICE_STATE_PREPARING_TO_UPDATE ],
+        [ "id = ? AND state = ?",
+          slice_id,
+          DB::SLICE_STATE_CONFIRMED ] )
+    end
+
     def update_transaction_end parameters
       raise BadRequestError.new "Slice id must be specified." if parameters[ :id ].nil?
 
@@ -223,10 +240,8 @@ class Network
       logger.debug "#{ __FILE__ }:#{ __LINE__ }: update-transaction end (slice_id = #{ slice_id })"
 
       slice = find_slice( slice_id )
+      raise NetworkManagementError.new unless slice.state == DB::SLICE_STATE_PREPARING_TO_UPDATE
 
-      DB::Port.update_all(
-        [ "state = ?", DB::PORT_STATE_READY_TO_UPDATE ],
-          [ "slice_id = ? AND state = ?", slice_id, DB::PORT_STATE_PREPARING_TO_DESTROY ] )
       DB::Slice.update_all(
         [ "state = ?", DB::SLICE_STATE_READY_TO_UPDATE ],
         [ "id = ? AND state = ?",
