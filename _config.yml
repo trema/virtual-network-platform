@@ -1,0 +1,12 @@
+name: Virtual Network Platform
+pygments: true
+baseurl: /virtual-network-platform
+exclude:
+- backend_database
+- configuration_frontend
+- GPL2
+- trema
+- version_of_paper-house.sh
+- virtual_network_agent
+- virtual_network_manager
+- vxlan_tunnel_endpoint

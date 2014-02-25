@@ -1,3 +1,7 @@
+---
+layout: default
+title: Virtual Network Platform
+---
 # What's this?
 
 This is the [Virtual Network Platform 1.0](http://trema.github.io/virtual-network-platform/)
