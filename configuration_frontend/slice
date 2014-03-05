@@ -432,12 +432,12 @@ end
 
 # internal-x: debug only
 
-command 'internel-switch-list' do | args |
+command 'internal-switch-list' do | args |
   help_and_exit "Too many arguments" unless args.size == 0
   desiplay_ids Internal::Switch.list
 end
 
-command 'internel-switch-show' do | args |
+command 'internal-switch-show' do | args |
   parameters = {}
   parameters[ :id ] = args.shift or help_and_exit "Too few arguments"
   help_and_exit "Too many arguments" unless args.size == 0
@@ -454,12 +454,12 @@ command 'internel-switch-show' do | args |
   end
 end
 
-command 'internel-agent-list' do | args |
+command 'internal-agent-list' do | args |
   help_and_exit "Too many arguments" unless args.size == 0
   desiplay_ids Internal::VirtualNetworkAgent.list
 end
 
-command 'internel-agent-show' do | args |
+command 'internal-agent-show' do | args |
   parameters = {}
   parameters[ :id ] = args.shift or help_and_exit "Too few arguments"
   help_and_exit "Too many arguments" unless args.size == 0
@@ -468,12 +468,12 @@ command 'internel-agent-show' do | args |
   puts "Uri: #{ response[ :uri ] }"
 end
 
-command 'internel-vtep-list' do | args |
+command 'internal-vtep-list' do | args |
   help_and_exit "Too many arguments" unless args.size == 0
   desiplay_ids Internal::VxlanTunnelEndpoint.list
 end
 
-command 'internel-vtep-show' do | args |
+command 'internal-vtep-show' do | args |
   parameters = {}
   parameters[ :id ] = args.shift or help_and_exit "Too few arguments"
   help_and_exit "Too many arguments" unless args.size == 0
