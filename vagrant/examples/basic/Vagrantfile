@@ -1,0 +1,117 @@
+ENV['VAGRANT_DEFAULT_PROVIDER'] ||= 'lxc'
+
+multicast_snooping = IO.read("/sys/class/net/lxcbr0/bridge/multicast_snooping").strip.to_i
+if multicast_snooping != 0
+  puts <<-'EOT'
+Please run following command:
+  sudo sh -c "echo 0 > /sys/class/net/lxcbr0/bridge/multicast_snooping"
+  EOT
+end
+
+Vagrant.configure('2') do |config|
+  config.vm.provider :virtualbox do |vb, override|
+    override.vm.box = 'opscode-ubuntu-12.04'
+    override.vm.box_url = 'https://opscode-vm.s3.amazonaws.com/vagrant/boxes/opscode-ubuntu-12.04.box'
+  end
+
+  config.vm.provider :lxc do |lxc, override|
+    override.vm.box = 'vagrant-lxc-precise64-2013-10-23'
+    override.vm.box_url = 'https://dl.dropboxusercontent.com/u/13510779/vagrant-lxc-precise-amd64-2013-10-23.box'
+  end
+
+  setup = {
+    :hosta => {
+      :type => :controller,
+      :address => '192.168.1.254',
+      :netmask => '255.255.255.0'
+    },
+    :hostb => {
+      :type => :datapath,
+      :address => '192.168.1.16',
+      :netmask => '255.255.255.0',
+      :openflow_switch => {
+        :datapath_id => '%016x' % 1,
+        :controller => 'tcp:192.168.1.254:6653',
+      },
+      :virtual_network_agent => {
+        :uri => 'http://192.168.1.16:8082/',
+        :controller_uri => 'http://192.168.1.254:8081/',
+        :tunnel_endpoint => '192.168.1.16:4789'
+      },
+      :veth_interfaces => [ # dummy hosts
+        {
+          :name => 'veth0-0', # ovs side interface
+          :peer => 'veth0-1', # dummy host
+          :peer_address => '192.168.10.1',
+          :peer_netmask => '255.255.255.0',
+          :peer_hwaddress => '00:00:00:00:00:01'
+        }
+      ]
+    },
+    :hostc => {
+      :type => :datapath,
+      :address => '192.168.1.17',
+      :netmask => '255.255.255.0',
+      :openflow_switch => {
+        :datapath_id => '%016x' % 2,
+        :controller => 'tcp:192.168.1.254:6653',
+      },
+      :virtual_network_agent => {
+        :uri => 'http://192.168.1.17:8082/',
+        :controller_uri => 'http://192.168.1.254:8081/',
+        :tunnel_endpoint => '192.168.1.17:4789'
+      },
+      :veth_interfaces => [ # dummy hosts
+        {
+          :name => 'veth0-0', # ovs-side interface
+          :peer => 'veth0-1', # dummy host
+          :peer_address => '192.168.10.2',
+          :peer_netmask => '255.255.255.0',
+          :peer_hwaddress => '00:00:00:00:00:02'
+        }
+      ]
+    }
+  }
+
+  # provisions the vagrant machine
+  setup.each do |name, each|
+    config.vm.define name do |host|
+      host.vm.hostname = name
+      host.vm.provision :chef_solo do |chef|
+        #chef.add_recipe 'timezone'
+        chef.add_recipe 'proxy'
+        chef.add_recipe 'apt'
+        chef.add_recipe 'tcpdump'
+
+        #chef.json[:tz] = "Asia/Tokyo"
+
+        chef.add_recipe 'virtual-network-platform::vlan-interfaces'
+        chef.json[:vlan_interfaces] = [
+          {
+            'name' => 'eth0.100',
+            'address' => each[:address],
+            'netmask' => each[:netmask]
+          }
+        ]
+
+        if each[:type] == :controller
+          chef.add_recipe 'virtual-network-platform::controller'
+
+        elsif each[:type] == :datapath
+          chef.add_recipe 'virtual-network-platform::datapath'
+          chef.add_recipe 'virtual-network-platform::veth-interfaces'
+
+          chef.json[:openflow_switch] = each[:openflow_switch]
+          chef.json[:virtual_network_agent] = each[:virtual_network_agent]
+          chef.json[:veth_interfaces] = each[:veth_interfaces]
+        end
+
+        chef.http_proxy = ENV['http_proxy']
+        chef.https_proxy = chef.http_proxy
+        chef.json[:proxy] = {
+          'http_proxy' => chef.http_proxy
+        }
+      end
+    end
+  end
+end

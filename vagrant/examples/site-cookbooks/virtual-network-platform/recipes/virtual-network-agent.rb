@@ -1,0 +1,38 @@
+log 'install prerequisites for virtual network agent... wait a few minutes.'
+%w{ ruby ruby-json ruby-sinatra ruby-rest-client }.each do | package_name |
+  package package_name
+end
+
+bash "setup init script" do
+  user "root"
+  code <<-'EOT'
+    cp /home/vagrant/virtual-network-platform/virtual_network_agent/init/virtual_network_agent /etc/init.d
+    update-rc.d virtual_network_agent defaults 30 10
+  EOT
+  not_if { ::File.exists?("/etc/init.d/virtual_network_agent") }
+end
+
+bash "setup configuration files" do
+  user "root"
+  code <<-'EOT'
+    cp /home/vagrant/virtual-network-platform/virtual_network_agent/config/virtual_network_agent /etc/default
+    sed -i -e "s/^VIRTUAL_NETWORK_AGENT_DIR=.*$/VIRTUAL_NETWORK_AGENT_DIR=\"\/home\/vagrant\/virtual-network-platform\/virtual_network_agent\"/" /etc/default/virtual_network_agent
+  EOT
+  not_if { ::File.exists?("/etc/default/virtual_network_agent") }
+end
+
+bash "edit configuration files" do
+  cwd "/home/vagrant/virtual-network-platform/virtual_network_agent"
+  user "vagrant"
+  code <<-EOT
+    sed -i -e "s/^controller_uri:.*$/controller_uri: #{ node['virtual_network_agent']['controller_uri'].gsub('/','\/') }/" \
+           -e "s/^uri:.*$/uri: #{ node['virtual_network_agent']['uri'].gsub('/','\/') }/" \
+           -e "s/^tunnel_endpoint:.*$/tunnel_endpoint: #{ node['virtual_network_agent']['tunnel_endpoint'] }/" \
+        tunnel_endpoint_configure.yml
+  EOT
+end
+
+bash 'start virtual network agent' do
+  user "root"
+  code "service virtual_network_agent start"
+end
