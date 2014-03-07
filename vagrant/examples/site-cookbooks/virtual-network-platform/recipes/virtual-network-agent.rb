@@ -1,5 +1,5 @@
 log 'install prerequisites for virtual network agent... wait a few minutes.'
-%w{ ruby ruby-json ruby-sinatra ruby-rest-client }.each do | package_name |
+%w{ ruby ruby-json ruby-sinatra ruby-rest-client ruby-systemu }.each do | package_name |
   package package_name
 end
 
