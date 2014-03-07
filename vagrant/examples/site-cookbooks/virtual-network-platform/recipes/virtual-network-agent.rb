@@ -32,6 +32,18 @@ bash "edit configuration files" do
   EOT
 end
 
+if node['virtual_network_agent']['vxlan_adapter'] == 'linux_kernel'
+  bash "update configuration files" do
+    cwd "/home/vagrant/virtual-network-platform/virtual_network_agent"
+    user "vagrant"
+    code <<-EOT
+      sed -i -e "s/adapter:.*$/adapter: #{ node['virtual_network_agent']['vxlan_adapter'] }/" \
+             -e "s/device: eth0/device: eth0.100/" \
+	  tunnel_endpoint_configure.yml
+    EOT
+  end
+end
+
 bash 'start virtual network agent' do
   user "root"
   code "service virtual_network_agent start"
