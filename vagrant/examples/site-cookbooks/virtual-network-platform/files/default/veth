@@ -1,0 +1,22 @@
+#!/bin/sh
+
+case "$IFACE" in
+  *:*)
+    exit 0
+  ;;
+  *.*)
+    exit 0
+  ;;
+  veth*)
+    if [ -n "$IF_VETH_PEER" ] && [ ! -d /sys/class/net/$IFACE ]; then
+      ip link add name $IFACE type veth peer name $IF_VETH_PEER
+    fi
+  ;;
+  *)
+    exit 0
+  ;;
+esac
+
+if [ -n "$IF_HW_MAC_ADDRESS" ]; then
+    ip link set $IFACE address $IF_HW_MAC_ADDRESS
+fi

@@ -1,0 +1,11 @@
+
+# The vlan interfaces
+<% @vlan_interfaces.each do |each| -%>
+
+auto <%= each['name'] %>
+iface <%= each['name'] %> inet static
+    address <%= each['address'] || '0.0.0.0' %>
+  <%- if each['netmask'] -%>
+    netmask <%= each['netmask'] %>
+  <%- end -%>
+<% end -%>

@@ -15,7 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 
-require 'open3'
+require 'systemu'
 require 'vxlan/configure'
 require 'vxlan/log'
 
@@ -50,6 +50,35 @@ module Vxlan
           IpLink.mtu device, mtu
         end
 
+      end
+
+    end
+
+    class VxlanCtlError < SystemCallError
+      SUCCEEDED = 0
+      INVALID_ARGUMENT = 1
+      ALREADY_RUNNING = 2
+      PORT_ALREADY_IN_USE = 3
+      SOURCE_PORTS_NOT_ALLOCATED = 4
+      DUPLICATED_INSTANCE = 5
+      INSTANCE_NOT_FOUND = 6
+      OTHER_ERROR = 255
+
+      attr_reader :exit_status
+      attr_reader :stdout
+      attr_reader :stderr
+      attr_reader :command
+
+      def initialize( status, stdout, stderr, command )
+	@exit_status = status
+	@stdout = stdout
+	@stderr = stderr
+	@command = command
+	message = ""
+	message << "#{ stdout } - " if stdout.length != 0
+	message << "#{ stderr } - " if stderr.length != 0
+	message << "#{ status.inspect } - #{ command }"
+	super( message )
       end
 
     end
@@ -101,18 +130,8 @@ module Vxlan
           end
           command_options = "#{ full_path } #{ command } #{ options.join ' ' }"
           logger.debug "vxlanctl: '#{ command_options }'"
-          result = ""
-          Open3.popen3( "#{ full_path } #{ command } #{ options.join ' ' }" ) do | stdin, stdout, stderr |
-            stdin.close
-            t = Thread.start do
-              result << stdout.read
-            end
-            error = stderr.read
-            t.join
-            raise "Permission denied #{ full_path }" if /Permission denied/ =~ result
-            raise "#{ result } #{ full_path }" if /Failed to/ =~ result
-            raise "#{ error } #{ full_path }" unless error.length == 0
-          end
+          status, result, error = systemu command_options
+          raise VxlanCtlError.new( status, result, error, command_options ) unless status.success?
           result
         end
 
@@ -120,6 +139,26 @@ module Vxlan
           Log.instance
         end
 
+      end
+
+    end
+
+    class IpLinkError < SystemCallError
+      attr_reader :exit_status
+      attr_reader :stdout
+      attr_reader :stderr
+      attr_reader :command
+
+      def initialize( status, stdout, stderr, command )
+	@exit_status = status
+	@stdout = stdout
+	@stderr = stderr
+	@command = command
+	message = ""
+	message << "#{ stdout } - " if stdout.length != 0
+	message << "#{ stderr } - " if stderr.length != 0
+	message << "#{ status.inspect } - #{ command }"
+	super( message )
       end
 
     end
@@ -137,13 +176,9 @@ module Vxlan
         end
 
         def ip_link command, options = []
-          result = ""
-          Open3.popen3( "#{ config[ 'ip' ] } link #{ command } #{ options.join ' ' }" ) do | stdin, stdout, stderr |
-            stdin.close
-            error = stderr.read
-            result << stdout.read
-            raise "#{ error } #{ config[ 'ip' ] }" unless error.length == 0
-          end
+          command_options = "#{ config[ 'ip' ] } link #{ command } #{ options.join ' ' }"
+          status, result, error = systemu command_options
+          raise IpLinkError.new( status, result, error, command_options ) unless status.success?
           result
         end
 

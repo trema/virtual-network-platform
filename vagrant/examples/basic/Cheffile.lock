@@ -1,0 +1,28 @@
+SITE
+  remote: http://community.opscode.com/api/v1
+  specs:
+    apt (2.3.8)
+    timezone (0.0.1)
+
+PATH
+  remote: ../site-cookbooks/proxy
+  specs:
+    proxy (0.1.0)
+
+PATH
+  remote: ../site-cookbooks/tcpdump
+  specs:
+    tcpdump (0.1.0)
+
+PATH
+  remote: ../site-cookbooks/virtual-network-platform
+  specs:
+    virtual-network-platform (0.1.0)
+
+DEPENDENCIES
+  apt (>= 0)
+  proxy (>= 0)
+  tcpdump (>= 0)
+  timezone (>= 0)
+  virtual-network-platform (>= 0)
+

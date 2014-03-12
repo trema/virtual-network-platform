@@ -15,7 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 
-require 'open3'
+require 'systemu'
 require 'vxlan/configure'
 
 module Vxlan
@@ -50,6 +50,26 @@ module Vxlan
           IpLink.mtu vni, mtu
         end
 
+      end
+
+    end
+
+    class IpLinkError < SystemCallError
+      attr_reader :exit_status
+      attr_reader :stdout
+      attr_reader :stderr
+      attr_reader :command
+
+      def initialize( status, stdout, stderr, command )
+	@exit_status = status
+	@stdout = stdout
+	@stderr = stderr
+	@command = command
+	message = ""
+	message << "#{ stdout } - " if stdout.length != 0
+	message << "#{ stderr } - " if stderr.length != 0
+	message << "#{ status.inspect } - #{ command }"
+	super( message )
       end
 
     end
@@ -112,13 +132,9 @@ module Vxlan
         end
 
         def ip_link command, options = []
-          result = ""
-          Open3.popen3( "#{ config[ 'ip' ] } link #{ command } #{ options.join ' ' }" ) do | stdin, stdout, stderr |
-            stdin.close
-            error = stderr.read
-            result << stdout.read
-            raise "#{ error } #{ config[ 'ip' ] }" unless error.length == 0
-          end
+          command_options = "#{ config[ 'ip' ] } link #{ command } #{ options.join ' ' }"
+          status, result, error = systemu command_options
+          raise IpLinkError.new( status, result, error, command_options ) unless status.success?
           result
         end
 

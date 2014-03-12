@@ -1,0 +1,5 @@
+alias vxlanctl="sudo $HOME/virtual-network-platform/vxlan_tunnel_endpoint/src/vxlanctl"
+alias ovs-appctl="sudo ovs-appctl"
+alias ovs-dpctl="sudo ovs-dpctl"
+alias ovs-ofctl="sudo ovs-ofctl"
+alias ovs-vsctl="sudo ovs-vsctl"

@@ -1,0 +1,26 @@
+
+# The veth interfaces
+<% @veth_interfaces.each do |each| -%>
+
+auto <%= each['name'] %>
+iface <%= each['name'] %> inet static
+    address <%= each['address'] || '0.0.0.0' %>
+  <%- if each['netmask'] -%>
+    netmask <%= each['netmask'] %>
+  <%- end -%>
+  <%- if each['hwaddress'] -%>
+    hwaddress <%= each['hwaddress'] %>
+  <%- end -%>
+    veth_peer <%= each['peer'] %>
+
+auto <%= each['peer'] %>
+iface <%= each['peer'] %> inet static
+    address <%= each['peer_address'] || '0.0.0.0' %>
+  <%- if each['peer_netmask'] -%>
+    netmask <%= each['peer_netmask'] %>
+  <%- end -%>
+  <%- if each['peer_hwaddress'] -%>
+    hwaddress <%= each['peer_hwaddress'] %>
+  <%- end -%>
+    veth_peer <%= each['name'] %>
+<% end -%>

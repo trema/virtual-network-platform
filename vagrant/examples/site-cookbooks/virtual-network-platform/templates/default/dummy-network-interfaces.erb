@@ -1,0 +1,14 @@
+
+# The dummy network interfaces
+<% @dummy_network_interfaces.each do |each| -%>
+
+auto <%= each['name'] %>
+iface <%= each['name'] %> inet static
+    address <%= each['address'] %>
+  <%- if each['netmask'] -%>
+    netmask <%= each['netmask'] %>
+  <%- end -%>
+  <%- if each['hwaddress'] -%>
+    hwaddress <%= each['hwaddress'] %>
+  <%- end -%>
+<% end -%>

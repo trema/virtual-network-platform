@@ -15,7 +15,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 
-require 'open3'
+require 'systemu'
 require 'vxlan/configure'
 require 'vxlan/log'
 
@@ -47,7 +47,7 @@ module Vxlan
         end
 
         def list vni
-          tunnel_endpoints = Ctl.list_tunnel_endpoints
+          tunnel_endpoints = Ctl.list_tunnel_endpoints vni
           tunnel_endpoints.has_key?( vni ) and tunnel_endpoints[ vni ] or nil
         end
 
@@ -57,6 +57,38 @@ module Vxlan
           not tunnel_endpoints.select{ | each | each[ :ip ] == address.to_s }.empty?
         end
 
+      end
+
+    end
+
+    class CtlError < SystemCallError
+      SUCCEEDED = 0
+      INVALID_ARGUMENT = 1
+      ALREADY_RUNNING = 2
+      PORT_ALREADY_IN_USE = 3
+      DUPLICATED_TEP_ENTRY = 4
+      TEP_ENTRY_NOT_FOUND = 5
+      OTHER_ERROR = 255
+
+      attr_reader :exit_status
+      attr_reader :stdout
+      attr_reader :stderr
+      attr_reader :command
+
+      def initialize( status, stdout, stderr, command )
+	@exit_status = status
+	@stdout = stdout
+	@stderr = stderr
+	@command = command
+	message = ""
+	message << "#{ stdout } - " if stdout.length != 0
+	message << "#{ stderr } - " if stderr.length != 0
+	message << "#{ status.inspect } - #{ command }"
+	super( message )
+      end
+
+      def tep_entry_not_found?
+        @exit_status.exited? and @exit_status.exitstatus == TEP_ENTRY_NOT_FOUND
       end
 
     end
@@ -85,13 +117,17 @@ module Vxlan
           if not vni.nil?
             options = options + [ '--vni', vni ]
           end
-          reflectorctl( '--list_tep', options ).split( "\n").each do | row |
-            next if ( line_no = line_no + 1 ) <= 2 # skip header
-            row = $1 if /^\s*(\S+(?:\s+\S+)*)\s*$/ =~ row
-            vni, address, port, packet_count, octet_count = row.split( /\s*\|\s*/, 5 )
-            port = 0 if port == '-'
-            tunnel_endpoint = { :ip => address, :port => port.to_i, :packet_count => packet_count.to_i, :octet_count => octet_count.to_i }
-            tunnel_endpoints[ vni.hex ].push tunnel_endpoint
+          begin
+	    reflectorctl( '--list_tep', options ).split( "\n").each do | row |
+	      next if ( line_no = line_no + 1 ) <= 2 # skip header
+	      row = $1 if /^\s*(\S+(?:\s+\S+)*)\s*$/ =~ row
+	      vni, address, port, packet_count, octet_count = row.split( /\s*\|\s*/, 5 )
+	      port = 0 if port == '-'
+	      tunnel_endpoint = { :ip => address, :port => port.to_i, :packet_count => packet_count.to_i, :octet_count => octet_count.to_i }
+	      tunnel_endpoints[ vni.hex ].push tunnel_endpoint
+	    end
+          rescue CtlError => e
+            raise unless e.tep_entry_not_found?
           end
           tunnel_endpoints
         end
@@ -109,18 +145,8 @@ module Vxlan
           end
           command_options = "#{ full_path } #{ command } #{ options.join ' ' }"
           logger.debug "reflectorctl: '#{ command_options }'"
-          result = ""
-          Open3.popen3( command_options ) do | stdin, stdout, stderr |
-            stdin.close
-            t = Thread.start do
-              result << stdout.read
-            end
-            error = stderr.read
-            t.join
-            raise "Permission denied #{ full_path }" if /Permission denied/ =~ result
-            raise "#{ result } #{ full_path }" if /Failed to/ =~ result
-            raise "#{ error } #{ full_path }" unless error.length == 0
-          end
+          status, result, error = systemu command_options
+          raise CtlError.new( status, result, error, command_options ) unless status.success?
           result
         end
 

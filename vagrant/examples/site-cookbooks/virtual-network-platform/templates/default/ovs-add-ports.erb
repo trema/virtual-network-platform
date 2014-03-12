@@ -1,0 +1,9 @@
+#!/bin/sh -
+PATH=/usr/sbin:/sbin:/usr/bin:/bin
+<% @ports.each do |each| -%>
+
+if ovs-vsctl list-ports br0 | fgrep -q <%= each['name'] %>; then
+    ovs-vsctl del-port br0 <%= each['name'] %>
+fi
+ovs-vsctl add-port br0 <%= each['name'] %>
+<% end -%>

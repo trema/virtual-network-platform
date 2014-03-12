@@ -1,5 +1,6 @@
 ## HEAD
 
+* Change the required packages
 * Change default OpenFlow TCP port to 6653
 * Bug fixes
 

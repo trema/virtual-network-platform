@@ -14,7 +14,7 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 
-require 'open3'
+require 'systemu'
 require 'ovs/configure'
 require 'ovs/log'
 
@@ -75,6 +75,27 @@ module OVS
         Vsctl.is_connected?
       end
     end
+
+  end
+
+  class VsctlError < SystemCallError
+    attr_reader :exit_status
+    attr_reader :stdout
+    attr_reader :stderr
+    attr_reader :command
+
+    def initialize( status, stdout, stderr, command )
+      @exit_status = status
+      @stdout = stdout
+      @stderr = stderr
+      @command = command
+      message = ""
+      message << "#{ stdout } - " if stdout.length != 0
+      message << "#{ stderr } - " if stderr.length != 0
+      message << "#{ status.inspect } - #{ command }"
+      super( message )
+    end
+
   end
 
   class Vsctl
@@ -122,14 +143,8 @@ module OVS
       def ovs_vsctl options, command, args = []
         command_args = "#{ config[ 'vsctl' ] } #{ options.join ' ' } #{ command } #{ args.join ' ' }"
         logger.debug "ovs_vsctl: '#{ command_args }'"
-        result = ""
-        Open3.popen3( command_args ) do | stdin, stdout, stderr |
-          stdin.close
-          error = stderr.read
-          result << stdout.read
-          raise "Permission denied #{ config[ 'vsctl' ] }" if /Permission denied/ =~ error
-          raise "#{ error } #{ config[ 'vsctl' ] }" unless error.length == 0
-        end
+        status, result, error = systemu command_args
+        raise VsctlError.new( status, result, error, command_args ) unless status.success?
         result
       end
 

@@ -284,7 +284,8 @@ build Trema before building Virtual Network Manager.
 
 1. Install Sinatra
 
-        $ sudo apt-get install ruby ruby-json ruby-sinatra ruby-rest-client
+        $ sudo apt-get install ruby ruby-json ruby-sinatra ruby-rest-client \
+        ruby-systemu
 
 2. Setup init script
 
