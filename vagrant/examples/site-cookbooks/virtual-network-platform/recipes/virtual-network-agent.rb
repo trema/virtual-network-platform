@@ -21,26 +21,40 @@ bash "setup configuration files" do
   not_if { ::File.exists?("/etc/default/virtual_network_agent") }
 end
 
-bash "edit configuration files" do
-  cwd "/home/vagrant/virtual-network-platform/virtual_network_agent"
-  user "vagrant"
-  code <<-EOT
-    sed -i -e "s/^controller_uri:.*$/controller_uri: #{ node['virtual_network_agent']['controller_uri'].gsub('/','\/') }/" \
-           -e "s/^uri:.*$/uri: #{ node['virtual_network_agent']['uri'].gsub('/','\/') }/" \
-           -e "s/^tunnel_endpoint:.*$/tunnel_endpoint: #{ node['virtual_network_agent']['tunnel_endpoint'] }/" \
-        tunnel_endpoint_configure.yml
-  EOT
-end
-
-if node['virtual_network_agent']['vxlan_adapter'] == 'linux_kernel'
-  bash "update configuration files" do
+if node['virtual_network_agent']['agent'] == 'reflector_agent'
+  bash "edit configuration files" do
     cwd "/home/vagrant/virtual-network-platform/virtual_network_agent"
     user "vagrant"
     code <<-EOT
-      sed -i -e "s/adapter:.*$/adapter: #{ node['virtual_network_agent']['vxlan_adapter'] }/" \
-             -e "s/device: eth0/device: eth0.100/" \
+      sed -i -e "s/^agent: tunnel_endpoint_agent/#agent: tunnel_endpoint_agent/" \
+             -e "s/^#agent: reflector_agent/agent: reflector_agent/" \
+          configure.yml
+      sed -i -e "s/^controller_uri:.*$/controller_uri: #{ node['virtual_network_agent']['controller_uri'].gsub('/','\/') }/" \
+	  reflector_configure.yml
+    EOT
+  end
+else
+  bash "edit configuration files" do
+    cwd "/home/vagrant/virtual-network-platform/virtual_network_agent"
+    user "vagrant"
+    code <<-EOT
+      sed -i -e "s/^controller_uri:.*$/controller_uri: #{ node['virtual_network_agent']['controller_uri'].gsub('/','\/') }/" \
+	     -e "s/^uri:.*$/uri: #{ node['virtual_network_agent']['uri'].gsub('/','\/') }/" \
+	     -e "s/^tunnel_endpoint:.*$/tunnel_endpoint: #{ node['virtual_network_agent']['tunnel_endpoint'] }/" \
 	  tunnel_endpoint_configure.yml
     EOT
+  end
+
+  if node['virtual_network_agent']['vxlan_adapter'] == 'linux_kernel'
+    bash "update configuration files" do
+      cwd "/home/vagrant/virtual-network-platform/virtual_network_agent"
+      user "vagrant"
+      code <<-EOT
+	sed -i -e "s/adapter:.*$/adapter: #{ node['virtual_network_agent']['vxlan_adapter'] }/" \
+	       -e "s/device: eth0/device: eth0.100/" \
+	    tunnel_endpoint_configure.yml
+      EOT
+    end
   end
 end
 

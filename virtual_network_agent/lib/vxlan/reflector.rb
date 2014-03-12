@@ -61,7 +61,7 @@ module Vxlan
 
     end
 
-    class CtlError < SystemCallError
+    class CtlError < StandardError
       SUCCEEDED = 0
       INVALID_ARGUMENT = 1
       ALREADY_RUNNING = 2

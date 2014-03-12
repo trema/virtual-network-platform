@@ -1,0 +1,13 @@
+site "http://community.opscode.com/api/v1"
+
+cookbook "proxy",
+  :path => "../site-cookbooks/proxy"
+
+cookbook "timezone"
+cookbook "apt"
+
+cookbook "tcpdump",
+  :path => "../site-cookbooks/tcpdump"
+
+cookbook "virtual-network-platform",
+  :path => "../site-cookbooks/virtual-network-platform"

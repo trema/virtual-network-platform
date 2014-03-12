@@ -17,10 +17,10 @@ remote_file "/home/vagrant/tmp/#{ tcpdump_tar_gz }" do
   source "http://www.tcpdump.org/release/#{ tcpdump_tar_gz }"
   owner 'vagrant'
   group 'vagrant'
+  notifies :run, "bash[build-tcpdump]", :immediately
 end
 
-log 'build tcpdump... wait a few minutes.'
-bash 'build tcpdump' do
+bash 'build-tcpdump' do
   cwd "/home/vagrant/tmp"
   user "vagrant"
   code <<-EOT
@@ -29,15 +29,19 @@ bash 'build tcpdump' do
     CFLAGS=-DOPENFLOW_PORT=6653 ./configure --prefix /usr
     make
   EOT
+  action :nothing
+  notifies :run, "bash[install-tcpdump]", :immediately
 end
 
-bash 'install tcpdump' do
+bash 'install-tcpdump' do
   cwd "/home/vagrant/tmp/#{ tcpdump_version }"
   user "root"
   code "make install"
+  action :nothing
+  notifies :run, "bash[make-clean-tcpdump]", :immediately
 end
 
-bash 'make clean - tcpdump' do
+bash 'make-clean-tcpdump' do
   cwd "/home/vagrant/tmp/#{ tcpdump_version }"
   user "vagrant"
   code "make clean"

@@ -15,7 +15,7 @@ end
 gem_package "bundler"
 
 log 'build trema... wait a few minutes.'
-bash "build trema" do
+bash "build-trema" do
   cwd "/home/vagrant/virtual-network-platform/trema"
   user "vagrant"
   code <<-'EOT'
@@ -31,8 +31,7 @@ log 'install prerequisites for virtual network platform... wait a few minutes.'
   package package_name
 end
 
-log 'build virtual network manager...'
-bash "build virtual network manager" do
+bash "build-virtual-network-manager" do
   cwd "/home/vagrant/virtual-network-platform/virtual_network_manager/src"
   user "vagrant"
   code "make"

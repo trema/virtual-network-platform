@@ -54,7 +54,7 @@ module Vxlan
 
     end
 
-    class VxlanCtlError < SystemCallError
+    class VxlanCtlError < StandardError
       SUCCEEDED = 0
       INVALID_ARGUMENT = 1
       ALREADY_RUNNING = 2
@@ -143,7 +143,7 @@ module Vxlan
 
     end
 
-    class IpLinkError < SystemCallError
+    class IpLinkError < StandardError
       attr_reader :exit_status
       attr_reader :stdout
       attr_reader :stderr

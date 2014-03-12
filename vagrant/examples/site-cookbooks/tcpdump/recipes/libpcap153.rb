@@ -17,10 +17,10 @@ remote_file "/home/vagrant/tmp/#{ libpcap_tar_gz }" do
   source "http://www.tcpdump.org/release/#{ libpcap_tar_gz }"
   owner 'vagrant'
   group 'vagrant'
+  notifies :run, "bash[build-libpcap]", :immediately
 end
 
-log 'build libpcap... wait a few minutes.'
-bash 'build libpcap' do
+bash 'build-libpcap' do
   cwd "/home/vagrant/tmp"
   user "vagrant"
   code <<-EOT
@@ -29,16 +29,21 @@ bash 'build libpcap' do
     ./configure --prefix /usr
     make
   EOT
+  action :nothing
+  notifies :run, "bash[install-libpcap]", :immediately
 end
 
-bash 'install libpcap' do
+bash 'install-libpcap' do
   cwd "/home/vagrant/tmp/#{ libpcap_version }"
   user "root"
   code "make install"
+  action :nothing
+  notifies :run, "bash[make-clean-libpcap]", :immediately
 end
 
-bash 'make clean' do
+bash 'make-clean-libpcap' do
   cwd "/home/vagrant/tmp/#{ libpcap_version }"
   user "vagrant"
   code "make clean"
+  action :nothing
 end

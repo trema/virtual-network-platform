@@ -1,0 +1,5 @@
+include_recipe 'virtual-network-platform::tuntap-device'
+include_recipe 'virtual-network-platform::getting-the-source-code'
+include_recipe 'virtual-network-platform::vxlan-packet-reflector'
+include_recipe 'virtual-network-platform::virtual-network-agent'
+include_recipe 'virtual-network-platform::bash-aliases'

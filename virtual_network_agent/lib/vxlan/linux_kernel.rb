@@ -54,7 +54,7 @@ module Vxlan
 
     end
 
-    class IpLinkError < SystemCallError
+    class IpLinkError < StandardError
       attr_reader :exit_status
       attr_reader :stdout
       attr_reader :stderr

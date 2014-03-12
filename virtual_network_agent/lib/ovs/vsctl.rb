@@ -78,7 +78,7 @@ module OVS
 
   end
 
-  class VsctlError < SystemCallError
+  class VsctlError < StandardError
     attr_reader :exit_status
     attr_reader :stdout
     attr_reader :stderr

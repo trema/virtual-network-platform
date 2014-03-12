@@ -7,7 +7,7 @@ log 'build vxlan tunnel end-point...'
 bash "build vxlan tunnel end-point" do
   cwd "/home/vagrant/virtual-network-platform/vxlan_tunnel_endpoint/src"
   user "vagrant"
-  code "make"
+  code "make vxland vxlanctl"
 end
 
 bash "setup init script" do
