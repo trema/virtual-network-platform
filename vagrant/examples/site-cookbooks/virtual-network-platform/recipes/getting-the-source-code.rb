@@ -13,8 +13,8 @@ bash "git submodule update" do
   cwd "/home/vagrant/virtual-network-platform"
   user "vagrant"
   code <<-'EOT'
-    git config submodule.trema.url https://github.com/trema/trema.git
-    git submodule init
+    git config submodule.trema.url https://github.com/trema/trema.git &&
+    git submodule init &&
     git submodule update
   EOT
 end

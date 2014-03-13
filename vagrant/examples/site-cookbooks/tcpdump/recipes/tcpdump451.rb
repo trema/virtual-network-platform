@@ -24,9 +24,9 @@ bash 'build-tcpdump' do
   cwd "/home/vagrant/tmp"
   user "vagrant"
   code <<-EOT
-    tar xf #{ tcpdump_tar_gz }
-    cd #{ tcpdump_version }
-    CFLAGS=-DOPENFLOW_PORT=6653 ./configure --prefix /usr
+    tar xf #{ tcpdump_tar_gz } &&
+    cd #{ tcpdump_version } &&
+    CFLAGS=-DOPENFLOW_PORT=6653 ./configure --prefix /usr &&
     make
   EOT
   action :nothing
@@ -38,11 +38,4 @@ bash 'install-tcpdump' do
   user "root"
   code "make install"
   action :nothing
-  notifies :run, "bash[make-clean-tcpdump]", :immediately
-end
-
-bash 'make-clean-tcpdump' do
-  cwd "/home/vagrant/tmp/#{ tcpdump_version }"
-  user "vagrant"
-  code "make clean"
 end

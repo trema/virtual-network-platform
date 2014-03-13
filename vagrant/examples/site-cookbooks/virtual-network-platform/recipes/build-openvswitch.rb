@@ -24,10 +24,10 @@ bash 'build openvswitch' do
   cwd "/home/vagrant/tmp"
   user "vagrant"
   code <<-EOT
-    tar xf #{ openvswitch_tar_gz }
-    cd #{ openvswitch_version }
-    ./boot.sh
-    ./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc
+    tar xf #{ openvswitch_tar_gz } &&
+    cd #{ openvswitch_version } &&
+    ./boot.sh &&
+    ./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc &&
     make
   EOT
 end
@@ -44,10 +44,9 @@ bash 'install openvswitch' do
   cwd "/home/vagrant/tmp/#{ openvswitch_version }"
   user "root"
   code <<-'EOT'
-    make install
-    sed -i -e "s/^\(insert_mod_if_required\)/\1() {\n    return 0 # without kernel support\n}\n\norg_\1/" /usr/share/openvswitch/scripts/ovs-ctl
+    make install &&
+    sed -i -e "s/^\(insert_mod_if_required\)/\1() {\n    return 0 # without kernel support\n}\n\norg_\1/" /usr/share/openvswitch/scripts/ovs-ctl &&
     cp debian/openvswitch-switch.init /etc/init.d/openvswitch-switch
-    update-rc.d openvswitch-switch defaults
   EOT
 end
 
@@ -57,7 +56,7 @@ bash 'make clean' do
   code "make clean"
 end
 
-bash 'start openvswitch' do
-  user "root"
-  code "service openvswitch-switch start"
+service "openvswitch-switch" do
+  supports :status => true, :restart => true
+  action [:enable, :start]
 end

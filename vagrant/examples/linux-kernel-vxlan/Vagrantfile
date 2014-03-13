@@ -7,6 +7,24 @@ Please run following command:
   sudo sh -c "echo 0 > /sys/class/net/lxcbr0/bridge/multicast_snooping"
   EOT
 end
+unless File.directory? '/sys/module/vxlan'
+  puts <<-'EOT'
+Please run following command:
+  sudo modprobe vxlan udp_port=4789
+  EOT
+  exit 1
+else
+  udp_port = IO.read("/sys/module/vxlan/parameters/udp_port").strip.to_i
+  if udp_port != 4789
+    puts <<-'EOT'
+Please run following command:
+  sudo rmmod vxlan
+  sudo modprobe vxlan udp_port=4789
+    EOT
+    exit 1
+  end
+end
+
 timezone = IO.read("/etc/timezone").strip
 
 Vagrant.configure('2') do |config|

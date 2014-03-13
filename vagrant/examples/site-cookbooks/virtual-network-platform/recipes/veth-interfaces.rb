@@ -29,7 +29,7 @@ end
 bash 'veth interfaces' do
   user "root"
   code <<-EOT
-     cat /home/vagrant/tmp/veth-interfaces >> /etc/network/interfaces
+     cat /home/vagrant/tmp/veth-interfaces >> /etc/network/interfaces &&
      /etc/init.d/networking restart
   EOT
   not_if "fgrep '# The veth interfaces' /etc/network/interfaces"

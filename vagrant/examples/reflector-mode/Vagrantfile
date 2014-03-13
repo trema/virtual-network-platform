@@ -6,7 +6,16 @@ if multicast_snooping != 0
 Please run following command:
   sudo sh -c "echo 0 > /sys/class/net/lxcbr0/bridge/multicast_snooping"
   EOT
+  exit 1
 end
+if File.directory? '/sys/module/vxlan'
+  puts <<-'EOT'
+Please run following command:
+  sudo rmmod vxlan
+  EOT
+  exit 1
+end
+
 timezone = IO.read("/etc/timezone").strip
 
 Vagrant.configure('2') do |config|

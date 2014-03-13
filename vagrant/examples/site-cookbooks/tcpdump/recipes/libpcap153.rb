@@ -24,9 +24,9 @@ bash 'build-libpcap' do
   cwd "/home/vagrant/tmp"
   user "vagrant"
   code <<-EOT
-    tar xf #{ libpcap_tar_gz }
-    cd #{ libpcap_version }
-    ./configure --prefix /usr
+    tar xf #{ libpcap_tar_gz } &&
+    cd #{ libpcap_version } &&
+    ./configure --prefix /usr &&
     make
   EOT
   action :nothing
@@ -37,13 +37,5 @@ bash 'install-libpcap' do
   cwd "/home/vagrant/tmp/#{ libpcap_version }"
   user "root"
   code "make install"
-  action :nothing
-  notifies :run, "bash[make-clean-libpcap]", :immediately
-end
-
-bash 'make-clean-libpcap' do
-  cwd "/home/vagrant/tmp/#{ libpcap_version }"
-  user "vagrant"
-  code "make clean"
   action :nothing
 end

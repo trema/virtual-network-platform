@@ -14,7 +14,6 @@ bash "setup init script" do
   user "root"
   code <<-'EOT'
     cp /home/vagrant/virtual-network-platform/vxlan_tunnel_endpoint/init/vxland /etc/init.d
-    update-rc.d vxland defaults
   EOT
   not_if { ::File.exists?("/etc/init.d/vxland") }
 end
@@ -22,7 +21,7 @@ end
 bash "setup configuration files" do
   user "root"
   code <<-'EOT'
-    cp /home/vagrant/virtual-network-platform/vxlan_tunnel_endpoint/config/vxland /etc/default
+    cp /home/vagrant/virtual-network-platform/vxlan_tunnel_endpoint/config/vxland /etc/default &&
     sed -i -e "s/^VXLAND_DIR=.*$/VXLAND_DIR=\"\/home\/vagrant\/virtual-network-platform\/vxlan_tunnel_endpoint\/src\"/" \
            -e "s/eth0/eth0.100/" \
         /etc/default/vxland
@@ -30,7 +29,7 @@ bash "setup configuration files" do
   not_if { ::File.exists?("/etc/default/vxland") }
 end
 
-bash 'start vxlan tunnel end-point' do
-  user "root"
-  code "service vxland start"
+service "vxland" do
+  supports :status => true, :restart => true
+  action [:enable, :start]
 end

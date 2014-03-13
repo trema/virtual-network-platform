@@ -21,7 +21,7 @@ end
 bash 'vlan interfaces' do
   user "root"
   code <<-EOT
-     cat /home/vagrant/tmp/vlan-interfaces >> /etc/network/interfaces
+     cat /home/vagrant/tmp/vlan-interfaces >> /etc/network/interfaces &&
      /etc/init.d/networking restart
   EOT
   not_if "fgrep '# The vlan interfaces' /etc/network/interfaces"

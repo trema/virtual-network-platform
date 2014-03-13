@@ -6,7 +6,7 @@ end
 bash 'assign root password' do
   user "root"
   code "/usr/bin/mysqladmin -u root password root123"
-  only_if "mysql -u root -e 'show databases;'"
+  only_if "/usr/bin/mysql -u root -e 'show databases;'"
 end
 
 bash 'add privileges to "root"' do
@@ -18,6 +18,7 @@ bash "create database and tables" do
   cwd "/home/vagrant/virtual-network-platform/backend_database"
   user "root"
   code "./create_database.sh"
+  not_if "/usr/bin/mysql --user=root --password=root123 vnet -e 'show tables;'"
 end
 
 if node['backend_database'] and node['backend_database']['reflector']

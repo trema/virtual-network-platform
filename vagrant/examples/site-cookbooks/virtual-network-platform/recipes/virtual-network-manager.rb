@@ -5,11 +5,13 @@ end
 
 gem_package "rubygems-update" do
   version "2.1.11"
+  notifies :run, "bash[update-rubygems]", :immediately
 end
 
-bash "update rubygems" do
+bash "update-rubygems" do
   user "root"
   code "update_rubygems _2.1.11_"
+  action :nothing
 end
 
 gem_package "bundler"
@@ -19,11 +21,12 @@ bash "build-trema" do
   cwd "/home/vagrant/virtual-network-platform/trema"
   user "vagrant"
   code <<-'EOT'
-    bundle config --local path vendor/bundle
-    bundle install
-    ./build.rb
+    bundle config --local path vendor/bundle &&
+    bundle install &&
+    ./build.rb &&
     mkdir -p tmp/log tmp/sock tmp/pid
   EOT
+  environment 'HOME' => "/home/vagrant" #
 end
 
 log 'install prerequisites for virtual network platform... wait a few minutes.'
@@ -41,7 +44,6 @@ bash "setup init script (virtual_network_manage)" do
   user "root"
   code <<-'EOT'
     cp /home/vagrant/virtual-network-platform/virtual_network_manager/init/virtual_network_manager /etc/init.d
-    update-rc.d virtual_network_manager defaults
   EOT
   not_if { ::File.exists?("/etc/init.d/virtual_network_manage") }
 end
@@ -50,7 +52,6 @@ bash "setup init script (trema)" do
   user "root"
   code <<-'EOT'
     cp /home/vagrant/virtual-network-platform/virtual_network_manager/init/trema /etc/init.d
-    update-rc.d trema defaults
   EOT
   not_if { ::File.exists?("/etc/init.d/trema") }
 end
@@ -58,9 +59,9 @@ end
 bash "setup configuration files (virtual_network_manager)" do
   user "root"
   code <<-'EOT'
-    cp /home/vagrant/virtual-network-platform/virtual_network_manager/config/virtual_network_manager /etc/default
-    sed -i -e "s/^VIRTUAL_NETWORK_MANAGER_DIR=.*$/VIRTUAL_NETWORK_MANAGER_DIR=\"\/home\/vagrant\/virtual-network-platform\/virtual_network_manager\/src\"/" /etc/default/virtual_network_manager
-    chown root.root /etc/default/virtual_network_manager
+    cp /home/vagrant/virtual-network-platform/virtual_network_manager/config/virtual_network_manager /etc/default &&
+    sed -i -e "s/^VIRTUAL_NETWORK_MANAGER_DIR=.*$/VIRTUAL_NETWORK_MANAGER_DIR=\"\/home\/vagrant\/virtual-network-platform\/virtual_network_manager\/src\"/" /etc/default/virtual_network_manager &&
+    chown root.root /etc/default/virtual_network_manager &&
     chmod 600 /etc/default/virtual_network_manager
   EOT
   not_if { ::File.exists?("/etc/default/virtual_network_manage") }
@@ -75,12 +76,14 @@ bash "setup configuration files (trema)" do
   not_if { ::File.exists?("/etc/default/trema") }
 end
 
-bash "start all required services" do
-  user "root"
-  code <<-'EOT'
-    service trema start
-    service virtual_network_manager start
-  EOT
+service "trema" do
+  supports :status => true, :restart => true
+  action [ :enable, :start ]
+end
+
+service "virtual_network_manager" do
+  supports :status => true, :restart => true
+  action [ :enable, :start ]
 end
 
 directory "/home/vagrant/bin" do
@@ -102,4 +105,5 @@ bash "examples" do
   cwd "/home/vagrant"
   user "vagrant"
   code "ln -s virtual-network-platform/doc/api/examples/curl examples"
+  not_if { ::File.exists?("/home/vagrant/examples") }
 end
