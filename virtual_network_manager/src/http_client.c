@@ -543,6 +543,12 @@ handle_http_transaction_from_main( http_transaction *transaction ) {
     goto error;
   }
 
+  retval = curl_easy_setopt( handle, CURLOPT_PROXY, "" );
+  if ( retval != CURLE_OK ) {
+    error( "Failed to disable PROXY option ( handle = %p, transaction = %p, error = %s ).",
+           handle, transaction, curl_easy_strerror( retval ) );
+    goto error;
+  }
   retval = curl_easy_setopt( handle, CURLOPT_USERAGENT, USER_AGENT );
   if ( retval != CURLE_OK ) {
     error( "Failed to set User-Agent header field value ( handle = %p, transaction = %p, error = %s ).",
