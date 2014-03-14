@@ -1,8 +1,8 @@
 include_recipe 'virtual-network-platform::tuntap-device'
-if node['build_openvswitch']
-  include_recipe 'virtual-network-platform::build-openvswitch'
-else
+if node['package_openvswitch']
   include_recipe 'virtual-network-platform::openvswitch-switch'
+else
+  include_recipe 'virtual-network-platform::build-openvswitch'
 end
 include_recipe 'virtual-network-platform::create-switch-instance'
 include_recipe 'virtual-network-platform::getting-the-source-code'
@@ -11,6 +11,6 @@ if node['virtual_network_agent']['vxlan_adapter'] == 'linux_kernel'
 else
   include_recipe 'virtual-network-platform::vxlan-tunnel-end-point'
 end
-include_recipe 'virtual-network-platform::ruby193_and_bundler'
+include_recipe 'virtual-network-platform::ruby193-and-bundler'
 include_recipe 'virtual-network-platform::virtual-network-agent'
 include_recipe 'virtual-network-platform::bash-aliases'
