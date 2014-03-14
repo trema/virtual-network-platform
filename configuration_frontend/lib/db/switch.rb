@@ -21,7 +21,7 @@ require 'db/datapath-id'
 module DB
 
   class Switch < Base
-    set_primary_key "datapath_id"
+    self.primary_key = "datapath_id"
 
     def datapath_id
       DatapathId.new read_attribute( :datapath_id )

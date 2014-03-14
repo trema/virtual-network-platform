@@ -1,20 +1,7 @@
 log 'install prerequisites for trema... wait a few minutes.'
-%w{ gcc make git ruby rubygems ruby-dev libpcap-dev libsqlite3-dev libglib2.0-dev }.each do | package_name |
+%w{ gcc make git libpcap-dev libsqlite3-dev libglib2.0-dev }.each do | package_name |
   package package_name
 end
-
-gem_package "rubygems-update" do
-  version "2.1.11"
-  notifies :run, "bash[update-rubygems]", :immediately
-end
-
-bash "update-rubygems" do
-  user "root"
-  code "update_rubygems _2.1.11_"
-  action :nothing
-end
-
-gem_package "bundler"
 
 log 'build trema... wait a few minutes.'
 bash "build-trema" do

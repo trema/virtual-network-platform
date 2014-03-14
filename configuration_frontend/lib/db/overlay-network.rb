@@ -22,7 +22,8 @@ require 'db/datapath-id'
 module DB
 
   class OverlayNetwork < Base
-    set_primary_key "slice_id"
+    self.primary_key = "slice_id"
+    before_create :generate_reflector_group_id
 
     def datapath_id
       DatapathId.new read_attribute( :datapath_id )
@@ -30,10 +31,6 @@ module DB
 
     def datapath_id= ( value )
       write_attribute( :datapath_id, value.to_i )
-    end
-
-    def before_create
-      generate_reflector_group_id
     end
 
     private

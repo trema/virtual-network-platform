@@ -3,7 +3,7 @@ package "git"
 git "virtual-network-platform" do
   repository "https://github.com/trema/virtual-network-platform.git"
   destination "/home/vagrant/virtual-network-platform"
-  revision "master"
+  revision "feature/activerecord_3.2"
   action :sync
   user "vagrant"
   group "vagrant"

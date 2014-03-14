@@ -15,7 +15,8 @@
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
-required_path = File.dirname( __FILE__ )
+
+required_path = File.expand_path( "../lib", __FILE__ )
 $LOAD_PATH.unshift required_path unless $LOAD_PATH.include? required_path
 
 require 'yaml'

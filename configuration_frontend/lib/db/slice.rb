@@ -22,6 +22,8 @@ require 'db/slice-state'
 module DB
 
   class Slice < Base
+    self.table_name = "slices"
+
     def state
       SliceState.new read_attribute( :state )
     end
