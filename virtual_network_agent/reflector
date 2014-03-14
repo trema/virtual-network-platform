@@ -16,14 +16,13 @@
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 
-required_path = File.dirname( __FILE__ ) + '/lib'
+required_path = File.expand_path( "../lib", __FILE__ )
 $LOAD_PATH.unshift required_path unless $LOAD_PATH.include? required_path
+ENV[ 'BUNDLE_GEMFILE' ] = File.expand_path( "../Gemfile", __FILE__ )
 
 require 'optparse'
-begin
 require 'rubygems'
-rescue LoadError
-end
+require 'bundler/setup'
 
 require 'configure'
 require 'log'

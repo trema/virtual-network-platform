@@ -1,6 +1,11 @@
-log 'install prerequisites for virtual network agent... wait a few minutes.'
-%w{ ruby ruby-json ruby-sinatra ruby-rest-client ruby-systemu }.each do | package_name |
-  package package_name
+log 'install gems for virtual network agent... wait a few minutes.'
+bash "bundle install" do
+  cwd "/home/vagrant/virtual-network-platform/virtual_network_agent"
+  user "vagrant"
+  code <<-'EOT'
+    bundle config --local path vendor/bundle &&
+    bundle install
+  EOT
 end
 
 bash "setup init script" do
