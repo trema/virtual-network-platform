@@ -1,5 +1,5 @@
 log 'install prerequisites for openflow_switch... wait a few minutes.'
-%w{ gcc make autoconf automake libtool }.each do | package_name |
+%w{ gcc make autoconf automake libtool pkg-config }.each do | package_name |
   package package_name
 end
 
