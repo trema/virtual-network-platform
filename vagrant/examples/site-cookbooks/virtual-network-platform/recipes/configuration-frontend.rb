@@ -1,6 +1,11 @@
-log 'install prerequisites for configuration frontend... wait a few minutes.'
-%w{ ruby ruby-json ruby-sinatra ruby-activerecord ruby-mysql }.each do | package_name |
-  package package_name
+log 'install gems for configuration frontend... wait a few minutes.'
+bash "bundle install" do
+  cwd "/home/vagrant/virtual-network-platform/configuration_frontend"
+  user "vagrant"
+  code <<-'EOT'
+    bundle config --local path vendor/bundle &&
+    bundle install
+  EOT
 end
 
 bash "setup init script" do

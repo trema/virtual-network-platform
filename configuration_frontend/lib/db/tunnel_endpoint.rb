@@ -22,7 +22,7 @@ require 'db/tep'
 module DB
 
   class TunnelEndpoint < Base
-    set_primary_key "datapath_id"
+    self.primary_key = "datapath_id"
 
     def datapath_id
       DatapathId.new read_attribute( :datapath_id )

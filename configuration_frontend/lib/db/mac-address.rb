@@ -23,7 +23,7 @@ require 'db/mac'
 module DB
 
   class MacAddress < Base
-    set_primary_key "mac"
+    self.primary_key = "mac"
 
     def type
       MacType.new read_attribute( :mac_type ).to_i

@@ -330,7 +330,13 @@ class Network
         port_id = port.id
         add_overlay_ports slice_id, slice.mac_learning
       end
-      { :id => port_id }
+      if port_no != DB::PORT_NO_UNDEFINED
+        conditions = [ "datapath_id = ? AND port_no = ? AND vid = ?", datapath_id.to_i, port_no, vid ]
+      else
+        conditions = [ "datapath_id = ? AND port_name = ? AND vid = ?", datapath_id.to_i, port_name, vid ]
+      end
+      port = DB::Port.find( :first, :readonly => true, :select => 'id', :conditions => conditions )
+      { :id => port.id }
     end
 
     def show_ports parameters
