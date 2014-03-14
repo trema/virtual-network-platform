@@ -18,3 +18,8 @@ bash "git submodule update" do
     git submodule update
   EOT
 end
+
+file "/home/vagrant/virtual-network-platform/trema/.ruby-version" do
+  action :delete
+  only_if {::File.exists?("/home/vagrant/virtual-network-platform/trema/.ruby-version")}
+end

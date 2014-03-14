@@ -21,10 +21,12 @@ log 'install prerequisites for virtual network platform... wait a few minutes.'
   package package_name
 end
 
-bash "build-virtual-network-manager" do
+ovs_version_code = node['ovs_version_code'] || '0x010903'
+
+bash "build-virtual-network-manager (OVS_VERSION_CODE=#{ ovs_version_code })" do
   cwd "/home/vagrant/virtual-network-platform/virtual_network_manager/src"
   user "vagrant"
-  code "make"
+  code "make OVS_VERSION_CODE=#{ ovs_version_code }"
 end
 
 bash "setup init script (virtual_network_manage)" do

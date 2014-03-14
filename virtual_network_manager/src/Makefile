@@ -12,6 +12,9 @@ CFLAGS = $(shell $(TREMA_CONFIG) --cflags) $(shell mysql_config --include) \
          -g -std=gnu99 -D_GNU_SOURCE -fno-strict-aliasing -Werror -Wall \
          -Wextra -Wformat=2 -Wcast-qual -Wcast-align -Wwrite-strings \
          -Wconversion -Wfloat-equal -Wpointer-arith
+ifdef OVS_VERSION_CODE
+CFLAGS += -DOVS_VERSION_CODE=$(OVS_VERSION_CODE)
+endif
 LDFLAGS = $(shell $(TREMA_CONFIG) --libs) $(shell mysql_config --libs_r) \
           $(shell curl-config --libs) -L. -ljson -lovsext
 
