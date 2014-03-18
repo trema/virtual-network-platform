@@ -28,7 +28,7 @@
 
 #define OVS_VERSION( a, b, c ) ( ( ( a ) << 16 ) + ( ( b ) << 8 ) + ( c ) )
 #ifndef OVS_VERSION_CODE
-#define OVS_VERSION_CODE OVS_VERSION( 1, 4, 0 )
+#define OVS_VERSION_CODE OVS_VERSION( 1, 4, 6 )
 #endif
 
 

@@ -196,7 +196,7 @@ install_default_flow_entry( uint64_t datapath_id, uint8_t table_id, uint16_t pri
   debug( "Installing a default flow entry ( datapath_id = %#" PRIx64 ", table_id = %#x, priority = %u, matches = [%s] ).",
          datapath_id, entry->table_id, entry->priority, entry->matches_string );
 
-  buffer *flow_mod = create_ovs_flow_mod( get_transaction_id(), get_cookie(), OFPFC_MODIFY_STRICT,
+  buffer *flow_mod = create_ovs_flow_mod( get_transaction_id(), 0, OFPFC_MODIFY_STRICT,
                                          entry->table_id, 0, 0, entry->priority, UINT32_MAX,
                                          OFPP_NONE, 0, matches, actions );
   bool ret = execute_transaction( datapath_id, flow_mod,
@@ -449,7 +449,7 @@ handle_packet_in( uint64_t datapath_id, uint32_t transaction_id, uint32_t buffer
   struct ofp_match match;
   memset( &match, 0, sizeof( struct ofp_match ) );
   match.wildcards = OFPFW_ALL;
-  buffer *message = create_flow_mod( get_transaction_id(), match, get_cookie(), OFPFC_MODIFY_STRICT,
+  buffer *message = create_flow_mod( get_transaction_id(), match, 0xffffffffffffffff, OFPFC_MODIFY_STRICT,
                                      0, hard_timeout, UINT16_MAX, UINT32_MAX, OFPP_NONE, 0, NULL );
   bool ret = send_openflow_message( datapath_id, message );
   if ( !ret ) {

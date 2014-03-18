@@ -44,8 +44,10 @@
 #define PORT_NAME_LENGTH 256
 
 
-#define COOKIE_FOR_NEW_FLOW( slice_id, port_no, vid ) \
-  ( ( ( uint64_t ) ( ( vid ) & 0x0fff ) ) >> 48 | ( ( uint64_t ) ( ( port_no ) & 0xffff ) ) >> 32 | ( ( uint64_t ) ( slice_id ) & 0xffffffff ) )
+#define COOKIE( slice_id, port_id ) \
+  ( ( ( uint64_t ) ( ( port_id ) & 0xffffffff ) ) << 32 | ( ( uint64_t ) ( slice_id ) & 0x00ffffff ) )
+#define COOKIE_FOR_NEW_FLOW( slice_id, port_id ) \
+  ( ( ( uint64_t ) ( ( port_id ) & 0xffffffff ) ) << 32 | ( ( uint64_t ) ( slice_id ) & 0x00ffffff ) | ( uint64_t ) 0x80000000 )
 
 
 enum {
@@ -2046,11 +2048,11 @@ add_transactions_to_install_port_flow_entries( uint64_t datapath_id, uint32_t sl
                                60, // idle_timeout
                                0, // hard_timeout
                                learn_priority,
-                               COOKIE_FOR_NEW_FLOW( slice_id, port->port_no, port->vid ),
+                               COOKIE_FOR_NEW_FLOW( slice_id, port->port_id ),
                                0, // flags
                                3, // table_id
 #if OVS_VERSION_CODE >= OVS_VERSION( 1, 6, 0 )
-                               0, // fin_idle_timeout
+                               10, // fin_idle_timeout
                                0, // fin_hard_timeout
 #endif
                                flow_mod_specs );
@@ -2060,7 +2062,7 @@ add_transactions_to_install_port_flow_entries( uint64_t datapath_id, uint32_t sl
     // FIXME: hard-coded table id and priority
     const uint8_t table_id = 0;
     const uint16_t priority = 128;
-    buffer *flow_mod = create_ovs_flow_mod( get_transaction_id(), slice_id, OFPFC_MODIFY_STRICT,
+    buffer *flow_mod = create_ovs_flow_mod( get_transaction_id(), COOKIE( slice_id, port->port_id ), OFPFC_MODIFY_STRICT,
                                             table_id, 0, 0, priority, UINT32_MAX, OFPP_NONE, 0, match, actions );
     bool ret = add_openflow_transaction( update->transactions, datapath_id, flow_mod,
                                          flow_mod_port_succeeded, update, flow_mod_port_failed, update );
@@ -2138,7 +2140,7 @@ add_transactions_to_install_port_flow_entries( uint64_t datapath_id, uint32_t sl
     // FIXME: hard-coded table id and priority
     const uint8_t table_id = 3;
     const uint16_t priority = 128;
-    buffer *flow_mod = create_ovs_flow_mod( get_transaction_id(), slice_id, OFPFC_MODIFY_STRICT,
+    buffer *flow_mod = create_ovs_flow_mod( get_transaction_id(), COOKIE( slice_id, port->port_id ), OFPFC_MODIFY_STRICT,
                                             table_id, 0, 0, priority, UINT32_MAX, OFPP_NONE, 0, match, actions );
     bool ret = add_openflow_transaction( update->transactions, datapath_id, flow_mod,
                                          flow_mod_port_succeeded, update, flow_mod_port_failed, update );
@@ -2196,7 +2198,7 @@ add_transactions_to_delete_port_flow_entries( uint64_t datapath_id, uint32_t sli
     // FIXME: hard-coded table id and priority
     const uint8_t table_id = 0;
     const uint16_t priority = 128;
-    buffer *flow_mod = create_ovs_flow_mod( get_transaction_id(), slice_id, OFPFC_DELETE_STRICT,
+    buffer *flow_mod = create_ovs_flow_mod( get_transaction_id(), COOKIE( slice_id, port->port_id ), OFPFC_DELETE_STRICT,
                                             table_id, 0, 0, priority, UINT32_MAX, OFPP_NONE, 0, match, NULL );
     bool ret = add_openflow_transaction( update->transactions, datapath_id, flow_mod,
                                          flow_mod_port_succeeded, update, flow_mod_port_failed, update );
@@ -2218,7 +2220,7 @@ add_transactions_to_delete_port_flow_entries( uint64_t datapath_id, uint32_t sli
     // remove learned MAC addresses from the table #3
     if ( port->mac_learning == MAC_LEARNING_ENABLE ) {
       match = create_ovs_matches();
-      append_ovs_match_cookie( match, COOKIE_FOR_NEW_FLOW( slice_id, port->port_no, port->vid ), UINT64_MAX );
+      append_ovs_match_cookie( match, COOKIE_FOR_NEW_FLOW( slice_id, port->port_id ), UINT64_MAX );
       append_ovs_match_reg( match, 0, slice_id, UINT32_MAX );
       // FIXME: hard-coded table id and priority
       uint8_t learn_table_id = 3;
@@ -2226,7 +2228,7 @@ add_transactions_to_delete_port_flow_entries( uint64_t datapath_id, uint32_t sli
       if ( port->type == PORT_TYPE_OVERLAY ) {
         learn_priority = 256;
       }
-      flow_mod = create_ovs_flow_mod( get_transaction_id(), slice_id, OFPFC_DELETE,
+      flow_mod = create_ovs_flow_mod( get_transaction_id(), COOKIE( slice_id, port->port_id ), OFPFC_DELETE,
                                       learn_table_id, 0, 0, learn_priority, UINT32_MAX, port->port_no, 0, match, NULL );
       ret = add_openflow_transaction( update->transactions, datapath_id, flow_mod,
                                       flow_mod_port_succeeded, update, flow_mod_port_failed, update );
@@ -2264,7 +2266,7 @@ add_transactions_to_delete_port_flow_entries( uint64_t datapath_id, uint32_t sli
     // FIXME: hard-coded table id and priority
     const uint8_t table_id = 3;
     const uint16_t priority = 128;
-    buffer *flow_mod = create_ovs_flow_mod( get_transaction_id(), slice_id, OFPFC_DELETE_STRICT,
+    buffer *flow_mod = create_ovs_flow_mod( get_transaction_id(), COOKIE( slice_id, port->port_id ), OFPFC_DELETE_STRICT,
                                             table_id, 0, 0, priority, UINT32_MAX, OFPP_NONE, 0, match, NULL );
     bool ret = add_openflow_transaction( update->transactions, datapath_id, flow_mod,
                                          flow_mod_port_succeeded, update, flow_mod_port_failed, update );
@@ -2380,7 +2382,7 @@ add_transactions_to_install_mac_flow_entries( uint64_t datapath_id, uint32_t sli
       // FIXME: hard-coded table id and priority
       table_id = 0;
       priority = 512;
-      flow_mod = create_ovs_flow_mod( get_transaction_id(), slice_id, OFPFC_MODIFY_STRICT,
+      flow_mod = create_ovs_flow_mod( get_transaction_id(), COOKIE( slice_id, port->port_id ), OFPFC_MODIFY_STRICT,
                                       table_id, 0, 0, priority, UINT32_MAX, OFPP_NONE, 0, match, NULL );
       bool ret = add_openflow_transaction( update->transactions, datapath_id, flow_mod,
                                            flow_mod_mac_succeeded, update, flow_mod_mac_failed, update );
@@ -2427,7 +2429,7 @@ add_transactions_to_install_mac_flow_entries( uint64_t datapath_id, uint32_t sli
       break;
     }
 
-    flow_mod = create_ovs_flow_mod( get_transaction_id(), slice_id, OFPFC_MODIFY_STRICT,
+    flow_mod = create_ovs_flow_mod( get_transaction_id(), COOKIE( slice_id, port->port_id ), OFPFC_MODIFY_STRICT,
                                     table_id, 0, 0, priority, UINT32_MAX, OFPP_NONE, 0, match, actions );
     bool ret = add_openflow_transaction( update->transactions, datapath_id, flow_mod,
                                          flow_mod_mac_succeeded, update, flow_mod_mac_failed, update );
@@ -2507,7 +2509,7 @@ add_transactions_to_delete_mac_flow_entries( uint64_t datapath_id, uint32_t slic
       // FIXME: hard-coded table id and priority
       table_id = 0;
       priority = 512;
-      flow_mod = create_ovs_flow_mod( get_transaction_id(), slice_id, OFPFC_DELETE_STRICT,
+      flow_mod = create_ovs_flow_mod( get_transaction_id(), COOKIE( slice_id, port->port_id ), OFPFC_DELETE_STRICT,
                                       table_id, 0, 0, priority, UINT32_MAX, OFPP_NONE, 0, match, NULL );
       bool ret = add_openflow_transaction( update->transactions, datapath_id, flow_mod,
                                            flow_mod_mac_succeeded, update, flow_mod_mac_failed, update );
@@ -2546,7 +2548,7 @@ add_transactions_to_delete_mac_flow_entries( uint64_t datapath_id, uint32_t slic
       break;
     }
 
-    flow_mod = create_ovs_flow_mod( get_transaction_id(), slice_id, OFPFC_DELETE_STRICT,
+    flow_mod = create_ovs_flow_mod( get_transaction_id(), COOKIE( slice_id, port->port_id ), OFPFC_DELETE_STRICT,
                                     table_id, 0, 0, priority, UINT32_MAX, port->port_no, 0, match, NULL );
     bool ret = add_openflow_transaction( update->transactions, datapath_id, flow_mod,
                                          flow_mod_mac_succeeded, update, flow_mod_mac_failed, update );
