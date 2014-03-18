@@ -165,6 +165,7 @@ enum {
 enum {
   OVSAST_RESUBMIT = 1,
   OVSAST_REG_LOAD = 7,
+  OVSAST_NOTE = 8,
   OVSAST_RESUBMIT_TABLE = 14,
   OVSAST_LEARN = 16,
 };
@@ -228,6 +229,15 @@ typedef struct {
   uint32_t dst;
   uint64_t value;
 } ovs_action_reg_load;
+
+
+typedef struct {
+  uint16_t  type;
+  uint16_t  len;
+  uint32_t vendor;
+  uint16_t subtype;
+  uint8_t note[6];
+} ovs_action_note;
 
 
 typedef struct {
@@ -305,6 +315,7 @@ typedef struct {
 #define OVS_LEARN_DST_MASK   (3 << OVS_LEARN_DST_SHIFT)
 
 
+#define ROUND_UP_8( n ) ( ( ( n ) + 7 ) / 8 )
 #define ROUND_UP_16( n ) ( ( ( n ) + 15 ) / 16 )
 #define OVS_LEARN_HEADER_LENGTH ( ( int ) sizeof( uint16_t ) )
 #define OVS_LEARN_SRC_IMMEDIATE_LENGTH( header ) ( 2 * ( ROUND_UP_16( ( header ) & OVS_LEARN_N_BITS_MASK ) ) )

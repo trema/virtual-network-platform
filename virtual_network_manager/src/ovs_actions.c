@@ -49,6 +49,31 @@ append_ovs_action_reg_load( openflow_actions *actions, const uint16_t offset, co
 }
 
 
+bool
+append_ovs_action_note( openflow_actions *actions, const uint8_t *note, const uint16_t note_len ) {
+  assert( actions != NULL );
+
+  uint16_t len = ( uint16_t ) ( ROUND_UP_8( offsetof( ovs_action_note, note ) + note_len ) * 8 );
+  ovs_action_note *action_note = xmalloc( sizeof( len ) );
+  memset( action_note, 0, len );
+
+  action_note->type = OFPAT_VENDOR;
+  action_note->len = len;
+  action_note->vendor = OVS_VENDOR_ID;
+  action_note->subtype = OVSAST_NOTE;
+  if ( note_len > 0 ) {
+    memcpy( action_note->note, note, note_len );
+  }
+
+  bool ret = append_to_tail( &actions->list, action_note );
+  if ( ret ) {
+    actions->n_actions++;
+  }
+
+  return ret;
+}
+
+
 static bool
 append_ovs_action_resubmit_with_type( openflow_actions *actions, const uint16_t type,
                                       const uint16_t in_port, const uint8_t table_id ) {

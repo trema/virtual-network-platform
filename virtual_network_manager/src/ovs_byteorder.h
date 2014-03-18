@@ -86,12 +86,14 @@ void ntoh_ovs_match( ovs_match_header *dst, const ovs_match_header *src );
 
 // Open vSwitch extended actions
 void hton_ovs_action_reg_load( ovs_action_reg_load *dst, const ovs_action_reg_load *src );
+void hton_ovs_action_note( ovs_action_note *dst, const ovs_action_note *src );
 void hton_ovs_action_resubmit( ovs_action_resubmit *dst, const ovs_action_resubmit *src );
 #define hton_ovs_action_resubmit_table hton_ovs_action_resubmit
 void hton_ovs_action_learn( ovs_action_learn *dst, const ovs_action_learn *src );
 void hton_ovs_action( ovs_action_header *dst, const ovs_action_header *src );
 
 #define ntoh_ovs_action_reg_load hton_ovs_action_reg_load
+void ntoh_ovs_action_note( ovs_action_note *dst, const ovs_action_note *src );
 #define ntoh_ovs_action_resubmit hton_ovs_action_resubmit
 #define ntoh_ovs_action_resubmit_table hton_ovs_action_resubmit
 void ntoh_ovs_action_learn( ovs_action_learn *dst, const ovs_action_learn *src );

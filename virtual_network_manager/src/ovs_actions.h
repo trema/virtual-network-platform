@@ -34,6 +34,7 @@ typedef struct {
 
 bool append_ovs_action_reg_load( openflow_actions *actions, const uint16_t offset, const uint8_t n_bits,
                                  const uint32_t destination, const uint64_t value );
+bool append_ovs_action_note( openflow_actions *actions, const uint8_t *note, const uint16_t note_len );
 bool append_ovs_action_resubmit( openflow_actions *actions, const uint16_t in_port );
 bool append_ovs_action_resubmit_table( openflow_actions *actions, const uint16_t in_port, const uint8_t table_id );
 bool append_ovs_action_learn( openflow_actions *actions, const uint16_t idle_timeout, const uint16_t hard_timeout,

@@ -1452,6 +1452,19 @@ hton_ovs_action_reg_load( ovs_action_reg_load *dst, const ovs_action_reg_load *s
 
 
 void
+hton_ovs_action_note( ovs_action_note *dst, const ovs_action_note *src ) {
+  assert( src != NULL );
+  assert( dst != NULL );
+
+  dst->type = htons( src->type );
+  dst->len = htons( src->len );
+  dst->vendor = htonl( src->vendor );
+  dst->subtype = htons( src->subtype );
+  memcpy( dst->note, src->note, src->len - offsetof( ovs_action_note, note ) );
+}
+
+
+void
 hton_ovs_action_resubmit( ovs_action_resubmit *dst, const ovs_action_resubmit *src ) {
   assert( src != NULL );
   assert( dst != NULL );
@@ -1587,6 +1600,13 @@ hton_ovs_action( ovs_action_header *dst, const ovs_action_header *src ) {
     }
     break;
 
+    case OVSAST_NOTE:
+    {
+      hton_ovs_action_note( ( ovs_action_note * ) dst,
+                            ( const ovs_action_note * ) src );
+    }
+    break;
+
     case OVSAST_RESUBMIT_TABLE:
     {
       hton_ovs_action_resubmit_table( ( ovs_action_resubmit * ) dst,
@@ -1612,6 +1632,19 @@ hton_ovs_action( ovs_action_header *dst, const ovs_action_header *src ) {
 
 #define ntoh_ovs_action_learn_front hton_ovs_action_learn_front
 #define ntoh_ovs_flow_mod_spec hton_ovs_flow_mod_spec
+
+
+void
+ntoh_ovs_action_note( ovs_action_note *dst, const ovs_action_note *src ) {
+  assert( src != NULL );
+  assert( dst != NULL );
+
+  dst->type = ntohs( src->type );
+  dst->len = ntohs( src->len );
+  dst->vendor = ntohl( src->vendor );
+  dst->subtype = ntohs( src->subtype );
+  memcpy( dst->note, src->note, dst->len - offsetof( ovs_action_note, note ) );
+}
 
 
 void
@@ -1658,6 +1691,13 @@ ntoh_ovs_action( ovs_action_header *dst, const ovs_action_header *src ) {
     {
       ntoh_ovs_action_reg_load( ( ovs_action_reg_load * ) dst,
                                 ( const ovs_action_reg_load * ) src );
+    }
+    break;
+
+    case OVSAST_NOTE:
+    {
+      ntoh_ovs_action_note( ( ovs_action_note * ) dst,
+                            ( const ovs_action_note * ) src );
     }
     break;
 
