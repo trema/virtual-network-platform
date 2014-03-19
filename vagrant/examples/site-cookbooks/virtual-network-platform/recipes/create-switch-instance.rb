@@ -11,7 +11,7 @@ bash 'set datapath identifier and openflow controller' do
   user "root"
   code <<-EOT
     ovs-vsctl set bridge br0 other-config:datapath-id=#{ node['openflow_switch']['datapath_id'] } &&
-    ovs-vsctl set-controller br0 #{ node['openflow_switch']['controller'] } -- set controller br0 connection-mode=out-of-band &&
+    ovs-vsctl set-controller br0 #{ node['openflow_switch']['controller'] } -- set controller br0 connection-mode=out-of-band inactivity_probe=60000 &&
     ovs-vsctl set-fail-mode br0 secure
   EOT
 end
