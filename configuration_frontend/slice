@@ -25,6 +25,7 @@ require 'rubygems'
 rescue LoadError
 end
 
+require 'agent'
 require 'configure'
 require 'db'
 require 'internal'
@@ -253,6 +254,15 @@ command 'failed' do | args |
   help_and_exit "Too many arguments" unless args.size == 0
   Network.failed( parameters )
   puts "State of the slice is updated successfully."
+end
+
+# reset-switch: debug only
+command 'reset-switch' do | args |
+  parameters = { :action => "reset" }
+  parameters[ :datapath_id ] = args.shift or help_and_exit "Too few arguments"
+  help_and_exit "Too many arguments" unless args.size == 0
+  Agent.action( parameters )
+  puts "A switch was reset successfully."
 end
 
 # update-transaction-begin: debug only
