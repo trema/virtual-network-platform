@@ -5,6 +5,7 @@ cookbook "proxy",
 
 cookbook "timezone"
 cookbook "apt"
+cookbook "rbenv"
 
 cookbook "tcpdump",
   :path => "../site-cookbooks/tcpdump"

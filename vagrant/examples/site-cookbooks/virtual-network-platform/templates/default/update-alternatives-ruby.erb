@@ -1,0 +1,21 @@
+#!/bin/sh -
+
+PREFIX="<%= @ruby_prefix %>"
+PRIORITY="<%= @ruby_priority %>"
+
+update-alternatives \
+        --install /usr/bin/ruby              ruby    ${PREFIX}/bin/ruby $PRIORITY    \
+        --slave   /usr/bin/bundle            bundle  ${PREFIX}/bin/bundle            \
+        --slave   /usr/bin/bundler           bundler ${PREFIX}/bin/bundler           \
+        --slave   /usr/bin/erb               erb     ${PREFIX}/bin/erb               \
+        --slave   /usr/bin/gem               gem     ${PREFIX}/bin/gem               \
+        --slave   /usr/bin/irb               irb     ${PREFIX}/bin/irb               \
+        --slave   /usr/bin/rake              rake    ${PREFIX}/bin/rake              \
+        --slave   /usr/bin/rdoc              rdoc    ${PREFIX}/bin/rdoc              \
+        --slave   /usr/bin/ri                ri      ${PREFIX}/bin/ri                \
+        --slave   /usr/bin/testrb            testrb  ${PREFIX}/bin/testrb            \
+        --slave   /usr/share/man/man1/erb.1  erb.1   ${PREFIX}/share/man/man1/erb.1  \
+        --slave   /usr/share/man/man1/irb.1  irb.1   ${PREFIX}/share/man/man1/irb.1  \
+        --slave   /usr/share/man/man1/rake.1 rake.1  ${PREFIX}/share/man/man1/rake.1 \
+        --slave   /usr/share/man/man1/ri.1   ri.1    ${PREFIX}/share/man/man1/ri.1   \
+        --slave   /usr/share/man/man1/ruby.1 ruby.1  ${PREFIX}/share/man/man1/ruby.1

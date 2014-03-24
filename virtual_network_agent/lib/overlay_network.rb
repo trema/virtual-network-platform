@@ -33,6 +33,7 @@ class OverlayNetwork
     @registered = false
 
     def startup
+      RestClient.proxy = nil
       register
       reset_request
     end

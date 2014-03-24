@@ -2,7 +2,32 @@ SITE
   remote: http://community.opscode.com/api/v1
   specs:
     apt (2.3.8)
+    build-essential (2.0.0)
+    chef_handler (1.1.5)
+    dmg (2.2.0)
+    git (4.0.0)
+      build-essential (>= 0.0.0)
+      dmg (>= 0.0.0)
+      runit (>= 1.0.0)
+      windows (>= 0.0.0)
+      yum (~> 3.0)
+      yum-epel (>= 0.0.0)
+    ohai (2.0.0)
+    rbenv (1.7.1)
+      apt (>= 0.0.0)
+      build-essential (>= 0.0.0)
+      git (>= 0.0.0)
+      ohai (>= 1.1)
+    runit (1.5.10)
+      build-essential (>= 0.0.0)
+      yum (~> 3.0)
+      yum-epel (>= 0.0.0)
     timezone (0.0.1)
+    windows (1.30.0)
+      chef_handler (>= 0.0.0)
+    yum (3.1.4)
+    yum-epel (0.3.4)
+      yum (~> 3.0)
 
 PATH
   remote: ../site-cookbooks/proxy
@@ -18,10 +43,12 @@ PATH
   remote: ../site-cookbooks/virtual-network-platform
   specs:
     virtual-network-platform (0.1.0)
+      rbenv (>= 0.0.0)
 
 DEPENDENCIES
   apt (>= 0)
   proxy (>= 0)
+  rbenv (>= 0)
   tcpdump (>= 0)
   timezone (>= 0)
   virtual-network-platform (>= 0)

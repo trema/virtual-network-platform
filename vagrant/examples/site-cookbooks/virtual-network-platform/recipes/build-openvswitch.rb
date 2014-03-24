@@ -10,7 +10,7 @@ directory "/home/vagrant/tmp" do
   action :create
 end
 
-openvswitch_version = node['openvswitch_version'] || 'openvswitch-1.9.3'
+openvswitch_version = node['openvswitch_version'] || 'openvswitch-2.1.0'
 openvswitch_tar_gz = "#{ openvswitch_version }.tar.gz"
 
 remote_file "/home/vagrant/tmp/#{ openvswitch_tar_gz }" do

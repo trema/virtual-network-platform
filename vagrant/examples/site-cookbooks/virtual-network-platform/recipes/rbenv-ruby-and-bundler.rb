@@ -1,24 +1,3 @@
-#
-# NOT WORK
-#
-# 1. Add a dependency on rbenv to virtual-network-platform/recipes/metadata.rb
-#
-#    depends 'rbenv'
-#
-# 2. Add a cookbook on rbenv to Cheffile
-#
-#    cookbook "rbenv"
-#
-# 3. Add a PATH to /etc/init.d/configuration_frontend
-#
-#    RBENV_ROOT=/opt/rbenv
-#    PATH=$RBENV_ROOT/shims:$RBENV_ROOT/bin:/opt/rbenv/plugins/ruby_build/bin:$PATH
-#
-# 4. Add a PATH to /etc/init.d/virtual_network_agent
-#
-#    RBENV_ROOT=/opt/rbenv
-#    PATH=$RBENV_ROOT/shims:$RBENV_ROOT/bin:/opt/rbenv/plugins/ruby_build/bin:$PATH
-#
 include_recipe "rbenv::default"
 include_recipe "rbenv::ruby_build"
 
@@ -29,4 +8,25 @@ end
 
 rbenv_gem "bundler" do
   action :nothing
+end
+
+directory "/home/vagrant/tmp" do
+  owner "vagrant"
+  group "vagrant"
+  mode 0755
+  action :create
+end
+
+template "/home/vagrant/tmp/update-alternatives-ruby.sh" do
+  source "update-alternatives-ruby.erb"
+  mode 0755
+  owner "vagrant"
+  group "vagrant"
+  variables :ruby_prefix => "/opt/rbenv/versions/2.1.1", :ruby_priority => "100"
+end
+
+bash 'update-alternatives install ruby' do
+  user "root"
+  code "sh /home/vagrant/tmp/update-alternatives-ruby.sh"
+  not_if "update-alternatives --list ruby | fgrep 2.1.1"
 end
